@@ -7,7 +7,6 @@
     <meta name="description" content="@yield('meta_description', config('app.name') . ' - Library Management System')">
     <meta name="keywords" content="@yield('meta_keywords', 'library, books, OLLMCHS, education, digital library, Kenya')">
     <meta name="theme-color" content="#153168">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="{{ config('app.name') }}">
     <meta name="mobile-web-app-capable" content="yes">

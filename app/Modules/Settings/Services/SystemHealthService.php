@@ -635,11 +635,26 @@ class SystemHealthService
     {
         $logs = [];
 
+        // Clear existing caches first, then rebuild
+        try {
+            Artisan::call('config:clear');
+            $logs[] = ['command' => 'config:clear', 'status' => 'success', 'output' => Artisan::output()];
+        } catch (\Throwable $e) {
+            $logs[] = ['command' => 'config:clear', 'status' => 'failure', 'output' => $e->getMessage()];
+        }
+
         try {
             Artisan::call('config:cache');
             $logs[] = ['command' => 'config:cache', 'status' => 'success', 'output' => Artisan::output()];
         } catch (\Throwable $e) {
             $logs[] = ['command' => 'config:cache', 'status' => 'failure', 'output' => $e->getMessage()];
+        }
+
+        try {
+            Artisan::call('route:clear');
+            $logs[] = ['command' => 'route:clear', 'status' => 'success', 'output' => Artisan::output()];
+        } catch (\Throwable $e) {
+            $logs[] = ['command' => 'route:clear', 'status' => 'failure', 'output' => $e->getMessage()];
         }
 
         try {
@@ -650,6 +665,13 @@ class SystemHealthService
         }
 
         try {
+            Artisan::call('view:clear');
+            $logs[] = ['command' => 'view:clear', 'status' => 'success', 'output' => Artisan::output()];
+        } catch (\Throwable $e) {
+            $logs[] = ['command' => 'view:clear', 'status' => 'failure', 'output' => $e->getMessage()];
+        }
+
+        try {
             Artisan::call('view:cache');
             $logs[] = ['command' => 'view:cache', 'status' => 'success', 'output' => Artisan::output()];
         } catch (\Throwable $e) {
@@ -657,8 +679,11 @@ class SystemHealthService
         }
 
         // Clear cached settings so fresh ones load
-        Cache::forget('setting.*');
-        Cache::flush();
+        try {
+            Cache::flush();
+        } catch (\Throwable $e) {
+            $logs[] = ['command' => 'cache:flush-settings', 'status' => 'failure', 'output' => $e->getMessage()];
+        }
 
         $this->auditAction('Rebuilt all caches', $logs);
 

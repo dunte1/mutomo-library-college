@@ -613,6 +613,10 @@ new class extends Component {
                     class="sidebar-link-sub {{ request()->routeIs('settings.subscriptions') ? 'sidebar-link-sub-active' : '' }}">
                     <span class="text-sm">Subscription Pricing</span>
                 </a>
+                <a href="{{ route('settings.auth-carousel') }}" wire:navigate
+                    class="sidebar-link-sub {{ request()->routeIs('settings.auth-carousel') ? 'sidebar-link-sub-active' : '' }}">
+                    <span class="text-sm">Auth Carousel</span>
+                </a>
                 <a href="{{ route('settings.landing-page') }}" wire:navigate
                     class="sidebar-link-sub {{ request()->routeIs('settings.landing-page') ? 'sidebar-link-sub-active' : '' }}">
                     <span class="text-sm">Landing Page</span>

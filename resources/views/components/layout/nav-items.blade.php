@@ -515,6 +515,12 @@
             class="sidebar-link-sub {{ request()->routeIs('settings.subscriptions') ? 'sidebar-link-sub-active' : '' }}">
             <span class="text-sm">Subscription Pricing</span>
         </a>
+        @if(\Illuminate\Support\Facades\Route::has('settings.auth-carousel'))
+        <a href="{{ route('settings.auth-carousel') }}" wire:navigate
+            class="sidebar-link-sub {{ request()->routeIs('settings.auth-carousel') ? 'sidebar-link-sub-active' : '' }}">
+            <span class="text-sm">Auth Carousel</span>
+        </a>
+        @endif
         <a href="{{ route('settings.maintenance') }}" wire:navigate
             class="sidebar-link-sub {{ request()->routeIs('settings.maintenance') ? 'sidebar-link-sub-active' : '' }}">
             <span class="text-sm">Maintenance</span>

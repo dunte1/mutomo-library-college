@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Settings\Livewire\AccessLevelList;
+use App\Modules\Settings\Livewire\AuthCarouselSettings;
 use App\Modules\Settings\Livewire\AppearanceSettings;
 use App\Modules\Settings\Livewire\AuditLogViewer;
 use App\Modules\Settings\Livewire\BackupSettings;
@@ -60,6 +61,7 @@ Route::middleware(['auth', 'verified'])->prefix('settings')->name('settings.')->
     Route::get('/cache', CacheManager::class)->name('cache')->middleware('can:manage-cache');
     Route::get('/storage', StorageManager::class)->name('storage')->middleware('can:view-storage');
     Route::get('/subscriptions', SubscriptionSettings::class)->name('subscriptions')->middleware('can:manage-settings');
+    Route::get('/auth-carousel', AuthCarouselSettings::class)->name('auth-carousel')->middleware('can:manage-settings');
     Route::get('/landing-page', LandingPageSettings::class)->name('landing-page')->middleware('can:manage-settings');
     Route::get('/features', FeatureList::class)->name('features')->middleware('can:manage-settings');
     Route::get('/features/create', FeatureForm::class)->name('features.create')->middleware('can:manage-settings');

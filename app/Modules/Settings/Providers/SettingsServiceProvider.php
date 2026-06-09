@@ -23,6 +23,7 @@ use App\Modules\Settings\Livewire\SecuritySettings;
 use App\Modules\Settings\Livewire\SettingsDashboard;
 use App\Modules\Settings\Livewire\GlobalSearch;
 use App\Modules\Settings\Livewire\SystemLogViewer;
+use App\Modules\Settings\Livewire\AuthCarouselSettings;
 use App\Modules\Settings\Livewire\AiSettings;
 use App\Modules\Settings\Livewire\MaintenanceSettings;
 use App\Modules\Settings\Livewire\SystemHealth;
@@ -118,6 +119,7 @@ class SettingsServiceProvider extends ServiceProvider
         Livewire::component('queue-monitor', QueueMonitor::class);
         Livewire::component('cache-manager', CacheManager::class);
         Livewire::component('storage-manager', StorageManager::class);
+        Livewire::component('auth-carousel-settings', AuthCarouselSettings::class);
         Livewire::component('subscription-settings', SubscriptionSettings::class);
         Livewire::component('feature-list', FeatureList::class);
         Livewire::component('feature-form', FeatureForm::class);

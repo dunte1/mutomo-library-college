@@ -42,21 +42,29 @@ class SystemHealth extends Component
     public function rebuildCache(): void
     {
         $this->authorize('manage-system-optimization');
-        $service = app(SystemHealthService::class);
-        $result = $service->rebuildCache();
-        $this->optimizationLogs = $result['logs'];
-        $this->activeTab = 'optimization';
-        $this->dispatch('notify', type: 'success', message: 'Cache rebuilt successfully.');
+        try {
+            $service = app(SystemHealthService::class);
+            $result = $service->rebuildCache();
+            $this->optimizationLogs = $result['logs'];
+            $this->activeTab = 'optimization';
+            $this->dispatch('notify', type: 'success', message: 'Cache rebuilt successfully.');
+        } catch (\Throwable $e) {
+            $this->dispatch('notify', type: 'error', message: 'Failed to rebuild cache: ' . $e->getMessage());
+        }
     }
 
     public function optimizeSystem(): void
     {
         $this->authorize('manage-system-optimization');
-        $service = app(SystemHealthService::class);
-        $result = $service->optimizeSystem();
-        $this->optimizationLogs = $result['logs'];
-        $this->activeTab = 'optimization';
-        $this->dispatch('notify', type: 'success', message: 'System optimization completed.');
+        try {
+            $service = app(SystemHealthService::class);
+            $result = $service->optimizeSystem();
+            $this->optimizationLogs = $result['logs'];
+            $this->activeTab = 'optimization';
+            $this->dispatch('notify', type: 'success', message: 'System optimization completed.');
+        } catch (\Throwable $e) {
+            $this->dispatch('notify', type: 'error', message: 'Failed to optimize system: ' . $e->getMessage());
+        }
     }
 
     public function setTab(string $tab): void

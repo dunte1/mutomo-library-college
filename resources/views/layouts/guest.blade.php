@@ -26,12 +26,66 @@
 </head>
 <body class="font-sans antialiased bg-surface-50">
     <div class="flex min-h-screen">
-        <div class="hidden lg:flex lg:w-[55%] relative bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 items-center justify-center p-12 overflow-hidden">
-            <div class="absolute inset-0 opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] bg-repeat"></div>
-            <div class="absolute -top-40 -right-40 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
-            <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+        @php
+            $carouselImages = null;
+            try { $carouselImages = \App\Modules\Settings\Models\AuthCarouselImage::active()->ordered()->get(); } catch (\Throwable $e) {}
+        @endphp
 
-            <div class="relative max-w-lg text-center">
+        <div class="hidden lg:flex lg:w-[55%] relative bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 items-center justify-center p-12 overflow-hidden">
+            @if($carouselImages && $carouselImages->isNotEmpty())
+                <div x-data="{
+                    current: 0,
+                    images: @js($carouselImages->map(fn($i) => ['image_path' => $i->image_path, 'title' => $i->title, 'subtitle' => $i->subtitle])),
+                    init() {
+                        if (this.images.length < 2) return;
+                        let interval = setInterval(() => {
+                            this.current = (this.current + 1) % this.images.length;
+                        }, 5000);
+                        this.$watch('current', () => {
+                            clearInterval(interval);
+                            interval = setInterval(() => {
+                                this.current = (this.current + 1) % this.images.length;
+                            }, 5000);
+                        });
+                    }
+                }" class="absolute inset-0">
+                    <template x-for="(image, index) in images" :key="index">
+                        <div x-show="current === index"
+                             x-transition:enter="transition-all duration-700"
+                             x-transition:enter-start="opacity-0 scale-105"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition-all duration-700"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute inset-0">
+                            <img :src="'{{ asset('storage') }}/' + image.image_path"
+                                 :alt="image.title || 'Slide'"
+                                 class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-gradient-to-t from-primary-900/90 via-primary-800/50 to-primary-900/30"></div>
+                            <div class="absolute bottom-0 left-0 right-0 p-12">
+                                <h2 x-show="image.title" x-text="image.title"
+                                    class="text-3xl font-bold text-white mb-2 leading-tight"></h2>
+                                <p x-show="image.subtitle" x-text="image.subtitle"
+                                    class="text-primary-200/80 text-base max-w-md leading-relaxed"></p>
+                            </div>
+                        </div>
+                    </template>
+
+                    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                        <template x-for="(image, index) in images" :key="index">
+                            <button @click="current = index"
+                                    :class="{'w-8 bg-white': current === index, 'w-2 bg-white/50 hover:bg-white/70': current !== index}"
+                                    class="h-2 rounded-full transition-all duration-300"></button>
+                        </template>
+                    </div>
+                </div>
+            @else
+                <div class="absolute inset-0 opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0xaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] bg-repeat"></div>
+                <div class="absolute -top-40 -right-40 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+            @endif
+
+            <div class="relative max-w-lg text-center z-10">
                 <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-sm shadow-soft-lg mb-8 ring-1 ring-white/20">
                     <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -45,6 +99,7 @@
                     Our Lady of Lourdes Mutomo College of Health Sciences
                 </p>
 
+                @if(!$carouselImages || $carouselImages->isEmpty())
                 <div class="grid grid-cols-3 gap-6 text-left">
                     <div class="bg-white/5 backdrop-blur-sm rounded-xl p-4 ring-1 ring-white/10">
                         <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center mb-3">
@@ -74,6 +129,7 @@
                         <p class="text-primary-200/60 text-xs mt-0.5">Library Access</p>
                     </div>
                 </div>
+                @endif
             </div>
         </div>
 
