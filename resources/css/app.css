@@ -1,0 +1,1153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        @apply antialiased text-surface-700 bg-surface-50 dark:bg-surface-900;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    :focus-visible {
+        @apply outline-2 outline-offset-2 outline-primary-500;
+    }
+
+    ::selection {
+        @apply bg-primary-200 text-primary-900;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    .card {
+        @apply bg-white dark:bg-surface-800 rounded-2xl shadow-soft border border-surface-100 dark:border-surface-700;
+    }
+
+    .card-header {
+        @apply px-6 py-4 border-b border-surface-100 dark:border-surface-700;
+    }
+
+    .card-body {
+        @apply p-6;
+    }
+
+    .stat-card {
+        @apply card p-6 transition-all duration-200 hover:shadow-soft-lg hover:-translate-y-0.5;
+    }
+
+    .stat-icon {
+        @apply w-12 h-12 rounded-xl flex items-center justify-center text-white;
+    }
+
+    .btn {
+        @apply inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+
+    .btn-primary {
+        @apply btn bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-500 shadow-sm;
+    }
+
+    .btn-secondary {
+        @apply btn bg-primary-100 text-primary-700 hover:bg-primary-200 focus-visible:ring-primary-400;
+    }
+
+    .btn-outline {
+        @apply btn border-2 border-surface-300 text-surface-700 hover:bg-surface-100 focus-visible:ring-surface-400;
+    }
+
+    .btn-danger {
+        @apply btn bg-accent-600 text-white hover:bg-accent-700 focus-visible:ring-accent-400;
+    }
+
+    .btn-ghost {
+        @apply btn text-surface-600 hover:bg-surface-100;
+    }
+
+    .btn-sm {
+        @apply px-3 py-1.5 text-xs;
+    }
+
+    .btn-lg {
+        @apply px-6 py-3 text-base;
+    }
+
+    .badge {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    }
+
+    .badge-success {
+        @apply badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400;
+    }
+
+    .badge-warning {
+        @apply badge bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400;
+    }
+
+    .badge-danger {
+        @apply badge bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400;
+    }
+
+    .badge-info {
+        @apply badge bg-info-100 text-info-800;
+    }
+
+    .badge-neutral {
+        @apply badge bg-surface-100 text-surface-700 dark:bg-surface-700 dark:text-surface-300;
+    }
+
+    .input-field {
+        @apply block w-full rounded-xl border-surface-300 dark:border-surface-600 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-100 placeholder-surface-400 dark:placeholder-surface-500 focus:border-primary-500 focus:ring-primary-500 dark:focus:border-primary-400 dark:focus:ring-primary-400 shadow-sm text-sm transition-colors;
+    }
+
+    .input-error {
+        @apply border-red-500 focus:border-red-500 focus:ring-red-500;
+    }
+
+    .label {
+        @apply block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5;
+    }
+
+    .sidebar-link {
+        @apply flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 text-primary-200 hover:text-white hover:bg-primary-700/50;
+    }
+
+    .sidebar-link-active {
+        @apply bg-primary-700/60 text-white font-semibold;
+    }
+
+    .sidebar-link-sub {
+        @apply flex items-center gap-3 px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-primary-300 hover:text-white hover:bg-primary-700/40;
+    }
+
+    .sidebar-link-sub-active {
+        @apply bg-primary-700/40 text-white font-medium;
+    }
+
+    /* Collapsed sidebar — hide text labels, sub-items, and group labels via CSS */
+    aside[data-collapsed="true"] .sidebar-link > span { display: none !important; }
+    aside[data-collapsed="true"] .sidebar-group-label { display: none !important; }
+    aside[data-collapsed="true"] > nav > .ml-4 { display: none !important; }
+    aside[data-collapsed="true"] .ml-8 { display: none !important; }
+    aside[data-collapsed="true"] .sidebar-link { justify-content: center; padding-left: 0.5rem; padding-right: 0.5rem; }
+    aside[data-collapsed="true"] button[aria-label="Toggle sidebar"] { display: none !important; }
+    aside[data-collapsed="true"] .sidebar-hidden-when-collapsed { display: none !important; }
+    aside[data-collapsed="true"] .sidebar-link-sub { display: none !important; }
+    aside[data-collapsed="true"] .sidebar-logo-link { justify-content: center; width: 100%; }
+
+    .sidebar-group-label {
+        @apply px-4 py-2 text-xs font-semibold uppercase tracking-wider text-primary-300/70;
+    }
+
+    .page-header {
+        @apply mb-6;
+    }
+
+    .page-title {
+        @apply text-2xl font-bold text-surface-900 dark:text-white;
+    }
+
+    .page-subtitle {
+        @apply text-sm text-surface-500 dark:text-surface-400 mt-1;
+    }
+
+    .table-header {
+        @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-surface-500 dark:text-surface-400 bg-surface-50 dark:bg-surface-800/50;
+    }
+
+    .table-cell {
+        @apply px-4 py-3 text-sm text-surface-700 dark:text-surface-300 border-b border-surface-100 dark:border-surface-700;
+    }
+
+    .skeleton {
+        @apply animate-pulse bg-surface-200 dark:bg-surface-700 rounded;
+    }
+
+    .divider {
+        @apply border-t border-surface-200 dark:border-surface-700 my-4;
+    }
+
+    .toast {
+        @apply fixed bottom-4 right-4 z-50 animate-slide-up;
+    }
+
+    /* ==================== MOBILE BOTTOM NAVIGATION ==================== */
+    .mobile-bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 40;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        background: rgba(255, 255, 255, 0.88);
+        -webkit-backdrop-filter: blur(24px) saturate(1.8);
+        backdrop-filter: blur(24px) saturate(1.8);
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .dark .mobile-bottom-nav {
+        background: rgba(15, 23, 42, 0.92);
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .mobile-bottom-nav-inner {
+        display: flex;
+        align-items: stretch;
+        justify-content: space-around;
+        height: 64px;
+        padding: 0 4px;
+    }
+
+    .mobile-bottom-nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        position: relative;
+        min-width: 48px;
+        padding: 4px 10px;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        cursor: pointer;
+        border: none;
+        background: transparent;
+        font-family: inherit;
+        color: #94a3b8;
+        transition: color 0.2s ease;
+        text-decoration: none;
+        flex: 1;
+        max-width: 80px;
+        position: relative;
+        overflow: hidden;
+        border-radius: 12px;
+    }
+
+    .dark .mobile-bottom-nav-item {
+        color: #64748b;
+    }
+
+    .mobile-bottom-nav-item:active {
+        background: rgba(0, 0, 0, 0.04);
+    }
+
+    .dark .mobile-bottom-nav-item:active {
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .mobile-bottom-nav-item.active {
+        color: #1E4FA3;
+    }
+
+    .dark .mobile-bottom-nav-item.active {
+        color: #83a3df;
+    }
+
+    .mobile-bottom-nav-item .nav-icon {
+        width: 24px;
+        height: 24px;
+        transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .mobile-bottom-nav-item.active .nav-icon {
+        transform: scale(1.15);
+    }
+
+    .mobile-bottom-nav-item .nav-label {
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+    }
+
+    .mobile-bottom-nav-item .nav-indicator {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 20px;
+        height: 3px;
+        border-radius: 0 0 3px 3px;
+        background: #1E4FA3;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        opacity: 0;
+    }
+
+    .dark .mobile-bottom-nav-item .nav-indicator {
+        background: #83a3df;
+    }
+
+    .mobile-bottom-nav-item.active .nav-indicator {
+        opacity: 1;
+    }
+
+    /* ==================== MOBILE DRAWER ==================== */
+    .mobile-drawer-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        background: rgba(0, 0, 0, 0.5);
+        -webkit-backdrop-filter: blur(4px);
+        backdrop-filter: blur(4px);
+    }
+
+    .mobile-drawer-panel {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 51;
+        width: 280px;
+        max-width: 85vw;
+        background: #153168;
+        box-shadow: 10px 0 40px -10px rgba(0, 0, 0, 0.4);
+        display: flex;
+        flex-direction: column;
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    /* ==================== TOUCH RIPPLE ==================== */
+    .ripple {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ripple::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255, 255, 255, 0.25) 0%, transparent 60%);
+        opacity: 0;
+        transition: opacity 0.4s;
+        pointer-events: none;
+    }
+
+    .ripple:active::after {
+        opacity: 1;
+        transition: opacity 0s;
+    }
+
+    .dark .ripple::after {
+        background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(255, 255, 255, 0.12) 0%, transparent 60%);
+    }
+
+    /* ==================== MOBILE ADJUSTMENTS ==================== */
+    .mobile-safe-bottom {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .mobile-safe-top {
+        padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    /* ==================== MOBILE TRANSITIONS ==================== */
+    .mobile-enter {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    .mobile-enter-active {
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    }
+
+    /* ==================== TOAST REPOSITION FOR MOBILE ==================== */
+    @media (max-width: 767px) {
+        div[x-data="{ show: false, message: '', type: 'success' }"] {
+            bottom: 5rem !important;
+            right: 0.5rem !important;
+            left: 0.5rem !important;
+        }
+
+        div[x-data="{ show: false, message: '', type: 'success' }"] > div {
+            width: 100% !important;
+        }
+
+        .page-header {
+            @apply mb-4;
+        }
+
+        .page-title {
+            @apply text-xl;
+        }
+    }
+
+    /* ==================== STICKY HEADER ==================== */
+    .sticky-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: inherit;
+    }
+
+    /* ==================== SKELETON LOADER TWEAKS ==================== */
+    .skeleton-mobile {
+        @apply skeleton rounded-xl;
+        min-height: 48px;
+    }
+
+    /* ==================== TABLET SIDEBAR BEHAVIOR ==================== */
+    @media (min-width: 768px) and (max-width: 1023px) {
+        .sidebar-tablet-collapsed {
+            @apply w-20;
+        }
+
+        .sidebar-tablet-expanded {
+            @apply w-64;
+        }
+    }
+
+    /* ==================== STAT CARDS RESPONSIVE GRID ==================== */
+    .stat-carousel {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    @media (max-width: 420px) {
+        .stat-carousel > .stat-card {
+            padding: 0.75rem;
+        }
+
+        .stat-carousel > .stat-card .stat-icon {
+            width: 2.25rem;
+            height: 2.25rem;
+        }
+
+        .stat-carousel > .stat-card .stat-icon svg {
+            width: 1.125rem;
+            height: 1.125rem;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .stat-carousel {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+    }
+
+    /* ==================== FLOATING ACTION BUTTON ==================== */
+    .fab {
+        position: fixed;
+        bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+        right: 1.25rem;
+        z-index: 35;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #1E4FA3, #153168);
+        color: white;
+        box-shadow: 0 8px 24px rgba(30, 79, 163, 0.35);
+        cursor: pointer;
+        border: none;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .fab:hover {
+        transform: scale(1.05);
+        box-shadow: 0 12px 32px rgba(30, 79, 163, 0.45);
+    }
+
+    .fab:active {
+        transform: scale(0.95);
+    }
+
+    .dark .fab {
+        background: linear-gradient(135deg, #2a5fc7, #1a3f84);
+        box-shadow: 0 8px 24px rgba(30, 79, 163, 0.25);
+    }
+
+    .fab svg {
+        width: 24px;
+        height: 24px;
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .fab.active svg {
+        transform: rotate(45deg);
+    }
+
+    /* FAB speed dial items */
+    .fab-menu {
+        position: fixed;
+        bottom: calc(144px + env(safe-area-inset-bottom, 0px));
+        right: 1.25rem;
+        z-index: 34;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.75rem;
+        pointer-events: none;
+    }
+
+    .fab-menu.show {
+        pointer-events: auto;
+    }
+
+    .fab-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        pointer-events: auto;
+        transform: scale(0) translateY(20px);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .fab-menu.show .fab-menu-item {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+
+    .fab-menu-item .fab-label {
+        background: rgba(255, 255, 255, 0.95);
+        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
+        padding: 0.5rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        color: #1e293b;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        white-space: nowrap;
+    }
+
+    .dark .fab-menu-item .fab-label {
+        background: rgba(30, 41, 59, 0.95);
+        color: #f1f5f9;
+    }
+
+    .fab-menu-item .fab-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        border: none;
+        cursor: pointer;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .fab-menu-item .fab-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .fab-menu-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 33;
+        background: rgba(0, 0, 0, 0.3);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        -webkit-backdrop-filter: blur(2px);
+        backdrop-filter: blur(2px);
+    }
+
+    .fab-menu-backdrop.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* ==================== COLLAPSIBLE SECTIONS ==================== */
+    .collapsible-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        border: none;
+        background: none;
+        font-family: inherit;
+        text-align: left;
+    }
+
+    .collapsible-trigger .collapse-icon {
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .collapsible-trigger.open .collapse-icon {
+        transform: rotate(180deg);
+    }
+
+    .collapsible-content {
+        overflow: hidden;
+        transition: max-height 0.35s ease, opacity 0.25s ease;
+        max-height: 0;
+        opacity: 0;
+    }
+
+    .collapsible-content.open {
+        max-height: 2000px;
+        opacity: 1;
+    }
+
+    /* ==================== MOBILE QUICK ACTIONS SHEET ==================== */
+    @media (max-width: 767px) {
+        .quick-actions-desktop {
+            display: none !important;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .quick-actions-mobile {
+            display: none !important;
+        }
+    }
+
+    /* ==================== RESPONSIVE TABLE → MOBILE CARDS ==================== */
+    /*
+     * Add class "table-mobile-cards" to the overflow-x-auto wrapper around a <table>.
+     * JS in app.js auto-injects data-label attributes from <th> text onto each <td>.
+     * On desktop the table renders normally; on mobile each <tr> becomes a card.
+     */
+    @media (max-width: 767px) {
+        .table-mobile-cards {
+            overflow-x: visible !important;
+        }
+
+        .table-mobile-cards table {
+            display: block;
+        }
+
+        .table-mobile-cards thead {
+            display: none;
+        }
+
+        .table-mobile-cards tbody {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            padding: 0.75rem;
+        }
+
+        .table-mobile-cards tbody tr {
+            display: block;
+            background: white;
+            border-radius: 1rem;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            /* Remove default table-cell bottom border inside cards */
+        }
+
+        .dark .table-mobile-cards tbody tr {
+            background: #1e293b;
+            border-color: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Hide the empty-state colspan row card styling */
+        .table-mobile-cards tbody tr:has(td[colspan]) {
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+
+        .table-mobile-cards tbody td {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.625rem;
+            padding: 0.625rem 1rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+            font-size: 0.8125rem;
+            min-height: 44px; /* touch target */
+        }
+
+        .dark .table-mobile-cards tbody td {
+            border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .table-mobile-cards tbody td:last-child {
+            border-bottom: none !important;
+        }
+
+        /* The label (injected via data-label) */
+        .table-mobile-cards tbody td::before {
+            content: attr(data-label);
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #94a3b8;
+            min-width: 5.5rem;
+            flex-shrink: 0;
+            padding-top: 0.125rem;
+            line-height: 1.4;
+        }
+
+        .dark .table-mobile-cards tbody td::before {
+            color: #64748b;
+        }
+
+        /* Hide label for colspan (empty state) cells */
+        .table-mobile-cards tbody td[colspan]::before {
+            display: none;
+        }
+
+        .table-mobile-cards tbody td[colspan] {
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        /* Action buttons: stack them nicely */
+        .table-mobile-cards tbody td:last-child .flex {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .table-mobile-cards tbody td:last-child .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.8125rem;
+        }
+    }
+
+    /* ==================== BOTTOM SHEET ==================== */
+    .bottom-sheet-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        background: rgba(0, 0, 0, 0.5);
+        -webkit-backdrop-filter: blur(4px);
+        backdrop-filter: blur(4px);
+        transition: opacity 0.3s ease;
+    }
+
+    .bottom-sheet-panel {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 61;
+        background: white;
+        border-radius: 1.25rem 1.25rem 0 0;
+        box-shadow: 0 -8px 48px rgba(0, 0, 0, 0.12);
+        max-height: 92dvh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    .dark .bottom-sheet-panel {
+        background: #1e293b;
+        box-shadow: 0 -8px 48px rgba(0, 0, 0, 0.4);
+    }
+
+    .bottom-sheet-handle {
+        width: 36px;
+        height: 4px;
+        background: #cbd5e1;
+        border-radius: 2px;
+        margin: 0.75rem auto 0;
+        flex-shrink: 0;
+    }
+
+    .dark .bottom-sheet-handle {
+        background: #475569;
+    }
+
+    /* On desktop: bottom sheet renders as a centered modal */
+    @media (min-width: 768px) {
+        .bottom-sheet-panel {
+            position: relative;
+            border-radius: 1rem;
+            max-height: 90vh;
+            margin: auto;
+            bottom: auto;
+            left: auto;
+            right: auto;
+        }
+
+        .bottom-sheet-handle {
+            display: none;
+        }
+    }
+
+    /* ==================== MOBILE FORM IMPROVEMENTS ==================== */
+    @media (max-width: 767px) {
+        /* Larger touch targets for inputs */
+        .input-field {
+            min-height: 48px;
+            font-size: 1rem; /* prevents iOS zoom on focus */
+        }
+
+        select.input-field {
+            min-height: 48px;
+        }
+
+        textarea.input-field {
+            min-height: 100px;
+        }
+
+        /* Buttons full-width on mobile when inside a form footer */
+        .mobile-form-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .mobile-form-actions .btn,
+        .mobile-form-actions a.btn-primary,
+        .mobile-form-actions a.btn-outline {
+            width: 100%;
+            justify-content: center;
+            min-height: 48px;
+        }
+
+        /* Card body less padding on mobile */
+        .card-body {
+            padding: 1rem;
+        }
+
+        .card-header {
+            padding: 0.875rem 1rem;
+        }
+    }
+
+    /* ==================== SWIPEABLE LIST ITEM ==================== */
+    .swipe-item-wrapper {
+        position: relative;
+        overflow: hidden;
+        border-radius: 1rem;
+    }
+
+    .swipe-item-actions {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0 1rem;
+        transform: translateX(100%);
+        transition: transform 0.25s ease;
+        z-index: 1;
+    }
+
+    .swipe-item-actions.revealed {
+        transform: translateX(0);
+    }
+
+    .swipe-item-content {
+        position: relative;
+        z-index: 2;
+        background: white;
+        transition: transform 0.25s ease;
+        border-radius: 1rem;
+    }
+
+    .dark .swipe-item-content {
+        background: #1e293b;
+    }
+
+    /* ==================== MOBILE FILTER SHEET TRIGGER ==================== */
+    .mobile-filter-trigger {
+        display: none;
+    }
+
+    @media (max-width: 767px) {
+        .mobile-filter-trigger {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.875rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #475569;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            margin-bottom: 0.75rem;
+        }
+
+        .dark .mobile-filter-trigger {
+            background: #1e293b;
+            border-color: #334155;
+            color: #94a3b8;
+        }
+
+        /* Hide desktop filter card on mobile when using bottom-sheet filters */
+        .desktop-filter-card {
+            display: none;
+        }
+    }
+
+    @media (min-width: 768px) {
+        .mobile-filter-trigger {
+            display: none !important;
+        }
+    }
+
+    /* ==================== UPLOAD ZONE ==================== */
+    /*
+     * Replace plain <input type="file"> with a styled tap-friendly zone.
+     * Usage: wrap the <input> in a <label class="upload-zone">
+     *        The input itself should have class "upload-zone-input" (sr-only).
+     */
+    .upload-zone {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 1.5rem 1rem;
+        border: 2px dashed #cbd5e1;
+        border-radius: 1rem;
+        background: #f8fafc;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+        text-align: center;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        position: relative;
+    }
+
+    .dark .upload-zone {
+        border-color: #334155;
+        background: #1e293b;
+    }
+
+    .upload-zone:hover,
+    .upload-zone:focus-within {
+        border-color: #1E4FA3;
+        background: #eff6ff;
+    }
+
+    .dark .upload-zone:hover,
+    .dark .upload-zone:focus-within {
+        border-color: #3b82f6;
+        background: rgba(30, 79, 163, 0.1);
+    }
+
+    .upload-zone.dragover {
+        border-color: #1E4FA3;
+        background: #dbeafe;
+        transform: scale(1.01);
+    }
+
+    .upload-zone-icon {
+        width: 40px;
+        height: 40px;
+        color: #94a3b8;
+        transition: color 0.2s, transform 0.2s;
+    }
+
+    .upload-zone:hover .upload-zone-icon,
+    .upload-zone:focus-within .upload-zone-icon {
+        color: #1E4FA3;
+        transform: scale(1.1);
+    }
+
+    .upload-zone-text {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #475569;
+    }
+
+    .dark .upload-zone-text {
+        color: #94a3b8;
+    }
+
+    .upload-zone-hint {
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+
+    /* On mobile: make it look like a big Android-style button */
+    @media (max-width: 767px) {
+        .upload-zone {
+            padding: 1.25rem 1rem;
+            border-radius: 0.875rem;
+        }
+
+        .upload-zone-icon {
+            width: 32px;
+            height: 32px;
+        }
+    }
+
+    /* Hide the native input visually but keep it accessible */
+    .upload-zone-input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    /* ==================== PULL TO REFRESH INDICATOR ==================== */
+    .ptr-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem;
+        color: #1E4FA3;
+        font-size: 0.75rem;
+        font-weight: 500;
+        transition: opacity 0.3s ease;
+    }
+
+    .dark .ptr-indicator {
+        color: #83a3df;
+    }
+
+    .ptr-indicator svg {
+        width: 20px;
+        height: 20px;
+        animation: ptr-spin 1s linear infinite;
+    }
+
+    @keyframes ptr-spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+}
+
+@layer utilities {
+    .scrollbar-thin {
+        scrollbar-width: thin;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-track {
+        @apply bg-transparent;
+    }
+
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        @apply bg-surface-300 dark:bg-surface-600 rounded-full;
+    }
+
+    .text-balance {
+        text-wrap: balance;
+    }
+}
+
+@keyframes slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(1rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+}
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(2rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-fade-in-up-delayed {
+    animation: fade-in-up 0.6s ease-out 0.2s forwards;
+    opacity: 0;
+}
+
+.animate-fade-in-up-delayed-2 {
+    animation: fade-in-up 0.6s ease-out 0.4s forwards;
+    opacity: 0;
+}
+
+@keyframes blob {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    25% {
+        transform: translate(30px, -30px) scale(1.1);
+    }
+    50% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+    75% {
+        transform: translate(20px, 30px) scale(1.05);
+    }
+}
+
+.animate-blob {
+    animation: blob 18s ease-in-out infinite;
+}
+
+.animate-blob-delayed {
+    animation: blob 18s ease-in-out 6s infinite;
+}
+
+.animate-blob-slow {
+    animation: blob 24s ease-in-out 12s infinite;
+}
+
+@keyframes scroll-bounce {
+    0%, 100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(6px);
+        opacity: 0.4;
+    }
+}
+
+.animate-scroll-bounce {
+    animation: scroll-bounce 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse-slow {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.85;
+    }
+}
+
+.animate-pulse-slow {
+    animation: pulse-slow 3s ease-in-out infinite;
+}

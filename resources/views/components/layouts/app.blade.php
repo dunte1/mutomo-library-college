@@ -1,0 +1,1 @@
+{{-- DEPRECATED: This file is no longer used. All layouts now use resources/views/layouts/app.blade.php --}}{{-- See config/livewire.php 'layout' => 'layouts.app' --}}{{-- This file can be safely deleted. --}}

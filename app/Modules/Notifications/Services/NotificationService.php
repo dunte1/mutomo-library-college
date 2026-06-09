@@ -1,0 +1,113 @@
+<?php
+
+namespace App\Modules\Notifications\Services;
+
+use App\Models\User;
+use App\Modules\Notifications\Models\InAppNotification;
+
+class NotificationService
+{
+    public function send(
+        User $user,
+        string $type,
+        string $title,
+        ?string $body = null,
+        ?string $icon = null,
+        ?string $actionUrl = null,
+        ?array $data = null,
+    ): InAppNotification {
+        return InAppNotification::create([
+            'user_id' => $user->id,
+            'type' => $type,
+            'title' => $title,
+            'body' => $body,
+            'icon' => $icon,
+            'action_url' => $actionUrl,
+            'data' => $data,
+        ]);
+    }
+
+    public function sendOverdueNotice(User $user, string $bookTitle, int $daysOverdue): void
+    {
+        $this->send(
+            $user,
+            'overdue',
+            'Book Overdue',
+            "{$bookTitle} is {$daysOverdue} day(s) overdue. Please return it as soon as possible.",
+            'exclamation-circle',
+            route('circulation.index'),
+        );
+    }
+
+    public function sendDueReminder(User $user, string $bookTitle, string $dueDate): void
+    {
+        $this->send(
+            $user,
+            'due_reminder',
+            'Due Date Reminder',
+            "{$bookTitle} is due on {$dueDate}.",
+            'clock',
+            route('circulation.index'),
+        );
+    }
+
+    public function sendHoldAvailable(User $user, string $bookTitle): void
+    {
+        $this->send(
+            $user,
+            'hold_available',
+            'Hold Available',
+            "{$bookTitle} is now available for pickup. Please collect it within the stated period.",
+            'bookmark',
+            route('circulation.index'),
+        );
+    }
+
+    public function sendFineAssessed(User $user, string $reason, float $amount): void
+    {
+        $this->send(
+            $user,
+            'fine',
+            'Fine Assessed',
+            "A fine of KES {$amount} has been assessed for: {$reason}.",
+            'credit-card',
+            route('finance.fines'),
+        );
+    }
+
+    public function markAsRead(int $notificationId): void
+    {
+        InAppNotification::where('id', $notificationId)->update([
+            'is_read' => true,
+            'read_at' => now(),
+        ]);
+    }
+
+    public function markAllAsRead(User $user): void
+    {
+        InAppNotification::where('user_id', $user->id)
+            ->where('is_read', false)
+            ->update(['is_read' => true, 'read_at' => now()]);
+    }
+
+    public function getUnreadCount(User $user): int
+    {
+        return InAppNotification::where('user_id', $user->id)
+            ->where('is_read', false)
+            ->count();
+    }
+
+    public function getNotifications(User $user, int $limit = 20): iterable
+    {
+        return InAppNotification::where('user_id', $user->id)
+            ->latest()
+            ->limit($limit)
+            ->get();
+    }
+
+    public function deleteOldNotifications(int $daysOld = 90): int
+    {
+        return InAppNotification::where('created_at', '<', now()->subDays($daysOld))
+            ->delete();
+    }
+}
