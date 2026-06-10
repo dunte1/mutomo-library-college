@@ -15,7 +15,7 @@ env:
   APP_DEBUG: false
   APP_KEY: ${{ secrets.APP_KEY }}
   DB_CONNECTION: sqlite
-  DB_DATABASE: :memory:
+  DB_DATABASE: ':memory:'
   CACHE_STORE: array
   SESSION_DRIVER: array
   QUEUE_CONNECTION: sync
