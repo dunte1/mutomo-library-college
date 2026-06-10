@@ -2,11 +2,19 @@
 
 namespace App\Modules\Subscriptions\Services;
 
+use App\Mail\PaymentConfirmation;
+use App\Mail\SubscriptionActivation;
 use App\Models\User;
 use App\Modules\Finance\Models\Transaction;
+use App\Modules\Finance\Services\BillingService;
+use App\Modules\Finance\Services\FinanceService;
+use App\Modules\Members\Models\Member;
+use App\Modules\Members\Services\LibraryCardService;
 use App\Modules\Subscriptions\Models\Plan;
 use App\Modules\Subscriptions\Models\Subscription;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SubscriptionService
 {
@@ -61,6 +69,68 @@ class SubscriptionService
 
             $subscription->update(['status' => 'active']);
 
+            // Generate invoice
+            try {
+                $financeService = app(FinanceService::class);
+                $invoice = $financeService->generateInvoice(
+                    $subscription->user,
+                    $amount,
+                    'subscription',
+                    "Subscription payment: {$subscription->plan->name}"
+                );
+                $invoice->update(['transaction_id' => $transaction->id]);
+            } catch (\Throwable $e) {
+                Log::warning("Failed to generate invoice for subscription payment: {$e->getMessage()}");
+            }
+
+            // Generate receipt
+            try {
+                $receipt = $financeService->generateReceipt($transaction);
+            } catch (\Throwable $e) {
+                Log::warning("Failed to generate receipt for subscription payment: {$e->getMessage()}");
+            }
+
+            // Auto-issue library card if member exists and doesn't have one
+            try {
+                $member = Member::where('user_id', $subscription->user_id)->first();
+                if ($member && !$member->libraryCard) {
+                    $libraryCardService = app(LibraryCardService::class);
+                    $libraryCardService->autoIssueCard($member);
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Failed to auto-issue library card: {$e->getMessage()}");
+            }
+
+            // Send subscription activation email
+            try {
+                $user = $subscription->user;
+                if ($user && $user->email) {
+                    Mail::to($user->email)->queue(new SubscriptionActivation($subscription));
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Failed to send subscription activation email: {$e->getMessage()}");
+            }
+
+            // Send payment confirmation email
+            try {
+                $user = $subscription->user;
+                if ($user && $user->email) {
+                    Mail::to($user->email)->queue(new PaymentConfirmation($transaction, $paymentMethod));
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Failed to send payment confirmation email: {$e->getMessage()}");
+            }
+
+            // Email receipt
+            try {
+                if ($transaction->receipt) {
+                    $billingService = app(BillingService::class);
+                    $billingService->emailReceipt($transaction->receipt);
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Failed to email receipt: {$e->getMessage()}");
+            }
+
             activity()
                 ->performedOn($subscription)
                 ->withProperties(['transaction_id' => $transaction->id, 'amount' => $amount, 'payment_method' => $paymentMethod])
@@ -104,6 +174,33 @@ class SubscriptionService
             ->chunk(100, function ($subscriptions) use (&$count) {
                 foreach ($subscriptions as $subscription) {
                     $subscription->markAsExpired();
+
+                    // Send expiration notice
+                    try {
+                        $user = $subscription->user;
+                        if ($user && $user->email) {
+                            Mail::to($user->email)->queue(
+                                new \App\Mail\ExpirationNotice($subscription, 'expired')
+                            );
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning("Failed to send expiration notice: {$e->getMessage()}");
+                    }
+
+                    // Log in-app notification
+                    try {
+                        app(\App\Modules\Notifications\Services\NotificationService::class)->send(
+                            $subscription->user,
+                            'subscription',
+                            'Membership Expired',
+                            "Your {$subscription->plan->name} subscription has expired. Renew to regain access.",
+                            'clock',
+                            route('subscriptions.plans'),
+                        );
+                    } catch (\Throwable $e) {
+                        Log::warning("Failed to send in-app expiration notice: {$e->getMessage()}");
+                    }
+
                     $count++;
                 }
             });
@@ -118,6 +215,60 @@ class SubscriptionService
             ->chunk(100, function ($subscriptions) use (&$count) {
                 foreach ($subscriptions as $subscription) {
                     $subscription->renew();
+
+                    // Send renewal reminder
+                    try {
+                        $user = $subscription->user;
+                        if ($user && $user->email) {
+                            Mail::to($user->email)->queue(
+                                new \App\Mail\RenewalReminder($subscription, 0)
+                            );
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning("Failed to send renewal reminder: {$e->getMessage()}");
+                    }
+
+                    $count++;
+                }
+            });
+
+        return $count;
+    }
+
+    public function sendExpiringSoonNotifications(int $days = 7): int
+    {
+        $count = 0;
+        Subscription::expiringSoon($days)
+            ->chunk(100, function ($subscriptions) use ($days, &$count) {
+                foreach ($subscriptions as $subscription) {
+                    $remainingDays = (int) now()->diffInDays($subscription->end_date, false);
+
+                    // Send expiring soon email
+                    try {
+                        $user = $subscription->user;
+                        if ($user && $user->email) {
+                            Mail::to($user->email)->queue(
+                                new \App\Mail\ExpirationNotice($subscription, 'expiring_soon', $remainingDays)
+                            );
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning("Failed to send expiring soon notice: {$e->getMessage()}");
+                    }
+
+                    // In-app notification
+                    try {
+                        app(\App\Modules\Notifications\Services\NotificationService::class)->send(
+                            $subscription->user,
+                            'subscription',
+                            'Membership Expiring Soon',
+                            "Your {$subscription->plan->name} subscription expires in {$remainingDays} day(s). Renew to keep your access.",
+                            'clock',
+                            route('subscriptions.my'),
+                        );
+                    } catch (\Throwable $e) {
+                        Log::warning("Failed to send in-app expiring notice: {$e->getMessage()}");
+                    }
+
                     $count++;
                 }
             });
@@ -159,5 +310,63 @@ class SubscriptionService
                 ]
             );
         }
+    }
+
+    protected function monthExpr(): string
+    {
+        $driver = DB::connection()->getDriverName();
+
+        return match ($driver) {
+            'mysql' => "DATE_FORMAT(paid_at, '%Y-%m')",
+            'pgsql' => "TO_CHAR(paid_at, 'YYYY-MM')",
+            'sqlite' => "strftime('%Y-%m', paid_at)",
+            default => "strftime('%Y-%m', paid_at)",
+        };
+    }
+
+    /**
+     * Get subscription revenue statistics.
+     */
+    public function getRevenueStats(): array
+    {
+        $subscriptionTransactions = Transaction::completed()
+            ->whereIn('type', ['subscription_payment', 'subscription_renewal']);
+
+        $currentMonth = $subscriptionTransactions->clone()
+            ->whereMonth('paid_at', now()->month)
+            ->whereYear('paid_at', now()->year);
+
+        $previousMonth = $subscriptionTransactions->clone()
+            ->whereMonth('paid_at', now()->subMonth()->month)
+            ->whereYear('paid_at', now()->subMonth()->year);
+
+        $currentRevenue = (float) $currentMonth->sum('amount');
+        $previousRevenue = (float) $previousMonth->sum('amount');
+
+        $growthRate = $previousRevenue > 0
+            ? round((($currentRevenue - $previousRevenue) / $previousRevenue) * 100, 1)
+            : 0;
+
+        return [
+            'total_revenue' => (float) $subscriptionTransactions->sum('amount'),
+            'current_month_revenue' => $currentRevenue,
+            'previous_month_revenue' => $previousRevenue,
+            'monthly_growth_rate' => $growthRate,
+            'current_month_transactions' => $currentMonth->count(),
+            'total_transactions' => $subscriptionTransactions->count(),
+            'revenue_by_plan' => $subscriptionTransactions->clone()
+                ->join('subscriptions', 'transactions.subscription_id', '=', 'subscriptions.id')
+                ->join('plans', 'subscriptions.plan_id', '=', 'plans.id')
+                ->selectRaw('plans.name, SUM(transactions.amount) as total, COUNT(*) as count')
+                ->groupBy('plans.name')
+                ->get()
+                ->toArray(),
+            'monthly_breakdown' => $subscriptionTransactions->clone()
+                ->selectRaw($this->monthExpr() . ' as month, SUM(amount) as total, COUNT(*) as count')
+                ->groupBy('month')
+                ->orderBy('month')
+                ->get()
+                ->toArray(),
+        ];
     }
 }

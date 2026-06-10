@@ -6,11 +6,15 @@ use App\Modules\Members\Models\LibraryCard as LibraryCardModel;
 use App\Modules\Members\Models\Member;
 use App\Modules\Members\Services\LibraryCardService;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class LibraryCard extends Component
 {
+    use WithFileUploads;
+
     public Member $member;
     public ?LibraryCardModel $card = null;
+    public mixed $passportPhoto = null;
     public string $tab = 'view';
     public array $cardStats = [];
 
@@ -31,12 +35,19 @@ class LibraryCard extends Component
     {
         $this->authorize('manage-library-cards');
 
+        $this->validate([
+            'passportPhoto' => 'nullable|image|max:2048',
+        ]);
+
         try {
-            app(LibraryCardService::class)->issueCard($this->member, auth()->user());
+            $photoPath = $this->uploadAndSyncPhoto();
+
+            app(LibraryCardService::class)->issueCard($this->member, auth()->user(), $photoPath);
             $this->card = LibraryCardModel::where('member_id', $this->member->id)
                 ->where('status', 'active')
                 ->latest()
                 ->first();
+            $this->passportPhoto = null;
             $this->dispatch('notify', type: 'success', message: 'Library card generated successfully.');
         } catch (\Throwable $e) {
             $this->dispatch('notify', type: 'error', message: 'Failed to generate card: ' . $e->getMessage());
@@ -52,12 +63,32 @@ class LibraryCard extends Component
             return;
         }
 
+        $this->validate([
+            'passportPhoto' => 'nullable|image|max:2048',
+        ]);
+
         try {
-            $this->card = app(LibraryCardService::class)->reissueCard($this->card, auth()->user());
+            $photoPath = $this->uploadAndSyncPhoto();
+
+            $this->card = app(LibraryCardService::class)->reissueCard($this->card, auth()->user(), $photoPath);
+            $this->passportPhoto = null;
             $this->dispatch('notify', type: 'success', message: 'Card reissued successfully.');
         } catch (\Throwable $e) {
             $this->dispatch('notify', type: 'error', message: 'Failed to reissue card: ' . $e->getMessage());
         }
+    }
+
+    protected function uploadAndSyncPhoto(): ?string
+    {
+        if (!$this->passportPhoto) {
+            return null;
+        }
+
+        $path = $this->passportPhoto->store('members/photos', 'public');
+
+        $this->member->update(['photo' => $path]);
+
+        return $path;
     }
 
     public function markAsLost(): void

@@ -41,6 +41,18 @@
             </div>
         </div>
 
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="font-medium text-gray-900 dark:text-white">Free Trial</h3>
+            </div>
+            <div class="p-6">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Trial Duration (Days)</label>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">Set to 0 to disable free trials for new subscriptions.</p>
+                <input type="number" wire:model="settings.trial_days" min="0" max="365" class="mt-1 block w-full input-field">
+                @error('settings.trial_days') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
+            </div>
+        </div>
+
         <div class="flex items-center justify-between">
             <button type="submit" class="btn-primary">Save Settings</button>
             @if($saved)

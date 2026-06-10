@@ -213,5 +213,24 @@
     </script>
     <style>
         [x-cloak] { display: none !important; }
+        @media print {
+            @if(!$asset->allow_printing)
+                body { display: none !important; }
+            @endif
+        }
     </style>
+    @if(!$asset->allow_printing)
+        <script>
+            document.addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    alert('Printing is disabled for this document.');
+                }
+            });
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+        </script>
+    @endif
 </div>

@@ -54,4 +54,21 @@ return [
         'provider' => env('SMS_PROVIDER', 'log'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | VAPID Keys for Web Push Notifications
+    |--------------------------------------------------------------------------
+    |
+    | Generate keys with: php artisan vapid:generate
+    | Add to .env:
+    |   VAPID_PUBLIC_KEY=your_public_key
+    |   VAPID_PRIVATE_KEY=your_private_key
+    |
+    */
+
+    'vapid' => [
+        'public_key' => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
+    ],
+
 ];

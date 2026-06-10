@@ -2,11 +2,16 @@
 
 namespace App\Modules\Finance\Services;
 
+use App\Mail\PaymentConfirmation;
+use App\Mail\SubscriptionActivation;
 use App\Modules\Finance\Models\MpesaTransaction;
 use App\Modules\Finance\Models\Transaction;
+use App\Modules\Members\Models\Member;
+use App\Modules\Members\Services\LibraryCardService;
 use App\Modules\Subscriptions\Models\Subscription;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class MpesaService
 {
@@ -144,6 +149,57 @@ class MpesaService
 
             if ($pendingSubscription) {
                 $pendingSubscription->update(['status' => 'active']);
+
+                // Generate invoice
+                try {
+                    $financeService = app(FinanceService::class);
+                    $invoice = $financeService->generateInvoice(
+                        $pendingSubscription->user,
+                        $amount,
+                        'subscription',
+                        "M-Pesa subscription payment: {$pendingSubscription->plan->name}"
+                    );
+                    $invoice->update(['transaction_id' => $txn->id]);
+                } catch (\Throwable $e) {
+                    Log::warning("M-Pesa: Failed to generate invoice: {$e->getMessage()}");
+                }
+
+                // Generate receipt
+                try {
+                    $receipt = $financeService->generateReceipt($txn);
+                } catch (\Throwable $e) {
+                    Log::warning("M-Pesa: Failed to generate receipt: {$e->getMessage()}");
+                }
+
+                // Auto-issue library card
+                try {
+                    $member = Member::where('user_id', $mpesaTxn->user_id)->first();
+                    if ($member && !$member->libraryCard) {
+                        app(LibraryCardService::class)->autoIssueCard($member);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning("M-Pesa: Failed to auto-issue library card: {$e->getMessage()}");
+                }
+
+                // Send emails
+                try {
+                    $user = $pendingSubscription->user;
+                    if ($user && $user->email) {
+                        Mail::to($user->email)->queue(new SubscriptionActivation($pendingSubscription));
+                        Mail::to($user->email)->queue(new PaymentConfirmation($txn, 'mpesa'));
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning("M-Pesa: Failed to send notification emails: {$e->getMessage()}");
+                }
+
+                // Email receipt
+                try {
+                    if ($txn->receipt) {
+                        app(BillingService::class)->emailReceipt($txn->receipt);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning("M-Pesa: Failed to email receipt: {$e->getMessage()}");
+                }
 
                 activity()
                     ->performedOn($pendingSubscription)

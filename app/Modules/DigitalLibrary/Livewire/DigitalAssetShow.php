@@ -6,7 +6,6 @@ use App\Modules\DigitalLibrary\Models\DigitalAsset;
 use App\Modules\DigitalLibrary\Services\CitationService;
 use App\Modules\DigitalLibrary\Services\SmartTagService;
 use App\Services\DownloadService;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 
 class DigitalAssetShow extends Component
@@ -85,7 +84,7 @@ class DigitalAssetShow extends Component
 
     public function getFileUrlProperty()
     {
-        return Storage::url($this->asset->file_path);
+        return route('digital-library.file', $this->asset);
     }
 
     public function render()

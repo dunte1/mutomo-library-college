@@ -250,6 +250,48 @@
                 </div>
             </div>
 
+            {{-- Passport Photo Upload --}}
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="font-semibold text-surface-900 dark:text-white">Passport Photo</h3>
+                </div>
+                <div class="card-body space-y-3">
+                    <p class="text-xs text-surface-500 dark:text-surface-400">
+                        Upload a passport photo for the library card. This will also be used as the member's profile photo.
+                    </p>
+                    <div class="flex items-center gap-3">
+                        <label class="flex-1 cursor-pointer">
+                            <div class="border-2 border-dashed border-surface-300 dark:border-surface-600 rounded-lg p-3 text-center hover:border-primary-400 transition-colors">
+                                @if($passportPhoto)
+                                    <img src="{{ $passportPhoto->temporaryUrl() }}" class="w-16 h-16 object-cover rounded-lg mx-auto mb-1">
+                                @elseif($member->photo)
+                                    <img src="{{ Storage::url($member->photo) }}" class="w-16 h-16 object-cover rounded-lg mx-auto mb-1">
+                                @else
+                                    <svg class="w-8 h-8 mx-auto text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                @endif
+                                <p class="text-xs text-surface-500 mt-1">
+                                    @if($passportPhoto)
+                                        {{ $passportPhoto->getClientOriginalName() }}
+                                    @else
+                                        Click to upload (max 2MB)
+                                    @endif
+                                </p>
+                            </div>
+                            <input type="file" wire:model="passportPhoto" accept="image/*" class="hidden">
+                        </label>
+                        @if($passportPhoto)
+                            <button wire:click="$set('passportPhoto', null)" class="btn-sm btn-outline text-xs shrink-0">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
             {{-- Quick Actions --}}
             <div class="card">
                 <div class="card-header">

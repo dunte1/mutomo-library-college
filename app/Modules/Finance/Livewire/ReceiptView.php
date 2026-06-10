@@ -2,6 +2,7 @@
 
 namespace App\Modules\Finance\Livewire;
 
+use App\Modules\Finance\Models\Receipt;
 use App\Modules\Finance\Models\Transaction;
 use App\Modules\Finance\Services\FinanceService;
 use Livewire\Component;
@@ -41,8 +42,7 @@ class ReceiptView extends Component
                 ->layout('layouts.app');
         }
 
-        $receipts = Transaction::with(['user'])
-            ->whereNotNull('receipt_number')
+        $receipts = Receipt::with(['user', 'transaction'])
             ->when($this->search, fn ($q) => $q->where(function ($q) {
                 $q->where('receipt_number', 'like', "%{$this->search}%")
                   ->orWhereHas('user', fn ($q) => $q->where('name', 'like', "%{$this->search}%"));

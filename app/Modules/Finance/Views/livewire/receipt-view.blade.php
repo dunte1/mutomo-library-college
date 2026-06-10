@@ -157,26 +157,24 @@
                                 <span class="font-mono text-sm">{{ $r->receipt_number }}</span>
                             </x-td>
                             <x-td>
-                                <div class="font-medium text-gray-900 dark:text-gray-100">{{ $r->user->name }}</div>
-                                <div class="text-xs text-gray-500">{{ $r->user->email }}</div>
+                                <div class="font-medium text-gray-900 dark:text-gray-100">{{ $r->user?->name ?? 'N/A' }}</div>
+                                <div class="text-xs text-gray-500">{{ $r->user?->email ?? '' }}</div>
                             </x-td>
                             <x-td>
                                 <span class="font-medium">KES {{ number_format($r->amount, 2) }}</span>
                             </x-td>
                             <x-td>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ $r->paid_at?->format('d/m/Y') ?? $r->created_at->format('d/m/Y') }}</span>
+                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ $r->issued_at?->format('d/m/Y') ?? $r->created_at->format('d/m/Y') }}</span>
                             </x-td>
                             <x-td class="text-right">
                                 <div class="flex items-center justify-end gap-1">
-                                    @if($r->receipt)
-                                        <a href="{{ route('finance.receipt.download', $r->receipt) }}"
-                                           class="btn-outline btn-sm p-1" title="Download PDF">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                            </svg>
-                                        </a>
-                                    @endif
-                                    <a href="{{ route('finance.receipt', $r->id) }}" wire:navigate class="btn-outline btn-sm">
+                                    <a href="{{ route('finance.receipt.download', $r) }}"
+                                       class="btn-outline btn-sm p-1" title="Download PDF">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                    </a>
+                                    <a href="{{ route('finance.receipt', $r->transaction_id) }}" wire:navigate class="btn-outline btn-sm">
                                         View
                                     </a>
                                 </div>

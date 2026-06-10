@@ -21,12 +21,12 @@ class DigitalLibraryReports extends Component
     {
         $this->stats = [
             'total_assets' => DigitalAsset::count(),
-            'total_downloads' => DigitalAsset::sum('download_count'),
+            'total_downloads' => DigitalAsset::sum('times_downloaded'),
             'total_views' => ReadingHistory::count(),
             'active_recommendations' => Recommendation::where('is_active', true)->count(),
             'total_categories' => DigitalAssetCategory::count(),
-            'most_viewed' => DigitalAsset::orderBy('view_count', 'desc')->first()?->title ?? 'N/A',
-            'most_downloaded' => DigitalAsset::orderBy('download_count', 'desc')->first()?->title ?? 'N/A',
+            'most_viewed' => DigitalAsset::orderBy('times_viewed', 'desc')->first()?->title ?? 'N/A',
+            'most_downloaded' => DigitalAsset::orderBy('times_downloaded', 'desc')->first()?->title ?? 'N/A',
         ];
     }
 

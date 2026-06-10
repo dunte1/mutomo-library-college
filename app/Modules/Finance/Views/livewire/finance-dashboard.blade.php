@@ -96,6 +96,55 @@
         </div>
     </div>
 
+    {{-- Subscription Revenue Stats --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="stat-card bg-blue-50 dark:bg-blue-900/20">
+            <p class="stat-label text-blue-600 dark:text-blue-400">Subscription Revenue (This Month)</p>
+            <p class="stat-value text-blue-700 dark:text-blue-300">KES {{ number_format($subscriptionRevenue['current_month_revenue'] ?? 0, 2) }}</p>
+        </div>
+        <div class="stat-card bg-blue-50 dark:bg-blue-900/20">
+            <p class="stat-label text-blue-600 dark:text-blue-400">Subscription Transactions</p>
+            <p class="stat-value text-blue-700 dark:text-blue-300">{{ $subscriptionRevenue['current_month_transactions'] ?? 0 }}</p>
+        </div>
+        <div class="stat-card bg-blue-50 dark:bg-blue-900/20">
+            <p class="stat-label text-blue-600 dark:text-blue-400">Monthly Growth</p>
+            <p class="stat-value @if(($subscriptionRevenue['monthly_growth_rate'] ?? 0) >= 0) text-emerald-600 @else text-red-600 @endif">
+                {{ $subscriptionRevenue['monthly_growth_rate'] ?? 0 }}%
+            </p>
+        </div>
+        <div class="stat-card bg-blue-50 dark:bg-blue-900/20">
+            <p class="stat-label text-blue-600 dark:text-blue-400">All-Time Subscription Revenue</p>
+            <p class="stat-value text-blue-700 dark:text-blue-300">KES {{ number_format($subscriptionRevenue['total_revenue'] ?? 0, 2) }}</p>
+        </div>
+    </div>
+
+    {{-- Revenue by Plan --}}
+    @if(!empty($subscriptionRevenue['revenue_by_plan']))
+        <div class="card p-4">
+            <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">Revenue by Subscription Plan</h3>
+            <div class="overflow-x-auto table-mobile-cards">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-gray-500 border-b dark:border-gray-700">
+                            <th class="py-2 pr-4">Plan</th>
+                            <th class="py-2 pr-4 text-right">Transactions</th>
+                            <th class="py-2 pr-4 text-right">Total Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($subscriptionRevenue['revenue_by_plan'] as $plan)
+                            <tr class="border-b dark:border-gray-700/50">
+                                <td class="py-2 pr-4 text-gray-800 dark:text-gray-200">{{ $plan['name'] }}</td>
+                                <td class="py-2 pr-4 text-right text-gray-600 dark:text-gray-400">{{ $plan['count'] }}</td>
+                                <td class="py-2 pr-4 text-right font-medium text-gray-800 dark:text-gray-200">KES {{ number_format($plan['total'], 2) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+
     <div class="card p-4">
         <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-3">Recent Transactions</h3>
         @if($stats['recent_transactions']->isNotEmpty())

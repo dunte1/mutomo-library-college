@@ -34,9 +34,9 @@ class DownloadsList extends Component
         $assets = $query->orderBy($this->sort, $this->direction)->paginate(15);
 
         $stats = [
-            'total_downloads' => DigitalAsset::sum('download_count'),
+            'total_downloads' => DigitalAsset::sum('times_downloaded'),
             'total_assets' => DigitalAsset::count(),
-            'most_downloaded' => DigitalAsset::orderBy('download_count', 'desc')->first(),
+            'most_downloaded' => DigitalAsset::orderBy('times_downloaded', 'desc')->first(),
         ];
 
         return view('digital-library::livewire.downloads-list', [

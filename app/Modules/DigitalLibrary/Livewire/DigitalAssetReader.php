@@ -88,7 +88,7 @@ class DigitalAssetReader extends Component
 
     public function getFileUrlProperty(): string
     {
-        return url('storage/' . $this->asset->file_path);
+        return route('digital-library.file', $this->asset);
     }
 
     public function getIsReadOnlyProperty(): bool

@@ -14,9 +14,15 @@ class ProcessSubscriptionRenewals implements ShouldQueue
 
     public function handle(SubscriptionService $subscriptionService): void
     {
+        // Process expired subscriptions and send expiration notices
         $expired = $subscriptionService->processExpiredSubscriptions();
+
+        // Process auto-renewals
         $renewed = $subscriptionService->processDueRenewals();
 
-        Log::info("Subscription processing: {$expired} expired, {$renewed} renewed");
+        // Send expiring soon notifications (7 days before expiry)
+        $expiringSoonNotified = $subscriptionService->sendExpiringSoonNotifications(7);
+
+        Log::info("Subscription processing: {$expired} expired, {$renewed} renewed, {$expiringSoonNotified} expiring-soon notified");
     }
 }

@@ -2,12 +2,19 @@
 
 namespace App\Modules\Subscriptions\Services;
 
+use App\Mail\PaymentConfirmation;
+use App\Mail\SubscriptionActivation;
 use App\Modules\Finance\Models\Transaction;
+use App\Modules\Finance\Services\BillingService;
+use App\Modules\Finance\Services\FinanceService;
+use App\Modules\Members\Models\Member;
+use App\Modules\Members\Services\LibraryCardService;
 use App\Modules\Subscriptions\Models\Plan;
 use App\Modules\Subscriptions\Models\Subscription;
 use App\Modules\Subscriptions\Models\WebhookLog;
 use Exception;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Stripe\Checkout\Session;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Stripe;
@@ -194,7 +201,7 @@ class StripeService
         $paymentIntent = $session->payment_intent;
         $amount = ($session->amount_total ?? 0) / 100;
 
-        Transaction::create([
+        $transaction = Transaction::create([
             'user_id' => $subscription->user_id,
             'subscription_id' => $subscription->id,
             'transaction_number' => Transaction::generateNumber(),
@@ -217,6 +224,57 @@ class StripeService
                 'stripe_payment_intent' => $paymentIntent,
             ]),
         ]);
+
+        // Generate invoice
+        try {
+            $financeService = app(FinanceService::class);
+            $invoice = $financeService->generateInvoice(
+                $subscription->user,
+                $amount,
+                'subscription',
+                "Stripe subscription payment: {$subscription->plan->name}"
+            );
+            $invoice->update(['transaction_id' => $transaction->id]);
+        } catch (\Throwable $e) {
+            Log::warning("Stripe: Failed to generate invoice: {$e->getMessage()}");
+        }
+
+        // Generate receipt
+        try {
+            $receipt = $financeService->generateReceipt($transaction);
+        } catch (\Throwable $e) {
+            Log::warning("Stripe: Failed to generate receipt: {$e->getMessage()}");
+        }
+
+        // Auto-issue library card
+        try {
+            $member = Member::where('user_id', $subscription->user_id)->first();
+            if ($member && !$member->libraryCard) {
+                app(LibraryCardService::class)->autoIssueCard($member);
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Stripe: Failed to auto-issue library card: {$e->getMessage()}");
+        }
+
+        // Send emails
+        try {
+            $user = $subscription->user;
+            if ($user && $user->email) {
+                Mail::to($user->email)->queue(new SubscriptionActivation($subscription));
+                Mail::to($user->email)->queue(new PaymentConfirmation($transaction, 'stripe'));
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Stripe: Failed to send notification emails: {$e->getMessage()}");
+        }
+
+        // Email receipt
+        try {
+            if ($transaction->receipt) {
+                app(BillingService::class)->emailReceipt($transaction->receipt);
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Stripe: Failed to email receipt: {$e->getMessage()}");
+        }
 
         return ['success' => true, 'message' => 'Subscription activated via checkout'];
     }

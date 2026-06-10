@@ -46,11 +46,19 @@ Schedule::call(function () {
     }
 })->dailyAt('09:00')->name('send-due-date-reminders');
 
+// Subscription renewal & expiration processing
+Schedule::job(new ProcessSubscriptionRenewals)->dailyAt('01:00')->name('process-subscription-renewals');
+
+// Send expiring-soon notifications for subscriptions expiring in 7 days
+Schedule::call(function () {
+    $service = app(\App\Modules\Subscriptions\Services\SubscriptionService::class);
+    $notified = $service->sendExpiringSoonNotifications(7);
+    \Illuminate\Support\Facades\Log::info("Subscription expiring-soon notifications sent: {$notified}");
+})->dailyAt('08:00')->name('send-subscription-expiry-notices');
+
 // Automated database backup and cleanup
 Schedule::command('backup:database')->dailyAt('03:00')->name('backup-database');
 Schedule::command('backup:clean')->dailyAt('03:30')->name('clean-old-backups');
-
-Schedule::job(new ProcessSubscriptionRenewals)->dailyAt('01:00')->name('process-subscription-renewals');
 
 Schedule::call(function () {
     app(MpesaService::class)->cleanStalePendingTransactions(60);

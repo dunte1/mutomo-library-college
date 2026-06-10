@@ -19,6 +19,7 @@ class SubscriptionSettings extends Component
             'settings.individual_yearly_fee' => ['required', 'numeric', 'min:0'],
             'settings.school_monthly_fee' => ['required', 'numeric', 'min:0'],
             'settings.school_yearly_fee' => ['required', 'numeric', 'min:0'],
+            'settings.trial_days' => ['required', 'integer', 'min:0', 'max:365'],
         ];
     }
 
@@ -29,6 +30,7 @@ class SubscriptionSettings extends Component
             'individual_yearly_fee' => (float) Setting::value('individual_yearly_fee', 5000),
             'school_monthly_fee' => (float) Setting::value('school_monthly_fee', 2000),
             'school_yearly_fee' => (float) Setting::value('school_yearly_fee', 20000),
+            'trial_days' => (int) Setting::value('trial_days', 7),
         ];
     }
 
@@ -41,12 +43,13 @@ class SubscriptionSettings extends Component
                 ['key' => $key, 'group' => 'subscriptions'],
                 [
                     'value' => (string) $value,
-                    'type' => 'float',
+                    'type' => is_int($value) ? 'integer' : 'float',
                     'description' => match ($key) {
                         'individual_monthly_fee' => 'Individual Monthly Subscription Fee',
                         'individual_yearly_fee' => 'Individual Yearly Subscription Fee',
                         'school_monthly_fee' => 'School Monthly Subscription Fee',
                         'school_yearly_fee' => 'School Yearly Subscription Fee',
+                        'trial_days' => 'Free trial duration in days (0 to disable)',
                         default => '',
                     },
                 ]
@@ -95,7 +98,7 @@ class SubscriptionSettings extends Component
             ->log('Updated subscription pricing settings');
 
         $this->saved = true;
-        session()->flash('success', 'Subscription pricing saved successfully. Plans have been updated.');
+        session()->flash('success', 'Subscription settings saved successfully. Plans have been updated.');
     }
 
     public function render()

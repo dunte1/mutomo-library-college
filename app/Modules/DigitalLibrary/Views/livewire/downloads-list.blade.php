@@ -19,7 +19,7 @@
             <p class="stat-label">Most Downloaded</p>
             <p class="stat-value text-sm truncate">{{ $stats['most_downloaded']?->title ?? 'N/A' }}</p>
             @if($stats['most_downloaded'])
-            <p class="text-xs text-surface-400">{{ $stats['most_downloaded']->download_count }} downloads</p>
+            <p class="text-xs text-surface-400">{{ $stats['most_downloaded']->times_downloaded }} downloads</p>
             @endif
         </div>
     </div>
@@ -39,9 +39,9 @@
                             <th>Title</th>
                             <th>Category</th>
                             <th>
-                                <button wire:click="$set('sort', 'download_count')" class="flex items-center gap-1 hover:text-primary-600">
+                                <button wire:click="$set('sort', 'times_downloaded')" class="flex items-center gap-1 hover:text-primary-600">
                                     Downloads
-                                    @if($sort === 'download_count')
+                                    @if($sort === 'times_downloaded')
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $direction === 'desc' ? 'M19 14l-7 7m0 0l-7-7m7 7V3' : 'M5 10l7-7m0 0l7 7m-7-7v18' }}" />
                                     </svg>
@@ -61,7 +61,7 @@
                                 </a>
                             </td>
                             <td class="text-sm text-surface-500">{{ $asset->category?->name ?? '—' }}</td>
-                            <td class="text-sm font-semibold">{{ number_format($asset->download_count) }}</td>
+                            <td class="text-sm font-semibold">{{ number_format($asset->times_downloaded) }}</td>
                             <td><span class="badge badge-secondary">{{ strtoupper($asset->file_type ?? '—') }}</span></td>
                             <td class="text-sm text-surface-500">{{ $asset->updated_at->format('M d, Y') }}</td>
                         </tr>

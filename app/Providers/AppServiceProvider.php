@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Console\Commands\GenerateVapidKeys;
 use App\View\Composers\LayoutComposer;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -16,5 +17,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         View::composer('layouts.app', LayoutComposer::class);
+
+        // Register commands
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                GenerateVapidKeys::class,
+            ]);
+        }
     }
 }

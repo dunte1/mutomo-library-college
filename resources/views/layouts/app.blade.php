@@ -10,6 +10,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="{{ config('app.name') }}">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="user-id" content="{{ auth()->id() }}">
+    @php $vapidConfigured = config('services.vapid.public_key') !== null; @endphp
+    <meta name="vapid-configured" content="{{ $vapidConfigured ? 'true' : 'false' }}">
     <link rel="apple-touch-icon" href="/icons/icon-152.png">
     <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72.png">
     <link rel="apple-touch-icon" sizes="96x96" href="/icons/icon-96.png">
@@ -114,6 +117,175 @@
                 Livewire.dispatch('openGlobalSearch');
             }
         });
+    </script>
+
+    {{-- Web Push Notifications Setup --}}
+    <script>
+        (function() {
+            'use strict';
+
+            // Only run on authenticated pages
+            if (!document.querySelector('meta[name="user-id"]')) return;
+            const userId = document.querySelector('meta[name="user-id"]').getAttribute('content');
+
+            // Check if push is supported and service worker is active
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                console.log('Push notifications not supported in this browser.');
+                return;
+            }
+
+            let pushEnabled = false;
+            let pushSubscription = null;
+
+            // Skip if VAPID keys are not configured
+            const vapidConfigured = document.querySelector('meta[name="vapid-configured"]')?.getAttribute('content') === 'true';
+            if (!vapidConfigured) {
+                console.log('Push notifications: VAPID keys not configured. Run php artisan vapid:generate');
+                return;
+            }
+
+            /**
+             * Get the VAPID public key from the server.
+             */
+            async function getVapidKey() {
+                try {
+                    const response = await fetch('/api/push/vapid-key');
+                    if (!response.ok) return null;
+                    const data = await response.json();
+                    return data.public_key || null;
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            /**
+             * URL-safe base64 to Uint8Array (required for applicationServerKey).
+             */
+            function urlBase64ToUint8Array(base64String) {
+                const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                const base64 = (base64String + padding)
+                    .replace(/\\-/g, '+')
+                    .replace(/_/g, '/');
+                const rawData = window.atob(base64);
+                return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+            }
+
+            /**
+             * Subscribe to push notifications.
+             */
+            async function subscribeToPush(registration) {
+                const vapidKey = await getVapidKey();
+                if (!vapidKey) {
+                    console.log('VAPID key not available. Run php artisan vapid:generate');
+                    return null;
+                }
+
+                try {
+                    const subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(vapidKey),
+                    });
+
+                    // Save subscription on server
+                    const response = await fetch('/api/push/subscribe', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            endpoint: subscription.endpoint,
+                            keys: subscription.toJSON().keys,
+                        }),
+                    });
+
+                    if (response.ok) {
+                        pushEnabled = true;
+                        pushSubscription = subscription;
+                        console.log('Push subscription successful');
+                        return subscription;
+                    }
+                } catch (e) {
+                    console.log('Push subscription failed:', e.message);
+                }
+
+                return null;
+            }
+
+            /**
+             * Unsubscribe from push notifications.
+             */
+            async function unsubscribeFromPush() {
+                if (!pushSubscription) return;
+
+                try {
+                    await pushSubscription.unsubscribe();
+
+                    await fetch('/api/push/unsubscribe', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                            'Accept': 'application/json',
+                        },
+                        body: JSON.stringify({ endpoint: pushSubscription.endpoint }),
+                    });
+
+                    pushEnabled = false;
+                    pushSubscription = null;
+                    console.log('Push unsubscribed');
+                } catch (e) {
+                    console.log('Failed to unsubscribe:', e.message);
+                }
+            }
+
+            /**
+             * Initialize push notifications after service worker is ready.
+             */
+            async function initPush() {
+                try {
+                    const registration = await navigator.serviceWorker.ready;
+
+                    // Check existing subscription
+                    const existingSubscription = await registration.pushManager.getSubscription();
+                    if (existingSubscription) {
+                        pushSubscription = existingSubscription;
+                        pushEnabled = true;
+
+                        // Refresh server-side subscription on page load
+                        try {
+                            await fetch('/api/push/subscribe', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                                    'Accept': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    endpoint: existingSubscription.endpoint,
+                                    keys: existingSubscription.toJSON().keys,
+                                }),
+                            });
+                        } catch (e) {}
+                    }
+
+                    // Expose subscribe/unsubscribe globally for UI toggles
+                    window.__pushSubscribe = () => subscribeToPush(registration);
+                    window.__pushUnsubscribe = () => unsubscribeFromPush();
+                    window.__pushEnabled = () => pushEnabled;
+                } catch (e) {
+                    console.log('Push init failed:', e.message);
+                }
+            }
+
+            // Initialize after DOM is ready
+            if (document.readyState === 'complete') {
+                initPush();
+            } else {
+                window.addEventListener('load', initPush);
+            }
+        })();
     </script>
 
     @livewireScripts

@@ -13,6 +13,7 @@
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^3.6.4",
         "livewire/volt": "^1.7.0",
+        "minishlink/web-push": "^10.1",
         "phpoffice/phpspreadsheet": "*",
         "pragmarx/google2fa": "^9.0",
         "shuchkin/simplexlsx": "*",
