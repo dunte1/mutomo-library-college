@@ -515,6 +515,12 @@
             class="sidebar-link-sub <?php echo e(request()->routeIs('settings.subscriptions') ? 'sidebar-link-sub-active' : ''); ?>">
             <span class="text-sm">Subscription Pricing</span>
         </a>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(\Illuminate\Support\Facades\Route::has('settings.auth-carousel')): ?>
+        <a href="<?php echo e(route('settings.auth-carousel')); ?>" wire:navigate
+            class="sidebar-link-sub <?php echo e(request()->routeIs('settings.auth-carousel') ? 'sidebar-link-sub-active' : ''); ?>">
+            <span class="text-sm">Auth Carousel</span>
+        </a>
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
         <a href="<?php echo e(route('settings.maintenance')); ?>" wire:navigate
             class="sidebar-link-sub <?php echo e(request()->routeIs('settings.maintenance') ? 'sidebar-link-sub-active' : ''); ?>">
             <span class="text-sm">Maintenance</span>

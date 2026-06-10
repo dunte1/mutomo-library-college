@@ -11,6 +11,8 @@ class GenerateVapidKeys extends Command
 
     public function handle(): int
     {
+        $this->ensureOpensslConfig();
+
         $this->info('Generating VAPID keys...');
 
         try {
@@ -39,6 +41,34 @@ class GenerateVapidKeys extends Command
         $this->warn('Keep your VAPID_PRIVATE_KEY secret! Never commit it to version control.');
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * If OPENSSL_CONF is missing, set it so child processes (OpenSSL CLI)
+     * can find openssl.cnf.  Does NOT affect the already-loaded OpenSSL
+     * extension — putenv() is too late for that — but the CLI fallback
+     * and any shell_exec'd openssl commands will see it.
+     */
+    private function ensureOpensslConfig(): void
+    {
+        if (getenv('OPENSSL_CONF') && file_exists(getenv('OPENSSL_CONF'))) {
+            return;
+        }
+
+        $candidates = [
+            PHP_BINDIR . '\\openssl.cnf',
+            PHP_BINDIR . '\\..\\ssl\\openssl.cnf',
+            'C:\\laragon\\bin\\php\\php-8.3.30-Win32-vs16-x64\\openssl.cnf',
+            'C:\\Program Files\\Git\\usr\\ssl\\openssl.cnf',
+            getenv('SystemRoot') . '\\System32\\openssl.cnf',
+        ];
+
+        foreach ($candidates as $path) {
+            if (file_exists($path)) {
+                putenv('OPENSSL_CONF=' . $path);
+                return;
+            }
+        }
     }
 
     /**
