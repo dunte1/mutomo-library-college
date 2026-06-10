@@ -201,12 +201,34 @@ window.__getCroppedBlob = function (mimeType) {
 /* ============================================================
  * PWA SERVICE WORKER REGISTRATION
  * Registers the Workbox-generated service worker for offline
- * support and PWA installability. Errors are silently ignored.
+ * support and PWA installability. On update detection, the new
+ * worker is activated immediately and the page reloads so the
+ * user always gets the latest assets.
  * ============================================================ */
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {
+    window.addEventListener('load', async () => {
+        try {
+            const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+
+            const activate = (worker) => {
+                worker.postMessage({ type: 'SKIP_WAITING' });
+                window.location.reload();
+            };
+
+            if (reg.waiting) {
+                activate(reg.waiting);
+            }
+
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        activate(newWorker);
+                    }
+                });
+            });
+        } catch {
             // Service Worker registration failed — offline not available
-        });
+        }
     });
 }
