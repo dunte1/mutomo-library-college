@@ -48,6 +48,17 @@
         <h1>You're offline</h1>
         <p>Connect to the internet to access the {{ config('app.name') }} system.</p>
         <a class="btn" href="javascript:window.location.reload()">Retry</a>
+        <br>
+        <a class="btn" href="javascript:(async()=>{if('serviceWorker'in navigator){const reg=await navigator.serviceWorker.getRegistration();if(reg)await reg.unregister()}window.location.reload()})()" style="background:#64748b;margin-top:0.5rem">Clear &amp; Retry</a>
     </div>
+    <script>
+        if (navigator.onLine) {
+            (async function() {
+                const reg = await navigator.serviceWorker.getRegistration();
+                if (reg) await reg.unregister();
+                window.location.reload();
+            })();
+        }
+    </script>
 </body>
 </html>

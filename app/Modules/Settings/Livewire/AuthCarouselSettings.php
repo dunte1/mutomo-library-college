@@ -13,10 +13,14 @@ class AuthCarouselSettings extends Component
 
     public $images = [];
     public $newImage;
+    public $newImages = [];
     public $editId = null;
     public $editTitle = '';
     public $editSubtitle = '';
     public bool $saved = false;
+    public string $uploadMode = 'single';
+    public ?int $bulkUploaded = null;
+    public array $bulkErrors = [];
 
     public function mount(): void
     {
@@ -44,6 +48,43 @@ class AuthCarouselSettings extends Component
         $this->newImage = null;
         $this->loadImages();
         $this->saved = true;
+    }
+
+    public function bulkAdd(): void
+    {
+        $this->validate([
+            'newImages' => 'required|array',
+            'newImages.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+        ]);
+
+        $maxOrder = AuthCarouselImage::max('sort_order');
+        $uploaded = 0;
+        $errors = [];
+
+        foreach ($this->newImages as $index => $image) {
+            try {
+                if ($image && $image->isValid()) {
+                    $path = $image->store('auth-carousel', 'public');
+                    AuthCarouselImage::create([
+                        'image_path' => $path,
+                        'sort_order' => $maxOrder + $uploaded + 1,
+                    ]);
+                    $uploaded++;
+                }
+            } catch (\Throwable $e) {
+                $errors[] = "Image #{" . ($index + 1) . "}: " . $e->getMessage();
+            }
+        }
+
+        $this->newImages = [];
+        $this->loadImages();
+        $this->saved = true;
+
+        if (!empty($errors)) {
+            $this->bulkErrors = $errors;
+        }
+
+        $this->bulkUploaded = $uploaded;
     }
 
     public function edit($id): void

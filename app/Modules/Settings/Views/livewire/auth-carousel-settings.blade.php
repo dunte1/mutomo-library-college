@@ -9,23 +9,77 @@
         </div>
     @endif
 
+    @if($bulkUploaded !== null)
+        <div class="mb-4 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-sm">
+            {{ $bulkUploaded }} image(s) uploaded successfully.
+        </div>
+    @endif
+
+    @if(!empty($bulkErrors))
+        <div class="mb-4 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 text-sm">
+            <p class="font-medium mb-1">Some images failed to upload:</p>
+            <ul class="list-disc list-inside">
+                @foreach($bulkErrors as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="card mb-6">
         <div class="card-body">
-            <form wire:submit="add">
-                <label class="label">Add New Image</label>
-                <p class="text-xs text-surface-400 mb-3">Recommended size: 1920x1080px or similar landscape ratio. Max 5MB.</p>
-                <div class="flex items-center gap-3">
-                    <input type="file" wire:model="newImage" accept="image/jpeg,image/png,image/jpg,image/webp"
-                           class="block w-full text-sm text-surface-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-900/20 dark:file:text-primary-300">
-                    <button type="submit" class="btn-primary" wire:loading.attr="disabled">
-                        <span wire:loading.remove>Upload</span>
-                        <span wire:loading>Uploading...</span>
-                    </button>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold text-surface-900 dark:text-white">Upload Images</h3>
+                <div class="flex gap-2">
+                    <button wire:click="$set('uploadMode', 'single')" class="btn-ghost btn-sm {{ $uploadMode === 'single' ? 'text-primary-600 font-semibold' : '' }}">Single</button>
+                    <button wire:click="$set('uploadMode', 'bulk')" class="btn-ghost btn-sm {{ $uploadMode === 'bulk' ? 'text-primary-600 font-semibold' : '' }}">Bulk</button>
                 </div>
-                @error('newImage') <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
-                <div wire:loading wire:target="newImage" class="mt-2 text-sm text-primary-600">Uploading image...</div>
-            </form>
+            </div>
+
+            @if($uploadMode === 'single')
+                <form wire:submit="add">
+                    <label class="label">Add New Image</label>
+                    <p class="text-xs text-surface-400 mb-3">Recommended size: 1920x1080px or similar landscape ratio. Max 5MB.</p>
+                    <div class="flex items-center gap-3">
+                        <input type="file" wire:model="newImage" accept="image/jpeg,image/png,image/jpg,image/webp"
+                               class="block w-full text-sm text-surface-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-900/20 dark:file:text-primary-300">
+                        <button type="submit" class="btn-primary" wire:loading.attr="disabled">
+                            <span wire:loading.remove>Upload</span>
+                            <span wire:loading>Uploading...</span>
+                        </button>
+                    </div>
+                    @error('newImage') <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
+                    <div wire:loading wire:target="newImage" class="mt-2 text-sm text-primary-600">Uploading image...</div>
+                </form>
+            @else
+                <form wire:submit="bulkAdd">
+                    <label class="label">Upload Multiple Images</label>
+                    <p class="text-xs text-surface-400 mb-3">Select multiple images to upload at once. Recommended: 1920x1080px or similar landscape ratio. Max 5MB each.</p>
+                    <div class="flex items-center gap-3">
+                        <input type="file" wire:model="newImages" multiple accept="image/jpeg,image/png,image/jpg,image/webp"
+                               class="block w-full text-sm text-surface-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-900/20 dark:file:text-primary-300">
+                        <button type="submit" class="btn-primary" wire:loading.attr="disabled">
+                            <span wire:loading.remove>Upload All</span>
+                            <span wire:loading>Uploading...</span>
+                        </button>
+                    </div>
+                    @error('newImages') <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
+                    @error('newImages.*') <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
+                    <div wire:loading wire:target="newImages" class="mt-2 text-sm text-primary-600">
+                        <svg class="animate-spin w-4 h-4 mr-2 inline" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                        </svg>
+                        Processing images...
+                    </div>
+                </form>
+            @endif
         </div>
+    </div>
+
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="font-semibold text-surface-900 dark:text-white">Current Images</h3>
+        <span class="text-xs text-surface-500">{{ count($images) }} image(s)</span>
     </div>
 
     <div class="space-y-4">

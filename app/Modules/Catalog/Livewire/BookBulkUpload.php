@@ -29,6 +29,7 @@ class BookBulkUpload extends Component
     public bool $importing = false;
     public int $imported = 0;
     public int $failed = 0;
+    public array $failedRows = [];
 
     protected function rules(): array
     {
@@ -78,7 +79,7 @@ class BookBulkUpload extends Component
         $required = ['title'];
         $missing = array_diff($required, $lowerHeader);
         if (!empty($missing)) {
-            $this->addError('file', 'Missing required columns: ' . implode(', ', $missing) . '. Required: title.');
+            $this->addError('file', 'Missing required column: "title". Detected columns in your file: ' . implode(', ', $header) . '. Expected columns: title, isbn, authors, category, publisher, language, pages, publication_year, edition, copies_count, shelf_location, price.');
             fclose($handle);
             return;
         }
@@ -119,7 +120,11 @@ class BookBulkUpload extends Component
         $required = ['title'];
         $missing = array_diff($required, $lowerHeader);
         if (!empty($missing)) {
-            $this->addError('file', 'Missing required columns: ' . implode(', ', $missing) . '. Required: title.');
+            foreach ($header as &$h) {
+                $h = '"' . $h . '"';
+            }
+            unset($h);
+            $this->addError('file', 'Missing required column: "title". Detected columns in your file: ' . implode(', ', $header) . '. Expected columns: title, isbn, authors, category, publisher, language, pages, publication_year, edition, copies_count, shelf_location, price.');
             return;
         }
 
@@ -138,16 +143,20 @@ class BookBulkUpload extends Component
 
     protected function processRow(array $data, int $rowNumber): void
     {
-        if (empty($data['title'])) {
+        $title = trim($data['title'] ?? '');
+        if (empty($title)) {
             return;
         }
 
         $rowErrors = [];
 
+        // Normalize ISBN: strip non-digit chars and convert Excel scientific notation
+        $isbn = $this->normalizeIsbn($data['isbn'] ?? '');
+
         $this->preview[] = [
             'row' => $rowNumber,
-            'title' => $data['title'] ?? '',
-            'isbn' => $data['isbn'] ?? '',
+            'title' => $title,
+            'isbn' => $isbn,
             'authors' => $data['authors'] ?? '',
             'category' => $data['category'] ?? '',
             'publisher' => $data['publisher'] ?? '',
@@ -155,11 +164,35 @@ class BookBulkUpload extends Component
             'pages' => $data['pages'] ?? '',
             'publication_year' => $data['publication_year'] ?? '',
             'edition' => $data['edition'] ?? '',
-            'copies_count' => $data['copies_count'] ?? '1',
+            'copies_count' => ($data['copies_count'] ?? '') !== '' ? ($data['copies_count'] ?? '1') : '1',
             'shelf_location' => $data['shelf_location'] ?? '',
             'price' => $data['price'] ?? '',
             '_errors' => $rowErrors,
         ];
+    }
+
+    /**
+     * Normalize an ISBN value: strip hyphens/spaces, handle Excel scientific notation.
+     */
+    private function normalizeIsbn(string $isbn): string
+    {
+        $isbn = trim($isbn);
+        if (empty($isbn)) {
+            return '';
+        }
+
+        // Handle Excel scientific notation: 9.78014E+12 → 9780136097044
+        if (preg_match('/^[\d\.]+E[\+\-]?\d+$/i', $isbn)) {
+            $num = (float) $isbn;
+            if ($num == floor($num) && is_finite($num)) {
+                $isbn = number_format($num, 0, '.', '');
+            }
+        }
+
+        // Strip hyphens, spaces, dots for clean storage
+        $isbn = preg_replace('/[\s\-\.]+/', '', $isbn);
+
+        return $isbn;
     }
 
     public function import(): void
@@ -167,6 +200,7 @@ class BookBulkUpload extends Component
         $this->importing = true;
         $this->imported = 0;
         $this->failed = 0;
+        $this->failedRows = [];
 
         $barcodeService = app(BarcodeService::class);
 
@@ -177,9 +211,13 @@ class BookBulkUpload extends Component
             }
 
             try {
+                $existingBook = null;
+                if (!empty($row['isbn'])) {
+                    $existingBook = Book::where('isbn', $row['isbn'])->first();
+                }
+
                 $bookData = [
                     'title' => $row['title'],
-                    'slug' => Str::slug($row['title']),
                     'isbn' => $row['isbn'] ?: null,
                     'language' => $row['language'] ?: 'en',
                     'pages' => $row['pages'] ? (int) $row['pages'] : null,
@@ -205,7 +243,19 @@ class BookBulkUpload extends Component
                     $bookData['price'] = (float) $row['price'];
                 }
 
-                $book = Book::create($bookData);
+                if ($existingBook) {
+                    $book = $existingBook;
+                    $book->update($bookData);
+                } else {
+                    $slug = Str::slug($row['title']);
+                    $originalSlug = $slug;
+                    $counter = 1;
+                    while (Book::where('slug', $slug)->exists()) {
+                        $slug = $originalSlug . '-' . $counter++;
+                    }
+                    $bookData['slug'] = $slug;
+                    $book = Book::create($bookData);
+                }
 
                 if (!empty($row['authors'])) {
                     $authorIds = [];
@@ -223,19 +273,21 @@ class BookBulkUpload extends Component
                     }
                 }
 
-                $copiesCount = (int) ($row['copies_count'] ?? 1);
-                for ($i = 0; $i < $copiesCount; $i++) {
-                    $book->copies()->create([
-                        'barcode' => $barcodeService->generate(),
-                        'shelf_location' => $row['shelf_location'] ?: null,
-                        'status' => 'available',
-                        'condition' => 'new',
-                        'acquired_at' => now(),
-                        'price' => $bookData['price'] ?? null,
-                    ]);
+                if (!$existingBook) {
+                    $copiesCount = (int) ($row['copies_count'] !== '' ? $row['copies_count'] : 1);
+                    for ($i = 0; $i < $copiesCount; $i++) {
+                        $book->copies()->create([
+                            'barcode' => $barcodeService->generate(),
+                            'shelf_location' => $row['shelf_location'] ?: null,
+                            'status' => 'available',
+                            'condition' => 'new',
+                            'acquired_at' => now(),
+                            'price' => $bookData['price'] ?? null,
+                        ]);
+                    }
                 }
 
-                AuditHelper::log('bulk_imported', 'catalog', [
+                AuditHelper::log($existingBook ? 'bulk_updated' : 'bulk_imported', 'catalog', [
                     'book_id' => $book->id,
                     'title' => $book->title,
                 ]);
@@ -244,7 +296,8 @@ class BookBulkUpload extends Component
             } catch (\Throwable $e) {
                 $this->failed++;
                 $row['_errors'][] = $e->getMessage();
-                \Illuminate\Support\Facades\Log::warning('Bulk import row failed', ['error' => $e->getMessage(), 'row' => $row['_title'] ?? 'unknown']);
+                $this->failedRows[] = ['title' => $row['title'], 'errors' => $row['_errors']];
+                \Illuminate\Support\Facades\Log::warning('Bulk import row failed', ['error' => $e->getMessage(), 'row' => $row['title'] ?? 'unknown']);
             }
         }
 
@@ -279,7 +332,7 @@ class BookBulkUpload extends Component
 
 
         $exampleRow = [
-            'The Great Gatsby', '9780743273565', '9780743273565', 'F. Scott Fitzgerald',
+            'The Great Gatsby', '9780743273565', 'F. Scott Fitzgerald',
             'Fiction', 'Scribner', 'en', '180', '1925', '1st', '3', 'A1-Shelf', '12.99',
         ];
         $sheet->fromArray([$exampleRow], null, 'A2');
@@ -303,7 +356,7 @@ class BookBulkUpload extends Component
 
     public function resetUpload(): void
     {
-        $this->reset(['file', 'preview', 'uploadErrors', 'step', 'imported', 'failed', 'importing']);
+        $this->reset(['file', 'preview', 'uploadErrors', 'step', 'imported', 'failed', 'failedRows', 'importing']);
     }
 
     public function render()

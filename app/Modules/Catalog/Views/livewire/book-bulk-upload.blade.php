@@ -33,6 +33,23 @@
                     </div>
                     <h3 class="text-lg font-semibold text-surface-900 dark:text-white mb-2">Import Completed with Errors</h3>
                     <p class="text-sm text-surface-500 dark:text-surface-400">{{ $imported }} book(s) imported, {{ $failed }} failed.</p>
+                    @if(!empty($failedRows))
+                        <div class="mt-4 text-left max-w-lg mx-auto">
+                            <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 space-y-3">
+                                <p class="text-sm font-medium text-red-800 dark:text-red-200">Failed rows:</p>
+                                @foreach($failedRows as $fail)
+                                    <div class="text-xs text-red-700 dark:text-red-300">
+                                        <span class="font-semibold">{{ $fail['title'] }}</span>:
+                                        <ul class="list-disc list-inside mt-1">
+                                            @foreach($fail['errors'] as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 @endif
                 <div class="mt-6 flex items-center justify-center gap-3">
                     <button wire:click="resetUpload" class="btn-primary">Upload Another File</button>

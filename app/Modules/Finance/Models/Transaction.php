@@ -63,7 +63,7 @@ class Transaction extends Model
 
     public function scopeCompleted($query)
     {
-        return $query->where('status', 'completed');
+        return $query->where('transactions.status', 'completed');
     }
 
     public function scopeOfType($query, string $type)

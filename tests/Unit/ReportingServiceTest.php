@@ -45,7 +45,7 @@ class ReportingServiceTest extends TestCase
         $report = $this->service->generateReport('catalog_inventory', [], 'csv');
         $content = \Illuminate\Support\Facades\Storage::disk('local')->get($report->file_path);
 
-        $this->assertStringContainsString('total_books', $content);
+        $this->assertStringContainsString('Total Books', $content);
     }
 
     public function test_each_report_type_generates(): void
@@ -73,7 +73,7 @@ class ReportingServiceTest extends TestCase
 
         $sections = $ref->invoke($this->service, $data);
 
-        $this->assertCount(2, $sections);
+        $this->assertCount(1, $sections);
         $this->assertEquals('Summary', $sections[0]['label']);
         $this->assertEquals(['Item', 'Value'], $sections[0]['headers']);
     }

@@ -743,7 +743,7 @@ new class extends Component {
         @endrole
 
         {{-- ==================== PATRON NAVIGATION ==================== --}}
-        @role('student|lecturer')
+        @role('student|lecturer|guest')
             @can('view-dashboard')
             <div>
                 <p class="sidebar-group-label">Overview</p>

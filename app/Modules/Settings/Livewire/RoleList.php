@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 class RoleList extends Component
 {
@@ -29,6 +30,7 @@ class RoleList extends Component
             return;
         }
         $role->delete();
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
         session()->flash('success', 'Role deleted successfully.');
     }
 

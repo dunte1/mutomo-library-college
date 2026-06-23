@@ -46,7 +46,7 @@ class ReportViewer extends Component
 
         return app(DownloadService::class)->download(
             $report,
-            storage_path('app/' . $report->file_path),
+            Storage::disk('local')->path($report->file_path),
             $report->name . $extension,
             $report->name,
             'report',

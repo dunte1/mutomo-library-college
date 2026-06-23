@@ -13,31 +13,13 @@ export default defineConfig({
             registerSW: false,
             injectRegister: false,
             manifest: false,
+            strategies: 'injectManifest',
+            srcDir: 'resources/js',
+            filename: 'sw.js',
             workbox: {
                 globDirectory: 'public',
                 globPatterns: ['build/assets/**/*.{js,css,woff,woff2}', 'offline.html'],
                 globIgnores: [],
-                navigateFallback: '/offline.html',
-                navigateFallbackDenylist: [/^\/api\//, /^\/storage\//, /^\/build\//, /^\/icons\//],
-                runtimeCaching: [
-                    {
-                        urlPattern: /^\/api\//,
-                        handler: 'NetworkFirst',
-                        options: {
-                            cacheName: 'api-cache',
-                            expiration: { maxEntries: 100, maxAgeSeconds: 3600 },
-                            networkTimeoutSeconds: 10,
-                        },
-                    },
-                    {
-                        urlPattern: /\.(?:png|jpg|jpeg|gif|svg|ico)$/,
-                        handler: 'CacheFirst',
-                        options: {
-                            cacheName: 'image-cache',
-                            expiration: { maxEntries: 50, maxAgeSeconds: 604800 },
-                        },
-                    },
-                ],
             },
         }),
     ],

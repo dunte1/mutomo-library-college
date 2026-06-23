@@ -330,7 +330,7 @@ class SubscriptionService
     public function getRevenueStats(): array
     {
         $subscriptionTransactions = Transaction::completed()
-            ->whereIn('type', ['subscription_payment', 'subscription_renewal']);
+            ->whereIn('transactions.type', ['subscription_payment', 'subscription_renewal']);
 
         $currentMonth = $subscriptionTransactions->clone()
             ->whereMonth('paid_at', now()->month)

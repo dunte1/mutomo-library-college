@@ -248,6 +248,14 @@ class RolesAndPermissionsSeeder extends Seeder
                 'view-queue-monitor', 'manage-cache', 'view-storage', 'manage-storage',
                 'view-reports',
             ])->get(),
+            'staff' => Permission::whereIn('name', [
+                'view-dashboard',
+                'view-books',
+                'view-digital-assets', 'download-digital-assets',
+                'view-recommendations',
+                'view-library-cards',
+                'view-assignments',
+            ])->get(),
             'guest' => Permission::whereIn('name', [
                 'view-books',
             ])->get(),

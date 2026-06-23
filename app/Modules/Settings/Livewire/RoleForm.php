@@ -5,6 +5,7 @@ namespace App\Modules\Settings\Livewire;
 use Livewire\Component;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 class RoleForm extends Component
 {
@@ -72,11 +73,13 @@ class RoleForm extends Component
             $role->update(['name' => $this->name, 'guard_name' => $this->guard_name]);
             $permissionNames = Permission::whereIn('id', $this->selectedPermissions)->pluck('name')->toArray();
             $role->syncPermissions($permissionNames);
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
             session()->flash('success', 'Role updated successfully.');
         } else {
             $role = Role::create(['name' => $this->name, 'guard_name' => $this->guard_name]);
             $permissionNames = Permission::whereIn('id', $this->selectedPermissions)->pluck('name')->toArray();
             $role->syncPermissions($permissionNames);
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
             session()->flash('success', 'Role created successfully.');
         }
 

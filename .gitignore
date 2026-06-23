@@ -31,3 +31,7 @@ Homestead.yaml
 Thumbs.db
 
 /storage/framework/views/*
+/deployment-package/
+/deployment-report/
+*.zip
+check_books.php

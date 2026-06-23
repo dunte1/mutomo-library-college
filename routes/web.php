@@ -159,6 +159,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/two-factor/verify', \App\Modules\Auth\Livewire\TwoFactorVerify::class)->name('two-factor.verify');
 });
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/pending-approval', fn () => view('pending-approval'))->name('pending.approval');
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', fn () => view('dashboard'))->name('dashboard')->middleware('permission:view-dashboard');
     Route::get('/profile', fn () => view('profile'))->name('profile');

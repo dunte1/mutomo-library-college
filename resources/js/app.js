@@ -1,6 +1,28 @@
 import Cropper from 'cropperjs';
 
 /* ============================================================
+ * THEME TOGGLE (DARK / LIGHT MODE)
+ * Listens for the 'toggle-dark-mode' event dispatched by the
+ * header / mobile-drawer toggle buttons. Toggles the 'dark'
+ * class on <html> and persists the preference in localStorage.
+ * On load, the inline <head> script applies the saved theme
+ * synchronously to prevent flash-of-wrong-theme.
+ * ============================================================ */
+document.addEventListener('toggle-dark-mode', function () {
+    const html = document.documentElement;
+    const isDark = html.classList.contains('dark');
+    if (isDark) {
+        html.classList.remove('dark');
+        html.classList.add('light');
+        localStorage.setItem('theme', 'light');
+    } else {
+        html.classList.remove('light');
+        html.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+    }
+});
+
+/* ============================================================
  * MOBILE TABLE → CARD: auto data-label injection
  * Reads <th> text from each .table-mobile-cards table and
  * stamps data-label onto the corresponding <td> cells so the

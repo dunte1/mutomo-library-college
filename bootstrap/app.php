@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,6 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         then: function () {
             Route::middleware('web')->group(base_path('routes/auth.php'));
             Route::get('/health', \App\Http\Controllers\HealthCheckController::class)->middleware('auth');
+
+            \Livewire\Livewire::setUpdateRoute(function ($handle) {
+                return Route::post('/livewire/update', $handle)->middleware('web');
+            });
         },
     )
     ->withProviders([
@@ -37,17 +40,14 @@ return Application::configure(basePath: dirname(__DIR__))
             '2fa' => \App\Http\Middleware\TwoFactorMiddleware::class,
             'subscription' => \App\Http\Middleware\CheckSubscriptionStatus::class,
         ]);
-
         $middleware->web(append: [
             \App\Http\Middleware\LogUserActivity::class,
             \App\Http\Middleware\SecurityHeadersMiddleware::class,
         ]);
-
         $middleware->api(append: [
             'throttle:api',
             \App\Http\Middleware\SecurityHeadersMiddleware::class,
         ]);
-
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Ensure ModelNotFoundException renders the custom 404 page

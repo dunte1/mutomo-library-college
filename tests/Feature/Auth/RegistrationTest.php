@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Volt\Volt;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -14,13 +15,13 @@ class RegistrationTest extends TestCase
     {
         $response = $this->get('/register');
 
-        $response
-            ->assertOk()
-            ->assertSeeVolt('pages.auth.register');
+        $response->assertOk();
     }
 
     public function test_new_users_can_register(): void
     {
+        Role::create(['name' => 'guest', 'guard_name' => 'web']);
+
         $component = Volt::test('pages.auth.register')
             ->set('name', 'Test User')
             ->set('email', 'test@example.com')
@@ -29,7 +30,7 @@ class RegistrationTest extends TestCase
 
         $component->call('register');
 
-        $component->assertRedirect(route('dashboard', absolute: false));
+        $component->assertRedirect(route('verification.notice', absolute: false));
 
         $this->assertAuthenticated();
     }

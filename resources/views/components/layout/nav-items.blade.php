@@ -622,7 +622,7 @@
 @endrole
 
 {{-- PATRON NAVIGATION --}}
-@role('student|lecturer')
+@role('student|lecturer|guest')
     @can('view-dashboard')
     @if(!($hideLabels ?? false))
     <div>

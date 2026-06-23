@@ -25,7 +25,7 @@ class SecurityHeadersMiddleware
 
     public function __construct()
     {
-        if (app()->environment('local')) {
+        if (! app()->environment('production')) {
             $httpOrigins = implode(' ', self::VITE_DEV_ORIGINS);
             $wsOrigins = collect(self::VITE_DEV_ORIGINS)
                 ->map(fn ($o) => preg_replace('/^http/', 'ws', $o))

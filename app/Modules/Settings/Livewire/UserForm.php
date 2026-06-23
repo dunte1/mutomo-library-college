@@ -105,9 +105,11 @@ class UserForm extends Component
             $user = User::findOrFail($this->userId);
             $user->update($data);
             $user->syncRoles($this->selectedRoles);
+            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
             session()->flash('success', 'User updated successfully.');
         } else {
             $data['password'] = Hash::make($this->password);
+            $data['email_verified_at'] = now();
             $user = User::create($data);
             $user->assignRole($this->selectedRoles);
             session()->flash('success', 'User created successfully.');
