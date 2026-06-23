@@ -19,7 +19,7 @@ class CleanOldBackups extends Command
 
         $backupDir = storage_path('app/backups');
 
-        if (!is_dir($backupDir)) {
+        if (! is_dir($backupDir)) {
             $this->info('No backups directory found.');
 
             return Command::SUCCESS;
@@ -28,7 +28,7 @@ class CleanOldBackups extends Command
         $files = collect(scandir($backupDir))
             ->filter(fn ($f) => str_ends_with((string) $f, '.sql'))
             ->sort()
-            ->map(fn ($f) => $backupDir . DIRECTORY_SEPARATOR . $f)
+            ->map(fn ($f) => $backupDir.DIRECTORY_SEPARATOR.$f)
             ->values();
 
         $cutoff = now()->subDays($retentionDays);
@@ -42,7 +42,7 @@ class CleanOldBackups extends Command
                 unlink($file);
                 $deleted++;
 
-                $this->line('Deleted old backup: ' . basename($file));
+                $this->line('Deleted old backup: '.basename($file));
             } else {
                 $kept++;
             }

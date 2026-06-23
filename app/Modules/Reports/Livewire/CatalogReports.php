@@ -2,17 +2,19 @@
 
 namespace App\Modules\Reports\Livewire;
 
+use App\Modules\Catalog\Models\Author;
 use App\Modules\Catalog\Models\Book;
 use App\Modules\Catalog\Models\BookCopy;
 use App\Modules\Catalog\Models\Category;
-use App\Modules\Catalog\Models\Author;
 use App\Modules\Catalog\Models\Publisher;
 use Livewire\Component;
 
 class CatalogReports extends Component
 {
     public array $stats = [];
+
     public array $categoryDistribution = [];
+
     public string $period = 'all';
 
     public function mount(): void

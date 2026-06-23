@@ -7,7 +7,6 @@ use App\Models\Program;
 use App\Models\User;
 use App\Modules\Circulation\Models\BorrowRecord;
 use App\Modules\Circulation\Models\Fine;
-use App\Modules\Members\Models\LibraryCard;
 use App\Modules\Shared\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,17 +16,24 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Member extends Model
 {
-    use SoftDeletes, Auditable;
+    use Auditable, SoftDeletes;
 
     const STATUS_ACTIVE = 'active';
+
     const STATUS_SUSPENDED = 'suspended';
+
     const STATUS_EXPIRED = 'expired';
+
     const STATUS_INACTIVE = 'inactive';
+
     const STATUS_CLEARED = 'cleared';
 
     const MEMBERSHIP_STUDENT = 'student';
+
     const MEMBERSHIP_TEACHER = 'teacher';
+
     const MEMBERSHIP_STAFF = 'staff';
+
     const MEMBERSHIP_EXTERNAL = 'external';
 
     protected $fillable = [
@@ -142,12 +148,12 @@ class Member extends Model
     {
         return $query->where(function ($q) use ($term) {
             $q->where('member_id', 'like', "%{$term}%")
-              ->orWhere('first_name', 'like', "%{$term}%")
-              ->orWhere('last_name', 'like', "%{$term}%")
-              ->orWhere('email', 'like', "%{$term}%")
-              ->orWhere('phone', 'like', "%{$term}%")
-              ->orWhere('id_number', 'like', "%{$term}%")
-              ->orWhere('admission_number', 'like', "%{$term}%");
+                ->orWhere('first_name', 'like', "%{$term}%")
+                ->orWhere('last_name', 'like', "%{$term}%")
+                ->orWhere('email', 'like', "%{$term}%")
+                ->orWhere('phone', 'like', "%{$term}%")
+                ->orWhere('id_number', 'like', "%{$term}%")
+                ->orWhere('admission_number', 'like', "%{$term}%");
         });
     }
 
@@ -158,7 +164,7 @@ class Member extends Model
         static::creating(function ($member) {
             if (empty($member->member_id)) {
                 $last = static::withTrashed()->lockForUpdate()->max('id') ?? 0;
-                $member->member_id = 'MEM-' . str_pad($last + 1, 5, '0', STR_PAD_LEFT);
+                $member->member_id = 'MEM-'.str_pad($last + 1, 5, '0', STR_PAD_LEFT);
             }
         });
     }

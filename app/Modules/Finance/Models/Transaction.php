@@ -58,7 +58,7 @@ class Transaction extends Model
 
     public static function generateNumber(): string
     {
-        return 'TXN-' . now()->format('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
+        return 'TXN-'.now()->format('Ymd').'-'.strtoupper(substr(uniqid(), -6));
     }
 
     public function scopeCompleted($query)

@@ -22,7 +22,7 @@ class SendOverdueNotificationJob implements ShouldQueue
     {
         $user = $this->borrowRecord->user;
 
-        if (!$user) {
+        if (! $user) {
             return;
         }
 
@@ -54,11 +54,11 @@ class SendOverdueNotificationJob implements ShouldQueue
             $whatsappEnabled = Setting::where('key', 'whatsapp_notifications')->value('value');
             if ($whatsappEnabled && $whatsappEnabled !== 'false' && $user->phone) {
                 $message = "🚨 *Library Overdue Notice*\n\n"
-                    . "Hi {$user->name},\n\n"
-                    . "The book \"{$bookTitle}\" (Barcode: {$this->borrowRecord->bookCopy?->barcode}) is **{$daysOverdue} day(s) overdue**.\n\n"
-                    . "Please return it immediately to avoid accumulating fines (KES 50/day).\n\n"
-                    . "Thank you,\n"
-                    . config('app.name');
+                    ."Hi {$user->name},\n\n"
+                    ."The book \"{$bookTitle}\" (Barcode: {$this->borrowRecord->bookCopy?->barcode}) is **{$daysOverdue} day(s) overdue**.\n\n"
+                    ."Please return it immediately to avoid accumulating fines (KES 50/day).\n\n"
+                    ."Thank you,\n"
+                    .config('app.name');
                 $whatsapp->send($user->phone, $message);
             }
         } catch (\Throwable $e) {

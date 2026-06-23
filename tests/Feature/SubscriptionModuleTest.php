@@ -6,7 +6,7 @@ use App\Models\User;
 use App\Modules\Settings\Models\Setting;
 use App\Modules\Subscriptions\Models\Plan;
 use App\Modules\Subscriptions\Models\Subscription;
-use App\Modules\Finance\Models\Transaction;
+use App\Modules\Subscriptions\Services\SubscriptionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,10 +15,15 @@ class SubscriptionModuleTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $student;
+
     protected Plan $individualMonthly;
+
     protected Plan $individualYearly;
+
     protected Plan $schoolMonthly;
+
     protected Plan $schoolYearly;
 
     protected function setUp(): void
@@ -128,7 +133,7 @@ class SubscriptionModuleTest extends TestCase
 
     public function test_subscription_service_creates_subscription(): void
     {
-        $service = app(\App\Modules\Subscriptions\Services\SubscriptionService::class);
+        $service = app(SubscriptionService::class);
         $subscription = $service->createSubscription($this->student, $this->individualMonthly);
 
         $this->assertDatabaseHas('subscriptions', [
@@ -259,7 +264,7 @@ class SubscriptionModuleTest extends TestCase
             'end_date' => now()->addMonth(),
         ]);
 
-        $service = app(\App\Modules\Subscriptions\Services\SubscriptionService::class);
+        $service = app(SubscriptionService::class);
         $count = $service->processExpiredSubscriptions();
 
         $this->assertEquals(1, $count);
@@ -275,7 +280,7 @@ class SubscriptionModuleTest extends TestCase
             'status' => 'pending',
         ]);
 
-        $service = app(\App\Modules\Subscriptions\Services\SubscriptionService::class);
+        $service = app(SubscriptionService::class);
         $transaction = $service->recordPayment($subscription, 'mpesa', 'MPE12345', 500);
 
         $this->assertDatabaseHas('transactions', ['id' => $transaction->id]);
@@ -291,7 +296,7 @@ class SubscriptionModuleTest extends TestCase
         Setting::updateOrCreate(['key' => 'school_monthly_fee'], ['value' => 2500, 'group' => 'subscriptions', 'type' => 'integer']);
         Setting::updateOrCreate(['key' => 'school_yearly_fee'], ['value' => 25000, 'group' => 'subscriptions', 'type' => 'integer']);
 
-        $service = app(\App\Modules\Subscriptions\Services\SubscriptionService::class);
+        $service = app(SubscriptionService::class);
         $service->syncPlansFromSettings();
 
         $this->assertDatabaseHas('plans', ['slug' => 'individual-monthly', 'price' => 600, 'is_active' => true]);
@@ -304,7 +309,7 @@ class SubscriptionModuleTest extends TestCase
     {
         Setting::updateOrCreate(['key' => 'individual_monthly_fee'], ['value' => 0, 'group' => 'subscriptions', 'type' => 'integer']);
 
-        $service = app(\App\Modules\Subscriptions\Services\SubscriptionService::class);
+        $service = app(SubscriptionService::class);
         $service->syncPlansFromSettings();
 
         $this->assertDatabaseHas('plans', ['slug' => 'individual-monthly', 'is_active' => false]);

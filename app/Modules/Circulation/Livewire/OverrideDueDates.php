@@ -11,8 +11,11 @@ class OverrideDueDates extends Component
     use WithPagination;
 
     public string $search = '';
+
     public ?int $selectedBorrowId = null;
+
     public string $newDueDate = '';
+
     public string $reason = '';
 
     protected $rules = [
@@ -45,7 +48,7 @@ class OverrideDueDates extends Component
 
         $record->update([
             'due_at' => $this->newDueDate,
-            'notes' => trim(($record->notes ?? '') . "\n[Override] " . $this->reason . ' (by ' . auth()->user()->name . ' on ' . now()->format('Y-m-d H:i') . ')'),
+            'notes' => trim(($record->notes ?? '')."\n[Override] ".$this->reason.' (by '.auth()->user()->name.' on '.now()->format('Y-m-d H:i').')'),
         ]);
 
         $this->dispatch('notify', message: 'Due date overridden successfully.', type: 'success');

@@ -3,13 +3,13 @@
 namespace App\Modules\Settings\Livewire;
 
 use App\Modules\Settings\Models\Setting;
-use App\Modules\Settings\Services\SettingsService;
 use App\Modules\Subscriptions\Models\Plan;
 use Livewire\Component;
 
 class SubscriptionSettings extends Component
 {
     public array $settings = [];
+
     public bool $saved = false;
 
     protected function rules(): array

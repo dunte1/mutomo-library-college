@@ -3,9 +3,9 @@
 namespace App\Modules\Reports\Livewire;
 
 use App\Modules\DigitalLibrary\Models\DigitalAsset;
+use App\Modules\DigitalLibrary\Models\DigitalAssetCategory;
 use App\Modules\DigitalLibrary\Models\ReadingHistory;
 use App\Modules\DigitalLibrary\Models\Recommendation;
-use App\Modules\DigitalLibrary\Models\DigitalAssetCategory;
 use Livewire\Component;
 
 class DigitalLibraryReports extends Component

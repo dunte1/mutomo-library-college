@@ -83,7 +83,7 @@ class DummyDataSeeder extends Seeder
                 ['email' => $userData['email']],
                 array_merge($userData, [
                     'password' => bcrypt('password'),
-                    'phone' => '+' . fake()->numerify('2547########'),
+                    'phone' => '+'.fake()->numerify('2547########'),
                     'is_active' => true,
                     'email_verified_at' => now(),
                 ])

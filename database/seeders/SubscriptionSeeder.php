@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Modules\Subscriptions\Models\Plan;
 use App\Modules\Settings\Models\Setting;
+use App\Modules\Subscriptions\Models\Plan;
 use Illuminate\Database\Seeder;
 
 class SubscriptionSeeder extends Seeder

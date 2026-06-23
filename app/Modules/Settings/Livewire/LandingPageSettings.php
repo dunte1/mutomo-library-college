@@ -35,6 +35,7 @@ class LandingPageSettings extends Component
 
     // SEO
     public array $seo = [];
+
     public $seo_og_image;
 
     // Contact

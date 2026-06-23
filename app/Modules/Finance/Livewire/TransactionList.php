@@ -12,10 +12,15 @@ class TransactionList extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $type = '';
+
     public string $paymentMethod = '';
+
     public string $status = '';
+
     public string $sort = 'created_at';
+
     public string $direction = 'desc';
 
     protected $queryString = ['search', 'type', 'paymentMethod', 'status', 'sort', 'direction'];
@@ -36,7 +41,7 @@ class TransactionList extends Component
 
         $headers = [
             'Content-Type' => 'text/csv; charset=utf-8',
-            'Content-Disposition' => 'attachment; filename="transactions-' . now()->format('Y-m-d') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="transactions-'.now()->format('Y-m-d').'.csv"',
         ];
 
         $callback = function () use ($transactions) {

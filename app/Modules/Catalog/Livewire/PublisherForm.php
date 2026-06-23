@@ -9,12 +9,19 @@ use Livewire\Component;
 class PublisherForm extends Component
 {
     public ?int $publisherId = null;
+
     public string $name = '';
+
     public ?string $address = null;
+
     public ?string $phone = null;
+
     public ?string $email = null;
+
     public ?string $website = null;
+
     public ?string $description = null;
+
     public bool $is_active = true;
 
     public bool $isEditing = false;

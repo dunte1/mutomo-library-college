@@ -16,11 +16,15 @@ class CirculationSeeder extends Seeder
         $librarian = User::where('email', 'librarian@ollmchs.ac.ke')->first();
         $hod = User::where('email', 'hod@ollmchs.ac.ke')->first();
 
-        if (!$student) return;
+        if (! $student) {
+            return;
+        }
 
         $availableCopies = BookCopy::where('status', 'available')->take(5)->get();
 
-        if ($availableCopies->count() < 2) return;
+        if ($availableCopies->count() < 2) {
+            return;
+        }
 
         // Active borrow for student
         $copy1 = $availableCopies->get(0);

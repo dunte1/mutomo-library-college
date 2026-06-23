@@ -2,7 +2,6 @@
 
 namespace App\Modules\Subscriptions\Models;
 
-use App\Models\User;
 use Database\Factories\PlanFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -34,7 +33,7 @@ class Plan extends Model
     {
         static::creating(function (Plan $plan) {
             if (empty($plan->slug)) {
-                $plan->slug = Str::slug($plan->name) . '-' . Str::random(4);
+                $plan->slug = Str::slug($plan->name).'-'.Str::random(4);
             }
         });
     }

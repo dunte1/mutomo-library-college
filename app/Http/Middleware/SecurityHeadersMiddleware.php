@@ -61,7 +61,7 @@ class SecurityHeadersMiddleware
     {
         foreach ($this->cspPolicies as $i => $policy) {
             if (str_starts_with($policy, $directive)) {
-                $this->cspPolicies[$i] = $policy . ' ' . $value;
+                $this->cspPolicies[$i] = $policy.' '.$value;
 
                 return;
             }

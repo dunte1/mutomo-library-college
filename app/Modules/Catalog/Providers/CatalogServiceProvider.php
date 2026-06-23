@@ -2,18 +2,18 @@
 
 namespace App\Modules\Catalog\Providers;
 
+use App\Modules\Catalog\Livewire\AuthorForm;
+use App\Modules\Catalog\Livewire\AuthorList;
 use App\Modules\Catalog\Livewire\BookBulkUpload;
 use App\Modules\Catalog\Livewire\BookForm;
 use App\Modules\Catalog\Livewire\BookList;
 use App\Modules\Catalog\Livewire\BookShow;
-use App\Modules\Catalog\Livewire\AuthorForm;
-use App\Modules\Catalog\Livewire\AuthorList;
 use App\Modules\Catalog\Livewire\CategoryForm;
 use App\Modules\Catalog\Livewire\CategoryList;
-use App\Modules\Catalog\Livewire\PublisherForm;
-use App\Modules\Catalog\Livewire\PublisherList;
 use App\Modules\Catalog\Livewire\InventoryList;
 use App\Modules\Catalog\Livewire\NewArrivals;
+use App\Modules\Catalog\Livewire\PublisherForm;
+use App\Modules\Catalog\Livewire\PublisherList;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;

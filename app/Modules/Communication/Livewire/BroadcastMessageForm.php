@@ -10,9 +10,13 @@ use Livewire\Component;
 class BroadcastMessageForm extends Component
 {
     public string $subject = '';
+
     public string $body = '';
+
     public string $targetType = 'all';
+
     public ?int $roleId = null;
+
     public bool $sendEmail = false;
 
     protected function rules(): array

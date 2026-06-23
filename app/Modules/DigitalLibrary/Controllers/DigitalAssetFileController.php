@@ -12,11 +12,11 @@ class DigitalAssetFileController extends Controller
     {
         Gate::authorize('view-digital-assets');
 
-        abort_if(!$asset->is_active, 404);
+        abort_if(! $asset->is_active, 404);
 
         $filePath = storage_path("app/public/{$asset->file_path}");
 
-        abort_if(!file_exists($filePath), 404);
+        abort_if(! file_exists($filePath), 404);
 
         $asset->incrementViews();
 

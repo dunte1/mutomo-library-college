@@ -61,12 +61,12 @@ class DocumentVerification extends Model
 
     public function generator(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'generated_by');
+        return $this->belongsTo(User::class, 'generated_by');
     }
 
     public function getVerificationUrlAttribute(): string
     {
-        return url('/verify/document/' . $this->document_id);
+        return url('/verify/document/'.$this->document_id);
     }
 
     public function getQrDataAttribute(): array

@@ -24,6 +24,7 @@ class CategoryList extends Component
         $category = Category::findOrFail($id);
         if ($category->books()->count() > 0) {
             $this->dispatch('notify', message: 'Cannot delete category with associated books.', type: 'error');
+
             return;
         }
         $category->delete();

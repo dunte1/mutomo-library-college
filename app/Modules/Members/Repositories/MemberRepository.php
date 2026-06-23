@@ -46,12 +46,14 @@ class MemberRepository implements BaseRepositoryInterface
     {
         $member = $this->findOrFail($id);
         $member->update($data);
+
         return $member;
     }
 
     public function updateMember(Member $member, array $data): Member
     {
         $member->update($data);
+
         return $member;
     }
 
@@ -99,12 +101,12 @@ class MemberRepository implements BaseRepositoryInterface
     {
         return $this->model->where(function ($q) use ($query) {
             $q->where('member_id', 'like', "%{$query}%")
-              ->orWhere('first_name', 'like', "%{$query}%")
-              ->orWhere('last_name', 'like', "%{$query}%")
-              ->orWhere('email', 'like', "%{$query}%")
-              ->orWhere('phone', 'like', "%{$query}%")
-              ->orWhere('id_number', 'like', "%{$query}%")
-              ->orWhere('admission_number', 'like', "%{$query}%");
+                ->orWhere('first_name', 'like', "%{$query}%")
+                ->orWhere('last_name', 'like', "%{$query}%")
+                ->orWhere('email', 'like', "%{$query}%")
+                ->orWhere('phone', 'like', "%{$query}%")
+                ->orWhere('id_number', 'like', "%{$query}%")
+                ->orWhere('admission_number', 'like', "%{$query}%");
         })->with(['registeredBy'])->paginate($perPage);
     }
 

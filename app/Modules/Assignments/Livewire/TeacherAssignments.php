@@ -19,24 +19,39 @@ class TeacherAssignments extends Component
     use WithPagination;
 
     public string $tab = 'all';
+
     public string $typeFilter = '';
+
     public string $statusFilter = '';
+
     public string $search = '';
 
     public bool $showForm = false;
+
     public bool $editing = false;
+
     public ?int $editId = null;
 
     public string $assignTo = 'individual';
+
     public $student_id = '';
+
     public $program_id = '';
+
     public $department_id = '';
+
     public $book_id = '';
+
     public $digital_asset_id = '';
+
     public $title = '';
+
     public $description = '';
+
     public $due_date = '';
+
     public $type = 'assignment';
+
     public $notes = '';
 
     public ?int $progressAssignmentId = null;
@@ -136,6 +151,7 @@ class TeacherAssignments extends Component
 
         if (empty($studentIds)) {
             session()->flash('error', 'No students found for the selected group.');
+
             return;
         }
 
@@ -251,7 +267,7 @@ class TeacherAssignments extends Component
 
     public function getProgressAssignmentProperty()
     {
-        if (!$this->progressAssignmentId) {
+        if (! $this->progressAssignmentId) {
             return null;
         }
 
@@ -262,7 +278,7 @@ class TeacherAssignments extends Component
 
     public function getProgressStatsProperty()
     {
-        if (!$this->progressAssignmentId) {
+        if (! $this->progressAssignmentId) {
             return collect();
         }
 
@@ -270,7 +286,7 @@ class TeacherAssignments extends Component
 
         $assignment = $base->find($this->progressAssignmentId);
 
-        if (!$assignment) {
+        if (! $assignment) {
             return collect();
         }
 
@@ -313,9 +329,9 @@ class TeacherAssignments extends Component
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('title', 'like', "%{$this->search}%")
-                  ->orWhereHas('student', function ($q) {
-                      $q->where('name', 'like', "%{$this->search}%");
-                  });
+                    ->orWhereHas('student', function ($q) {
+                        $q->where('name', 'like', "%{$this->search}%");
+                    });
             });
         }
 

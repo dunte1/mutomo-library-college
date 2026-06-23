@@ -29,7 +29,7 @@ class AccessLevelList extends Component
     public function toggleStatus(int $id): void
     {
         $accessLevel = AccessLevel::findOrFail($id);
-        $accessLevel->update(['is_active' => !$accessLevel->is_active]);
+        $accessLevel->update(['is_active' => ! $accessLevel->is_active]);
         $this->dispatch('notify', message: 'Access level status updated successfully.', type: 'success');
     }
 

@@ -3,6 +3,7 @@
 namespace App\Modules\Settings\Livewire;
 
 use App\Modules\Settings\Services\SettingsService;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Component;
 
 class EmailSettings extends Component
@@ -10,11 +11,17 @@ class EmailSettings extends Component
     public array $settings = [];
 
     public bool $saved = false;
+
     public ?string $password = null;
+
     public ?string $testEmail = null;
+
     public bool $testing = false;
+
     public ?string $testResult = null;
+
     public bool $testSuccess = false;
+
     public bool $hasPassword = false;
 
     protected $rules = [
@@ -47,15 +54,15 @@ class EmailSettings extends Component
                 'mail.from.name' => $this->settings['mail_from_name'] ?? config('mail.from.name'),
             ]);
 
-            \Illuminate\Support\Facades\Mail::raw('This is a test email from your library management system.', function ($message) {
+            Mail::raw('This is a test email from your library management system.', function ($message) {
                 $message->to($this->testEmail)
-                    ->subject('Test Email from ' . config('app.name'));
+                    ->subject('Test Email from '.config('app.name'));
             });
             $this->testSuccess = true;
-            $this->testResult = 'Test email sent successfully to ' . $this->testEmail;
+            $this->testResult = 'Test email sent successfully to '.$this->testEmail;
         } catch (\Throwable $e) {
             $this->testSuccess = false;
-            $this->testResult = 'Failed: ' . $e->getMessage();
+            $this->testResult = 'Failed: '.$e->getMessage();
         }
 
         $this->testing = false;
@@ -76,13 +83,13 @@ class EmailSettings extends Component
 
         $data = $this->settings;
 
-        if (!empty($this->password)) {
+        if (! empty($this->password)) {
             $data['mail_password'] = $this->password;
         }
 
         $service->updateSettings('email', $data, ['mail_password']);
 
-        $this->hasPassword = !empty($data['mail_password'] ?? $service->hasEmailPassword());
+        $this->hasPassword = ! empty($data['mail_password'] ?? $service->hasEmailPassword());
         $this->saved = true;
         session()->flash('success', 'Email settings saved successfully.');
     }

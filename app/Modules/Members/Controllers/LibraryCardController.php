@@ -4,7 +4,6 @@ namespace App\Modules\Members\Controllers;
 
 use App\Modules\Members\Models\LibraryCard;
 use App\Modules\Members\Services\LibraryCardService;
-use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
 class LibraryCardController extends Controller
@@ -30,7 +29,7 @@ class LibraryCardController extends Controller
     {
         $card = LibraryCard::where('card_number', $cardNumber)->first();
 
-        if (!$card) {
+        if (! $card) {
             return view('members::card-verify', [
                 'valid' => false,
                 'message' => 'Invalid card number. No library card found.',

@@ -2,13 +2,16 @@
 
 namespace App\Modules\Finance\Services;
 
+use App\Models\User;
+use App\Modules\Catalog\Models\Author;
 use App\Modules\Catalog\Models\Book;
 use App\Modules\Catalog\Models\BookCopy;
+use App\Modules\Catalog\Models\Category;
+use App\Modules\Catalog\Models\Publisher;
 use App\Modules\Circulation\Models\BorrowRecord;
 use App\Modules\Circulation\Models\Fine;
 use App\Modules\Finance\Models\Report;
 use App\Modules\Finance\Models\Transaction;
-use App\Models\User;
 use App\Services\DocumentService;
 use Illuminate\Support\Facades\Storage;
 
@@ -32,14 +35,14 @@ class ReportingService
         $name = Report::typeOptions()[$type] ?? $type;
 
         if ($format === 'csv') {
-            $filename = 'reports/' . $type . '_' . now()->format('Ymd_His') . '.csv';
+            $filename = 'reports/'.$type.'_'.now()->format('Ymd_His').'.csv';
             $fileType = 'csv';
             $csvContent = $this->generateCsv($sections);
             Storage::disk('local')->put($filename, $csvContent);
         } else {
             $documentService = app(DocumentService::class);
             $pdf = $documentService->generateReportPdf($name, $sections);
-            $filename = 'reports/' . $type . '_' . now()->format('Ymd_His') . '.pdf';
+            $filename = 'reports/'.$type.'_'.now()->format('Ymd_His').'.pdf';
             $fileType = 'pdf';
             Storage::disk('local')->put($filename, $pdf->output());
         }
@@ -68,8 +71,8 @@ class ReportingService
         $output = fopen('php://temp', 'r+');
 
         foreach ($sections as $section) {
-            fputcsv($output, ['--- ' . $section['label'] . ' ---']);
-            if (!empty($section['headers'])) {
+            fputcsv($output, ['--- '.$section['label'].' ---']);
+            if (! empty($section['headers'])) {
                 fputcsv($output, $section['headers']);
             }
             foreach ($section['rows'] as $row) {
@@ -219,9 +222,9 @@ class ReportingService
             'borrowed_copies' => BookCopy::where('status', 'borrowed')->count(),
             'damaged_copies' => BookCopy::where('status', 'damaged')->count(),
             'lost_copies' => BookCopy::where('status', 'lost')->count(),
-            'unique_authors' => \App\Modules\Catalog\Models\Author::count(),
-            'unique_publishers' => \App\Modules\Catalog\Models\Publisher::count(),
-            'categories' => \App\Modules\Catalog\Models\Category::count(),
+            'unique_authors' => Author::count(),
+            'unique_publishers' => Publisher::count(),
+            'categories' => Category::count(),
         ];
     }
 

@@ -6,11 +6,10 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class SystemHealthService
 {
@@ -54,7 +53,7 @@ class SystemHealthService
                 default => null,
             };
 
-            if (!empty($check['recommendations'])) {
+            if (! empty($check['recommendations'])) {
                 foreach ($check['recommendations'] as $rec) {
                     $recommendations[] = [
                         'check' => $name,
@@ -162,7 +161,7 @@ class SystemHealthService
     public function checkCache(): array
     {
         try {
-            $key = '_health_' . time();
+            $key = '_health_'.time();
             Cache::put($key, true, 1);
             $retrieved = Cache::get($key);
             Cache::forget($key);
@@ -267,7 +266,7 @@ class SystemHealthService
             }
 
             // Check if the jobs table exists if using database driver
-            if ($driver === 'database' && !Schema::hasTable(config('queue.connections.database.table', 'jobs'))) {
+            if ($driver === 'database' && ! Schema::hasTable(config('queue.connections.database.table', 'jobs'))) {
                 $issues[] = 'Jobs table not found';
                 $recommendations[] = 'Run php artisan queue:table and php artisan migrate';
             }
@@ -306,7 +305,7 @@ class SystemHealthService
             $recommendations[] = 'Mail driver is set to "log". Emails will be logged but not sent';
         }
 
-        if (!$fromAddress || $fromAddress === 'hello@example.com') {
+        if (! $fromAddress || $fromAddress === 'hello@example.com') {
             $issues[] = 'MAIL_FROM_ADDRESS not configured';
             $recommendations[] = 'Set MAIL_FROM_ADDRESS in your .env file';
         }
@@ -327,7 +326,7 @@ class SystemHealthService
     public function checkMigrations(): array
     {
         try {
-            if (!Schema::hasTable('migrations')) {
+            if (! Schema::hasTable('migrations')) {
                 return [
                     'status' => 'critical',
                     'label' => 'Migrations',
@@ -343,7 +342,7 @@ class SystemHealthService
 
             foreach ($files as $file) {
                 $migrationName = basename($file, '.php');
-                if (!$ran->contains($migrationName)) {
+                if (! $ran->contains($migrationName)) {
                     $pending[] = $migrationName;
                 }
             }
@@ -388,7 +387,7 @@ class SystemHealthService
             $existing = Permission::pluck('name')->toArray();
             $missing = array_diff($expectedPermissions, $existing);
 
-            $issues = $missing ? ['Missing permissions: ' . implode(', ', $missing)] : [];
+            $issues = $missing ? ['Missing permissions: '.implode(', ', $missing)] : [];
             $recommendations = $missing ? ['Run php artisan db:seed --class=RolesAndPermissionsSeeder'] : [];
 
             return [
@@ -416,7 +415,7 @@ class SystemHealthService
     public function checkRoutes(): array
     {
         try {
-            $routes = collect(\Illuminate\Support\Facades\Route::getRoutes())->map(fn ($r) => $r->getName())->filter()->values();
+            $routes = collect(Route::getRoutes())->map(fn ($r) => $r->getName())->filter()->values();
 
             $expected = [
                 'dashboard', 'profile', 'settings.index',
@@ -427,12 +426,12 @@ class SystemHealthService
 
             $missing = [];
             foreach ($expected as $route) {
-                if (!$routes->contains($route)) {
+                if (! $routes->contains($route)) {
                     $missing[] = $route;
                 }
             }
 
-            $issues = $missing ? ['Missing routes: ' . implode(', ', $missing)] : [];
+            $issues = $missing ? ['Missing routes: '.implode(', ', $missing)] : [];
             $recommendations = $missing ? ['Check route registrations in module service providers'] : [];
 
             return [
@@ -462,7 +461,7 @@ class SystemHealthService
         $issues = [];
         $recommendations = [];
 
-        if (!File::exists($envFile)) {
+        if (! File::exists($envFile)) {
             return [
                 'status' => 'critical',
                 'label' => 'Environment',
@@ -476,7 +475,7 @@ class SystemHealthService
         $key = config('app.key');
         $debug = config('app.debug');
 
-        if (!$key || $key === 'base64:...') {
+        if (! $key || $key === 'base64:...') {
             $issues[] = 'Application key not set';
             $recommendations[] = 'Run php artisan key:generate';
         }
@@ -503,7 +502,7 @@ class SystemHealthService
     public function checkFailedJobs(): array
     {
         try {
-            if (!Schema::hasTable('failed_jobs')) {
+            if (! Schema::hasTable('failed_jobs')) {
                 return [
                     'status' => 'healthy',
                     'label' => 'Failed Jobs',
@@ -542,10 +541,10 @@ class SystemHealthService
         $issues = [];
         $recommendations = [];
 
-        if (!File::exists($publicStorage)) {
+        if (! File::exists($publicStorage)) {
             $issues[] = 'public/storage symlink does not exist';
             $recommendations[] = 'Run php artisan storage:link to create the symlink';
-        } elseif (!is_link($publicStorage)) {
+        } elseif (! is_link($publicStorage)) {
             $issues[] = 'public/storage is a directory, not a symlink';
             $recommendations[] = 'Remove the public/storage directory and run php artisan storage:link';
         }
@@ -572,12 +571,12 @@ class SystemHealthService
 
         $missing = [];
         foreach ($assets as $path => $name) {
-            if (!File::exists(base_path($path))) {
+            if (! File::exists(base_path($path))) {
                 $missing[] = $name;
             }
         }
 
-        $issues = $missing ? ['Missing assets: ' . implode(', ', $missing)] : [];
+        $issues = $missing ? ['Missing assets: '.implode(', ', $missing)] : [];
         $recommendations = $missing ? ['Ensure frontend build process has been run'] : [];
 
         return [

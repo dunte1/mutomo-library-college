@@ -8,6 +8,7 @@ use Livewire\Component;
 class AiSettings extends Component
 {
     public array $settings = [];
+
     public string $api_key = '';
 
     protected function rules(): array
@@ -41,7 +42,7 @@ class AiSettings extends Component
 
         $data = $this->settings;
 
-        if (!empty($this->api_key)) {
+        if (! empty($this->api_key)) {
             $data['api_key'] = $this->api_key;
         }
 

@@ -8,6 +8,7 @@ use Livewire\Component;
 class StorageManager extends Component
 {
     public array $disks = [];
+
     public array $logs = [];
 
     public function mount(): void
@@ -63,14 +64,14 @@ class StorageManager extends Component
                 }
             }
             foreach ($disk->files('framework/cache/data') as $file) {
-                if (!str_contains($file, '.gitignore') && $disk->delete($file)) {
+                if (! str_contains($file, '.gitignore') && $disk->delete($file)) {
                     $count++;
                 }
             }
             $this->refreshStats();
             $this->dispatch('notify', type: 'success', message: "Cleaned {$count} temporary files.");
         } catch (\Throwable $e) {
-            $this->dispatch('notify', type: 'error', message: 'Failed to clean temporary files: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to clean temporary files: '.$e->getMessage());
         }
     }
 
@@ -82,7 +83,8 @@ class StorageManager extends Component
             $bytes /= 1024;
             $i++;
         }
-        return round($bytes, 2) . ' ' . $units[$i];
+
+        return round($bytes, 2).' '.$units[$i];
     }
 
     public function render()

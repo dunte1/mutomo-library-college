@@ -99,7 +99,8 @@ class SettingsService
     public function hasEmailPassword(): bool
     {
         $val = $this->cached('mail_password', '');
-        return !empty($val);
+
+        return ! empty($val);
     }
 
     public function getBrandingSettings(): array
@@ -154,7 +155,7 @@ class SettingsService
     public function updateSettings(string $group, array $data, array $sensitiveKeys = []): void
     {
         foreach ($data as $key => $value) {
-            $isEncrypted = in_array($key, $sensitiveKeys) && !empty($value);
+            $isEncrypted = in_array($key, $sensitiveKeys) && ! empty($value);
 
             if ($isEncrypted && $value !== null) {
                 $value = encrypt($value);
@@ -191,13 +192,13 @@ class SettingsService
         return Cache::remember("setting.{$key}", now()->addDay(), function () use ($key, $default) {
             $setting = Setting::where('key', $key)->first();
 
-            if (!$setting) {
+            if (! $setting) {
                 return $default;
             }
 
             $value = $setting->value;
 
-            if ($setting->is_encrypted && !empty($value)) {
+            if ($setting->is_encrypted && ! empty($value)) {
                 try {
                     $value = decrypt($value);
                 } catch (\Exception $e) {

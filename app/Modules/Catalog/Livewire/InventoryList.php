@@ -2,7 +2,6 @@
 
 namespace App\Modules\Catalog\Livewire;
 
-use App\Modules\Catalog\Models\Book;
 use App\Modules\Catalog\Models\BookCopy;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -12,8 +11,11 @@ class InventoryList extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $status = '';
+
     public string $sort = 'books.title';
+
     public string $direction = 'asc';
 
     protected $queryString = [
@@ -42,8 +44,8 @@ class InventoryList extends Component
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('books.title', 'like', "%{$this->search}%")
-                  ->orWhere('book_copies.barcode', 'like', "%{$this->search}%")
-                  ->orWhere('book_copies.shelf_location', 'like', "%{$this->search}%");
+                    ->orWhere('book_copies.barcode', 'like', "%{$this->search}%")
+                    ->orWhere('book_copies.shelf_location', 'like', "%{$this->search}%");
             });
         }
 

@@ -13,18 +13,27 @@ class Message extends Model
     use SoftDeletes;
 
     const PRIORITY_LOW = 'low';
+
     const PRIORITY_NORMAL = 'normal';
+
     const PRIORITY_HIGH = 'high';
 
     const TYPE_DIRECT = 'direct';
+
     const TYPE_GROUP = 'group';
+
     const TYPE_BROADCAST = 'broadcast';
+
     const TYPE_DEPARTMENT = 'department';
+
     const TYPE_PROGRAM = 'program';
 
     const STATUS_DRAFT = 'draft';
+
     const STATUS_SCHEDULED = 'scheduled';
+
     const STATUS_SENT = 'sent';
+
     const STATUS_FAILED = 'failed';
 
     protected $fillable = [

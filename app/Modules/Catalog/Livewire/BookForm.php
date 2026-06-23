@@ -3,40 +3,61 @@
 namespace App\Modules\Catalog\Livewire;
 
 use App\Modules\Catalog\Models\Author;
-use App\Modules\Catalog\Models\Book;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Publisher;
 use App\Modules\Catalog\Models\Subject;
 use App\Modules\Catalog\Services\BookService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
-    use Livewire\WithFileUploads;
-    use Illuminate\Support\Facades\Storage;
+use Livewire\WithFileUploads;
 
 class BookForm extends Component
 {
     use WithFileUploads;
 
     public ?int $bookId = null;
+
     public string $title = '';
+
     public ?string $subtitle = null;
+
     public ?string $isbn = null;
+
     public ?string $description = null;
+
     public string $language = 'en';
+
     public ?int $pages = null;
+
     public ?int $publication_year = null;
+
     public ?string $edition = null;
+
     public ?string $volume = null;
+
     public ?string $series = null;
+
     public ?int $publisher_id = null;
+
     public ?int $category_id = null;
+
     public ?float $price = null;
+
     public ?string $dewey_decimal = null;
+
     public ?string $lc_classification = null;
+
     public array $authors = [];
+
     public array $subjects = [];
+
     public $cover_image = null;
+
     public ?string $existingCoverUrl = null;
+
     public ?string $shelf_location = null;
+
     public int $copies_count = 1;
 
     public bool $isEditing = false;
@@ -50,7 +71,7 @@ class BookForm extends Component
             'description' => ['nullable', 'string'],
             'language' => ['required', 'string', 'size:2'],
             'pages' => ['nullable', 'integer', 'min:1', 'max:99999'],
-            'publication_year' => ['nullable', 'integer', 'min:1000', 'max:' . (now()->year + 1)],
+            'publication_year' => ['nullable', 'integer', 'min:1000', 'max:'.(now()->year + 1)],
             'edition' => ['nullable', 'string', 'max:100'],
             'volume' => ['nullable', 'string', 'max:100'],
             'series' => ['nullable', 'string', 'max:255'],
@@ -126,7 +147,7 @@ class BookForm extends Component
 
             $this->redirect(route('catalog.books.show', $book->id), navigate: true);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Book save failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            Log::error('Book save failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             $this->dispatch('notify', type: 'error', message: 'An error occurred while saving the book.');
         }
     }
@@ -154,11 +175,11 @@ class BookForm extends Component
             'shelf_location' => $this->shelf_location,
         ];
 
-        if (!$this->isEditing) {
+        if (! $this->isEditing) {
             $data['copies_count'] = $this->copies_count;
         }
 
-        return array_filter($data, fn($value) => $value !== null && $value !== '' && $value !== []);
+        return array_filter($data, fn ($value) => $value !== null && $value !== '' && $value !== []);
     }
 
     public function render()

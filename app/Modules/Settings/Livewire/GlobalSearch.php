@@ -11,8 +11,11 @@ use Livewire\Component;
 class GlobalSearch extends Component
 {
     public string $query = '';
+
     public bool $show = false;
+
     public array $results = [];
+
     public string $activeGroup = 'all';
 
     protected $listeners = ['openGlobalSearch' => 'open'];
@@ -33,6 +36,7 @@ class GlobalSearch extends Component
     {
         if (strlen($this->query) < 2) {
             $this->results = [];
+
             return;
         }
 
@@ -41,7 +45,7 @@ class GlobalSearch extends Component
         $books = Book::active()
             ->where(function ($query) use ($q) {
                 $query->where('title', 'like', "%{$q}%")
-                      ->orWhere('isbn', 'like', "%{$q}%");
+                    ->orWhere('isbn', 'like', "%{$q}%");
             })
             ->take(5)
             ->get()
@@ -55,28 +59,28 @@ class GlobalSearch extends Component
             ]);
 
         $members = Member::where(function ($query) use ($q) {
-                $query->where('first_name', 'like', "%{$q}%")
-                      ->orWhere('last_name', 'like', "%{$q}%")
-                      ->orWhere('member_id', 'like', "%{$q}%")
-                      ->orWhere('email', 'like', "%{$q}%")
-                      ->orWhere('admission_number', 'like', "%{$q}%");
-            })
+            $query->where('first_name', 'like', "%{$q}%")
+                ->orWhere('last_name', 'like', "%{$q}%")
+                ->orWhere('member_id', 'like', "%{$q}%")
+                ->orWhere('email', 'like', "%{$q}%")
+                ->orWhere('admission_number', 'like', "%{$q}%");
+        })
             ->take(5)
             ->get()
             ->map(fn ($m) => [
-                'id' => $m->id,
-                'type' => 'member',
-                'title' => $m->full_name,
-                'subtitle' => $m->member_id . ' — ' . ucfirst($m->membership_type),
-                'url' => route('members.show', $m->id),
-                'icon' => 'user',
-            ]);
+            'id' => $m->id,
+            'type' => 'member',
+            'title' => $m->full_name,
+            'subtitle' => $m->member_id.' — '.ucfirst($m->membership_type),
+            'url' => route('members.show', $m->id),
+            'icon' => 'user',
+        ]);
 
         $assets = DigitalAsset::active()
             ->where(function ($query) use ($q) {
                 $query->where('title', 'like', "%{$q}%")
-                      ->orWhere('author', 'like', "%{$q}%")
-                      ->orWhere('keywords', 'like', "%{$q}%");
+                    ->orWhere('author', 'like', "%{$q}%")
+                    ->orWhere('keywords', 'like', "%{$q}%");
             })
             ->take(5)
             ->get()
@@ -84,27 +88,27 @@ class GlobalSearch extends Component
                 'id' => $a->id,
                 'type' => 'asset',
                 'title' => $a->title,
-                'subtitle' => ucfirst($a->file_type) . ' — ' . ($a->author ?? ''),
+                'subtitle' => ucfirst($a->file_type).' — '.($a->author ?? ''),
                 'url' => route('digital-library.show', $a->id),
                 'icon' => 'document',
             ]);
 
         $users = User::where(function ($query) use ($q) {
-                $query->where('name', 'like', "%{$q}%")
-                      ->orWhere('email', 'like', "%{$q}%")
-                      ->orWhere('admission_number', 'like', "%{$q}%")
-                      ->orWhere('employee_id', 'like', "%{$q}%");
-            })
+            $query->where('name', 'like', "%{$q}%")
+                ->orWhere('email', 'like', "%{$q}%")
+                ->orWhere('admission_number', 'like', "%{$q}%")
+                ->orWhere('employee_id', 'like', "%{$q}%");
+        })
             ->take(3)
             ->get()
             ->map(fn ($u) => [
-                'id' => $u->id,
-                'type' => 'user',
-                'title' => $u->name,
-                'subtitle' => $u->email,
-                'url' => route('settings.users.edit', $u->id),
-                'icon' => 'user',
-            ]);
+            'id' => $u->id,
+            'type' => 'user',
+            'title' => $u->name,
+            'subtitle' => $u->email,
+            'url' => route('settings.users.edit', $u->id),
+            'icon' => 'user',
+        ]);
 
         $this->results = [
             'books' => $books,

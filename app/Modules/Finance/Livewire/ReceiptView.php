@@ -4,7 +4,6 @@ namespace App\Modules\Finance\Livewire;
 
 use App\Modules\Finance\Models\Receipt;
 use App\Modules\Finance\Models\Transaction;
-use App\Modules\Finance\Services\FinanceService;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -13,7 +12,9 @@ class ReceiptView extends Component
     use WithPagination;
 
     public ?Transaction $transaction = null;
+
     public bool $showInvoice = false;
+
     public string $search = '';
 
     public function mount(?int $id = null): void
@@ -32,7 +33,7 @@ class ReceiptView extends Component
 
     public function toggleView(): void
     {
-        $this->showInvoice = !$this->showInvoice;
+        $this->showInvoice = ! $this->showInvoice;
     }
 
     public function render()
@@ -45,7 +46,7 @@ class ReceiptView extends Component
         $receipts = Receipt::with(['user', 'transaction'])
             ->when($this->search, fn ($q) => $q->where(function ($q) {
                 $q->where('receipt_number', 'like', "%{$this->search}%")
-                  ->orWhereHas('user', fn ($q) => $q->where('name', 'like', "%{$this->search}%"));
+                    ->orWhereHas('user', fn ($q) => $q->where('name', 'like', "%{$this->search}%"));
             }))
             ->orderBy('created_at', 'desc')
             ->paginate(15);

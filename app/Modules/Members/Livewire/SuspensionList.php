@@ -3,7 +3,6 @@
 namespace App\Modules\Members\Livewire;
 
 use App\Modules\Members\Models\Member;
-use App\Modules\Members\Services\MemberService;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -12,7 +11,9 @@ class SuspensionList extends Component
     use WithPagination;
 
     public string $search = '';
+
     public ?string $reason = null;
+
     public ?int $reinstateMemberId = null;
 
     protected $queryString = [
@@ -34,7 +35,7 @@ class SuspensionList extends Component
             $this->reinstateMemberId = null;
             $this->dispatch('notify', type: 'success', message: 'Member reinstated successfully.');
         } catch (\Throwable $e) {
-            $this->dispatch('notify', type: 'error', message: 'Failed to reinstate member: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to reinstate member: '.$e->getMessage());
         }
     }
 
@@ -45,8 +46,8 @@ class SuspensionList extends Component
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('member_id', 'like', "%{$this->search}%")
-                  ->orWhere('first_name', 'like', "%{$this->search}%")
-                  ->orWhere('last_name', 'like', "%{$this->search}%");
+                    ->orWhere('first_name', 'like', "%{$this->search}%")
+                    ->orWhere('last_name', 'like', "%{$this->search}%");
             });
         }
 

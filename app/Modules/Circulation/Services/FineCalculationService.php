@@ -6,6 +6,7 @@ use App\Modules\Circulation\Models\BorrowRecord;
 use App\Modules\Circulation\Models\Fine;
 use App\Modules\Notifications\Services\NotificationService;
 use App\Modules\Shared\Helpers\AuditHelper;
+use Illuminate\Database\Eloquent\Collection;
 
 class FineCalculationService
 {
@@ -132,7 +133,7 @@ class FineCalculationService
         $fine = Fine::findOrFail($fineId);
 
         if ($fine->status === Fine::STATUS_PAID || $fine->status === Fine::STATUS_WAIVED) {
-            throw new \RuntimeException('Fine has already been ' . $fine->status . '.');
+            throw new \RuntimeException('Fine has already been '.$fine->status.'.');
         }
 
         $waivedAmount = $fine->amount - $fine->paid_amount;
@@ -179,7 +180,7 @@ class FineCalculationService
         return $fine->fresh();
     }
 
-    public function getUserOutstandingFines(int $userId): \Illuminate\Database\Eloquent\Collection
+    public function getUserOutstandingFines(int $userId): Collection
     {
         return Fine::byUser($userId)->pending()->get();
     }
@@ -187,6 +188,6 @@ class FineCalculationService
     public function getUserTotalOutstanding(int $userId): float
     {
         return Fine::byUser($userId)->pending()->get()
-            ->sum(fn($fine) => $fine->outstanding_balance);
+            ->sum(fn ($fine) => $fine->outstanding_balance);
     }
 }

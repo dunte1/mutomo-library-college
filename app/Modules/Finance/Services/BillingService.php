@@ -4,11 +4,10 @@ namespace App\Modules\Finance\Services;
 
 use App\Modules\Finance\Models\Invoice;
 use App\Modules\Finance\Models\Receipt;
-use App\Modules\Finance\Models\Transaction;
 use App\Modules\Settings\Services\SettingsService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 
 class BillingService
 {
@@ -45,17 +44,19 @@ class BillingService
         return $pdf;
     }
 
-    public function downloadInvoice(Invoice $invoice): \Illuminate\Http\Response
+    public function downloadInvoice(Invoice $invoice): Response
     {
         $pdf = $this->generateInvoicePdf($invoice);
         $filename = "invoice-{$invoice->invoice_number}.pdf";
+
         return $pdf->download($filename);
     }
 
-    public function downloadReceipt(Receipt $receipt): \Illuminate\Http\Response
+    public function downloadReceipt(Receipt $receipt): Response
     {
         $pdf = $this->generateReceiptPdf($receipt);
         $filename = "receipt-{$receipt->receipt_number}.pdf";
+
         return $pdf->download($filename);
     }
 

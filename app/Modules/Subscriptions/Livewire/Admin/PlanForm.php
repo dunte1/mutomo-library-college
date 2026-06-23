@@ -8,14 +8,23 @@ use Livewire\Component;
 class PlanForm extends Component
 {
     public ?Plan $plan = null;
+
     public string $name = '';
+
     public string $type = 'individual';
+
     public string $billingCycle = 'monthly';
+
     public float $price = 0;
+
     public string $currency = 'KES';
+
     public string $description = '';
+
     public bool $isActive = true;
+
     public int $sortOrder = 0;
+
     public string $features = '';
 
     public bool $editing = false;

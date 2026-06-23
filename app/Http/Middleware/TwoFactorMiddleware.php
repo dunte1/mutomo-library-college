@@ -12,7 +12,7 @@ class TwoFactorMiddleware
     {
         $user = auth()->user();
 
-        if ($user && $user->two_factor_enabled && !session('two_factor_verified')) {
+        if ($user && $user->two_factor_enabled && ! session('two_factor_verified')) {
             return redirect()->route('two-factor.verify');
         }
 

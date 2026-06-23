@@ -11,8 +11,11 @@ class AuditLogViewer extends Component
     use WithPagination;
 
     public string $searchUser = '';
+
     public string $event = '';
+
     public string $dateFrom = '';
+
     public string $dateTo = '';
 
     protected $queryString = ['searchUser', 'event', 'dateFrom', 'dateTo'];
@@ -32,7 +35,7 @@ class AuditLogViewer extends Component
             ->when($this->searchUser, function ($q) {
                 $q->whereHas('causer', function ($q) {
                     $q->where('name', 'like', "%{$this->searchUser}%")
-                      ->orWhere('email', 'like', "%{$this->searchUser}%");
+                        ->orWhere('email', 'like', "%{$this->searchUser}%");
                 });
             })
             ->when($this->event, fn ($q) => $q->where('event', $this->event))

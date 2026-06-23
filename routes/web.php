@@ -1,10 +1,15 @@
 <?php
 
+use App\Livewire\Verify\DocumentLookup;
+use App\Modules\Auth\Livewire\TwoFactorVerify;
 use App\Modules\Catalog\Models\Book;
+use App\Modules\Circulation\Models\BorrowRecord;
 use App\Modules\DigitalLibrary\Models\DigitalAsset;
+use App\Modules\Members\Models\Member;
 use App\Modules\Settings\Models\Feature;
 use App\Modules\Settings\Models\Testimonial;
 use App\Modules\Settings\Models\WhyChooseUs;
+use App\Modules\Settings\Services\SettingsService;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -14,16 +19,16 @@ Route::get('/', function () {
 
     try {
         $stats = [
-            'resources' => \App\Modules\Catalog\Models\Book::count(),
-            'members' => \App\Modules\Members\Models\Member::count(),
-            'borrowsToday' => \App\Modules\Circulation\Models\BorrowRecord::whereDate('borrowed_at', today())->count(),
+            'resources' => Book::count(),
+            'members' => Member::count(),
+            'borrowsToday' => BorrowRecord::whereDate('borrowed_at', today())->count(),
         ];
-    } catch (\Throwable) {
+    } catch (Throwable) {
         $stats = ['resources' => 0, 'members' => 0, 'borrowsToday' => 0];
     }
 
     try {
-        $service = app(\App\Modules\Settings\Services\SettingsService::class);
+        $service = app(SettingsService::class);
         $display = $service->getDisplaySettings();
         $footer = $service->getFooterSettings();
         $landing = [
@@ -85,7 +90,7 @@ Route::get('/', function () {
 
         $featuredBooks = Book::active()->featured()->with(['authors', 'category'])->take(6)->get();
         $featuredDigitalAssets = DigitalAsset::active()->featured()->take(6)->get();
-    } catch (\Throwable) {
+    } catch (Throwable) {
         $display = ['site_name' => config('app.name'), 'site_description' => '', 'library_address' => '', 'library_phone' => '', 'library_email' => '', 'opening_hours' => ''];
         $footer = ['footer_copyright' => 'All rights reserved.', 'footer_facebook_url' => '', 'footer_twitter_url' => '', 'footer_instagram_url' => '', 'footer_youtube_url' => '', 'footer_linkedin_url' => '', 'footer_newsletter_visible' => true];
         $landing = [
@@ -153,10 +158,10 @@ Route::get('/', function () {
 Route::view('/privacy', 'legal.privacy')->name('privacy');
 Route::view('/terms', 'legal.terms')->name('terms');
 
-Route::get('/verify/document/{id?}', \App\Livewire\Verify\DocumentLookup::class)->name('verify.document');
+Route::get('/verify/document/{id?}', DocumentLookup::class)->name('verify.document');
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/two-factor/verify', \App\Modules\Auth\Livewire\TwoFactorVerify::class)->name('two-factor.verify');
+    Route::get('/two-factor/verify', TwoFactorVerify::class)->name('two-factor.verify');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -172,5 +177,6 @@ Route::post('/logout', function () {
     auth()->logout();
     session()->invalidate();
     session()->regenerateToken();
+
     return redirect('/');
 })->name('logout')->middleware('auth');

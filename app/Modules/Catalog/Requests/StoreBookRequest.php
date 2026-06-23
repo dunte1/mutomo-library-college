@@ -20,7 +20,7 @@ class StoreBookRequest extends FormRequest
             'description' => 'nullable|string',
             'language' => 'nullable|string|max:10',
             'pages' => 'nullable|integer|min:1',
-            'publication_year' => 'nullable|integer|min:1000|max:' . date('Y'),
+            'publication_year' => 'nullable|integer|min:1000|max:'.date('Y'),
             'edition' => 'nullable|string|max:50',
             'volume' => 'nullable|string|max:50',
             'series' => 'nullable|string|max:255',

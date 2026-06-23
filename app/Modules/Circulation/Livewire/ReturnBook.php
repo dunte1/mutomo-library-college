@@ -4,15 +4,21 @@ namespace App\Modules\Circulation\Livewire;
 
 use App\Modules\Circulation\Models\BorrowRecord;
 use App\Modules\Circulation\Services\BorrowingService;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
 class ReturnBook extends Component
 {
     public string $barcode = '';
+
     public $record = null;
+
     public string $condition = 'good';
+
     public string $message = '';
+
     public string $messageType = '';
+
     public bool $showConfirm = false;
 
     public function searchByBarcode(): void
@@ -25,7 +31,7 @@ class ReturnBook extends Component
             ->latest()
             ->first();
 
-        if (!$this->record) {
+        if (! $this->record) {
             $this->message = 'No active borrow found for this barcode.';
             $this->messageType = 'error';
             $this->showConfirm = false;
@@ -48,7 +54,7 @@ class ReturnBook extends Component
             $this->message = $e->getMessage();
             $this->messageType = 'error';
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Return book failed', ['error' => $e->getMessage()]);
+            Log::error('Return book failed', ['error' => $e->getMessage()]);
             $this->message = 'An unexpected error occurred.';
             $this->messageType = 'error';
         }

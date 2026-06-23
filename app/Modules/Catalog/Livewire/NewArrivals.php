@@ -12,6 +12,7 @@ class NewArrivals extends Component
     use WithPagination;
 
     public string $period = '30';
+
     public ?int $categoryId = null;
 
     protected $queryString = [

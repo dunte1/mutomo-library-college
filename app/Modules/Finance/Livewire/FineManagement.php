@@ -13,11 +13,17 @@ class FineManagement extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $status = '';
+
     public string $type = '';
+
     public bool $showPayModal = false;
+
     public ?int $selectedFineId = null;
+
     public string $paymentMethod = 'cash';
+
     public ?string $reference = null;
 
     protected $queryString = ['search', 'status', 'type'];
@@ -49,7 +55,7 @@ class FineManagement extends Component
     public function waive(int $fineId)
     {
         $fine = Fine::findOrFail($fineId);
-        app(FineCalculationService::class)->waiveFine($fine->id, 'Waived by ' . (auth()->user()?->name ?? 'System'));
+        app(FineCalculationService::class)->waiveFine($fine->id, 'Waived by '.(auth()->user()?->name ?? 'System'));
 
         session()->flash('success', 'Fine waived successfully.');
     }

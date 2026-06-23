@@ -6,9 +6,10 @@ use App\Modules\Members\Livewire\LibraryCard;
 use App\Modules\Members\Livewire\MemberBulkImport;
 use App\Modules\Members\Livewire\MemberForm;
 use App\Modules\Members\Livewire\MemberList;
-use App\Modules\Members\Livewire\MemberShow;
 use App\Modules\Members\Livewire\MembershipRequestList;
+use App\Modules\Members\Livewire\MemberShow;
 use App\Modules\Members\Livewire\SuspensionList;
+use App\Modules\Members\Services\LibraryCardService;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
@@ -17,7 +18,7 @@ class MembersServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(\App\Modules\Members\Services\LibraryCardService::class);
+        $this->app->singleton(LibraryCardService::class);
     }
 
     public function boot(): void

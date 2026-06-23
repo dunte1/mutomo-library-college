@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 class SmsService
 {
     protected string $provider;
+
     protected bool $enabled;
 
     public function __construct()
@@ -18,8 +19,9 @@ class SmsService
 
     public function send(string $phoneNumber, string $message, array $options = []): bool
     {
-        if (!$this->enabled) {
+        if (! $this->enabled) {
             $this->log('log', $phoneNumber, $message, 'SMS disabled');
+
             return false;
         }
 
@@ -31,10 +33,12 @@ class SmsService
             };
 
             $this->log($this->provider, $phoneNumber, $message, null, $result ? 'sent' : 'failed');
+
             return $result;
         } catch (\Throwable $e) {
             $this->log($this->provider, $phoneNumber, $message, $e->getMessage(), 'failed');
             Log::error("SMS send failed: {$e->getMessage()}");
+
             return false;
         }
     }
@@ -45,12 +49,14 @@ class SmsService
         foreach ($recipients as $phoneNumber) {
             $results[$phoneNumber] = $this->send($phoneNumber, $message);
         }
+
         return $results;
     }
 
     protected function sendViaLog(string $phoneNumber, string $message): bool
     {
         Log::info("SMS to {$phoneNumber}: {$message}");
+
         return true;
     }
 

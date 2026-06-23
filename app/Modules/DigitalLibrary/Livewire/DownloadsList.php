@@ -11,7 +11,9 @@ class DownloadsList extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $sort = 'downloads';
+
     public string $direction = 'desc';
 
     protected $queryString = [
@@ -27,7 +29,7 @@ class DownloadsList extends Component
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('title', 'like', "%{$this->search}%")
-                  ->orWhere('author', 'like', "%{$this->search}%");
+                    ->orWhere('author', 'like', "%{$this->search}%");
             });
         }
 

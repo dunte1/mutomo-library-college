@@ -8,11 +8,17 @@ use Livewire\Component;
 class AnnouncementForm extends Component
 {
     public ?int $announcementId = null;
+
     public string $title = '';
+
     public string $content = '';
+
     public string $type = 'info';
+
     public string $status = 'draft';
+
     public ?string $published_at = null;
+
     public ?string $expires_at = null;
 
     public bool $isEditing = false;

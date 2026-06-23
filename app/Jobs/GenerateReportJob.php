@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Modules\Finance\Models\Report;
 use App\Modules\Finance\Services\ReportingService;
+use App\Services\DocumentService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -19,7 +20,7 @@ class GenerateReportJob implements ShouldQueue
             $service = app(ReportingService::class);
             $data = $service->generateReport($this->report);
 
-            $documentService = app(\App\Services\DocumentService::class);
+            $documentService = app(DocumentService::class);
 
             if ($this->report->type === 'pdf') {
                 $pdfPath = $documentService->generateReportPdf(

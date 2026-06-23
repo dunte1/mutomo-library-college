@@ -5,6 +5,7 @@ namespace App\Modules\Circulation\Livewire;
 use App\Modules\Circulation\Models\BorrowRecord;
 use App\Modules\Circulation\Services\BorrowingService;
 use App\Services\ExportService;
+use Illuminate\Http\Response;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -13,6 +14,7 @@ class CirculationList extends Component
     use WithPagination;
 
     public string $tab = 'active';
+
     public string $search = '';
 
     public function setTab(string $tab): void
@@ -21,7 +23,7 @@ class CirculationList extends Component
         $this->resetPage();
     }
 
-    public function exportCsv(): \Illuminate\Http\Response
+    public function exportCsv(): Response
     {
         return app(ExportService::class)->exportCirculationCsv($this->tab);
     }

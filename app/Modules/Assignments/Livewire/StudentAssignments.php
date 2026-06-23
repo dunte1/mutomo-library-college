@@ -11,6 +11,7 @@ class StudentAssignments extends Component
     use WithPagination;
 
     public string $tab = 'all';
+
     public string $typeFilter = '';
 
     public function markComplete(int $id): void

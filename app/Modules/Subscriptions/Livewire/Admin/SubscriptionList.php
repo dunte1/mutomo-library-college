@@ -11,7 +11,9 @@ class SubscriptionList extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $status = '';
+
     public string $billingCycle = '';
 
     protected $queryString = ['search', 'status', 'billingCycle'];

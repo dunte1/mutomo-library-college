@@ -8,6 +8,7 @@ use Livewire\Component;
 class GeneralSettings extends Component
 {
     public array $settings = [];
+
     public bool $saved = false;
 
     protected function rules(): array

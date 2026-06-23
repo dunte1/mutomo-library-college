@@ -6,12 +6,12 @@ use App\Mail\WelcomeCredentials;
 use App\Models\User;
 use App\Modules\Members\Models\Member;
 use App\Modules\Members\Repositories\MemberRepository;
-use App\Modules\Members\Services\LibraryCardService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Spatie\Permission\PermissionRegistrar;
 
 class MemberService
 {
@@ -50,15 +50,15 @@ class MemberService
     /**
      * Register a new member, optionally creating a linked User account.
      *
-     * @param array $data Member data, plus optional keys:
-     *                    - create_user (bool)
-     *                    - password (string)
-     *                    - role (string|array)
+     * @param  array  $data  Member data, plus optional keys:
+     *                       - create_user (bool)
+     *                       - password (string)
+     *                       - role (string|array)
      */
     public function registerMember(array $data): Member
     {
         return DB::transaction(function () use ($data) {
-            $createUser = !empty($data['create_user']);
+            $createUser = ! empty($data['create_user']);
             unset($data['create_user']);
 
             $password = $data['password'] ?? null;
@@ -73,7 +73,7 @@ class MemberService
 
             // If creating a user, check for duplicate email first
             $plainPassword = null;
-            if ($createUser && !empty($data['email'])) {
+            if ($createUser && ! empty($data['email'])) {
                 $existingUser = User::where('email', $data['email'])->first();
                 if ($existingUser) {
                     // Link existing user to this member
@@ -82,20 +82,20 @@ class MemberService
                     // Create new user
                     $plainPassword = $password ?? substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 10);
                     $userData = [
-                        'name' => trim(($data['first_name'] ?? '') . ' ' . ($data['last_name'] ?? '')),
+                        'name' => trim(($data['first_name'] ?? '').' '.($data['last_name'] ?? '')),
                         'email' => $data['email'],
                         'password' => Hash::make($plainPassword),
                         'phone' => $data['phone'] ?? null,
                         'is_active' => true,
                     ];
 
-                    if (!empty($data['admission_number'])) {
+                    if (! empty($data['admission_number'])) {
                         $userData['admission_number'] = $data['admission_number'];
                     }
-                    if (!empty($data['department_id'])) {
+                    if (! empty($data['department_id'])) {
                         $userData['department_id'] = $data['department_id'];
                     }
-                    if (!empty($data['program_id'])) {
+                    if (! empty($data['program_id'])) {
                         $userData['program_id'] = $data['program_id'];
                     }
 
@@ -107,7 +107,7 @@ class MemberService
                     $user->assignRole($roleNames);
 
                     // Clear permission cache so the new role is active immediately
-                    app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+                    app(PermissionRegistrar::class)->forgetCachedPermissions();
 
                     $data['user_id'] = $user->id;
                 }
@@ -123,7 +123,7 @@ class MemberService
             }
 
             // Send welcome email with credentials
-            if ($createUser && !empty($member->email) && $member->user_id && $plainPassword) {
+            if ($createUser && ! empty($member->email) && $member->user_id && $plainPassword) {
                 try {
                     $member->load('user');
                     if ($member->user) {
@@ -163,7 +163,7 @@ class MemberService
             $member->update([
                 'status' => Member::STATUS_SUSPENDED,
                 'notes' => $member->notes
-                    ? $member->notes . "\n[Suspended: {$reason}]"
+                    ? $member->notes."\n[Suspended: {$reason}]"
                     : "[Suspended: {$reason}]",
             ]);
         });
@@ -199,7 +199,7 @@ class MemberService
             $member->update([
                 'status' => Member::STATUS_CLEARED,
                 'notes' => $member->notes
-                    ? $member->notes . "\n[Cleared: {$notes}]"
+                    ? $member->notes."\n[Cleared: {$notes}]"
                     : "[Cleared: {$notes}]",
             ]);
 
@@ -255,23 +255,23 @@ class MemberService
     {
         $query = Member::with(['registeredBy', 'user', 'department', 'program']);
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('member_id', 'like', "%{$search}%")
-                  ->orWhere('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('admission_number', 'like', "%{$search}%");
+                    ->orWhere('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('admission_number', 'like', "%{$search}%");
             });
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['membership_type'])) {
+        if (! empty($filters['membership_type'])) {
             $query->where('membership_type', $filters['membership_type']);
         }
 

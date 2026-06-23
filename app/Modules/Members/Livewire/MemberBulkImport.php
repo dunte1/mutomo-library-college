@@ -14,12 +14,19 @@ class MemberBulkImport extends Component
     use WithFileUploads;
 
     public $csvFile = null;
+
     public bool $preview = false;
+
     public array $parsedRows = [];
+
     public array $importErrors = [];
+
     public int $successCount = 0;
+
     public int $errorCount = 0;
+
     public bool $importing = false;
+
     public bool $completed = false;
 
     protected function rules(): array
@@ -51,16 +58,18 @@ class MemberBulkImport extends Component
         $path = $this->csvFile->getRealPath();
         $handle = fopen($path, 'r');
 
-        if (!$handle) {
+        if (! $handle) {
             $this->dispatch('notify', type: 'error', message: 'Could not read the uploaded file.');
+
             return;
         }
 
         // Read header row
         $headers = fgetcsv($handle);
-        if (!$headers) {
+        if (! $headers) {
             fclose($handle);
             $this->dispatch('notify', type: 'error', message: 'CSV file appears to be empty or has no header row.');
+
             return;
         }
 
@@ -100,14 +109,21 @@ class MemberBulkImport extends Component
         $foundLast = false;
         $foundEmail = false;
         foreach ($fieldMapping as $field) {
-            if ($field === 'first_name') $foundFirst = true;
-            if ($field === 'last_name') $foundLast = true;
-            if ($field === 'email') $foundEmail = true;
+            if ($field === 'first_name') {
+                $foundFirst = true;
+            }
+            if ($field === 'last_name') {
+                $foundLast = true;
+            }
+            if ($field === 'email') {
+                $foundEmail = true;
+            }
         }
 
-        if (!$foundFirst || !$foundLast || !$foundEmail) {
+        if (! $foundFirst || ! $foundLast || ! $foundEmail) {
             fclose($handle);
-            $this->importErrors[] = 'CSV must have at least these columns: first_name, last_name, email. Found headers: ' . implode(', ', $headers);
+            $this->importErrors[] = 'CSV must have at least these columns: first_name, last_name, email. Found headers: '.implode(', ', $headers);
+
             return;
         }
 
@@ -139,12 +155,12 @@ class MemberBulkImport extends Component
             }
             if (empty($record['email'])) {
                 $rowErrors[] = 'Email is required';
-            } elseif (!filter_var($record['email'], FILTER_VALIDATE_EMAIL)) {
+            } elseif (! filter_var($record['email'], FILTER_VALIDATE_EMAIL)) {
                 $rowErrors[] = 'Invalid email format';
             }
 
             // Check for duplicate email in the system
-            if (!empty($record['email'])) {
+            if (! empty($record['email'])) {
                 $existingMember = Member::where('email', $record['email'])->exists();
                 if ($existingMember) {
                     $rowErrors[] = "Email '{$record['email']}' already exists";
@@ -153,12 +169,12 @@ class MemberBulkImport extends Component
 
             // Validate membership type
             $validTypes = [Member::MEMBERSHIP_STUDENT, Member::MEMBERSHIP_TEACHER, Member::MEMBERSHIP_STAFF, Member::MEMBERSHIP_EXTERNAL];
-            if (!empty($record['membership_type']) && !in_array(strtolower($record['membership_type']), $validTypes)) {
+            if (! empty($record['membership_type']) && ! in_array(strtolower($record['membership_type']), $validTypes)) {
                 $rowErrors[] = "Invalid membership type '{$record['membership_type']}'. Must be: student, teacher, staff, or external";
             }
 
             // Look up department
-            if (!empty($record['department'])) {
+            if (! empty($record['department'])) {
                 $deptId = $departments[strtolower($record['department'])] ?? null;
                 if ($deptId) {
                     $record['department_id'] = $deptId;
@@ -169,7 +185,7 @@ class MemberBulkImport extends Component
             unset($record['department']);
 
             // Look up program
-            if (!empty($record['program'])) {
+            if (! empty($record['program'])) {
                 $progId = $programs[strtolower($record['program'])] ?? null;
                 if ($progId) {
                     $record['program_id'] = $progId;
@@ -186,20 +202,21 @@ class MemberBulkImport extends Component
             $record['membership_type'] = strtolower($record['membership_type']);
 
             // Validate gender
-            if (!empty($record['gender']) && !in_array(strtolower($record['gender']), ['male', 'female', 'other'])) {
+            if (! empty($record['gender']) && ! in_array(strtolower($record['gender']), ['male', 'female', 'other'])) {
                 $rowErrors[] = "Invalid gender '{$record['gender']}'. Must be: male, female, or other";
             }
-            if (!empty($record['gender'])) {
+            if (! empty($record['gender'])) {
                 $record['gender'] = strtolower($record['gender']);
             }
 
-            if (!empty($rowErrors)) {
+            if (! empty($rowErrors)) {
                 $this->importErrors[] = [
                     'row' => $rowNum,
-                    'name' => ($record['first_name'] ?? '') . ' ' . ($record['last_name'] ?? ''),
+                    'name' => ($record['first_name'] ?? '').' '.($record['last_name'] ?? ''),
                     'email' => $record['email'] ?? '',
                     'errors' => implode('; ', $rowErrors),
                 ];
+
                 continue;
             }
 
@@ -256,7 +273,7 @@ class MemberBulkImport extends Component
                 $this->errorCount++;
                 $this->importErrors[] = [
                     'row' => 'N/A',
-                    'name' => ($record['first_name'] ?? '') . ' ' . ($record['last_name'] ?? ''),
+                    'name' => ($record['first_name'] ?? '').' '.($record['last_name'] ?? ''),
                     'email' => $record['email'] ?? '',
                     'errors' => $e->getMessage(),
                 ];

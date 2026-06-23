@@ -11,8 +11,11 @@ class MessageLogList extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $type = '';
+
     public string $sort = 'created_at';
+
     public string $direction = 'desc';
 
     protected $queryString = [
@@ -39,7 +42,7 @@ class MessageLogList extends Component
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('subject', 'like', "%{$this->search}%")
-                  ->orWhere('body', 'like', "%{$this->search}%");
+                    ->orWhere('body', 'like', "%{$this->search}%");
             });
         }
 

@@ -2,14 +2,14 @@
 
 namespace App\Modules\DigitalLibrary\Providers;
 
-use App\Modules\DigitalLibrary\Models\DigitalAsset;
 use App\Modules\DigitalLibrary\Livewire\DigitalAssetList;
 use App\Modules\DigitalLibrary\Livewire\DigitalAssetReader;
-use App\Modules\DigitalLibrary\Livewire\DigitalAssetUpload;
 use App\Modules\DigitalLibrary\Livewire\DigitalAssetShow;
-use App\Modules\DigitalLibrary\Livewire\Recommendations;
-use App\Modules\DigitalLibrary\Livewire\DownloadsList;
+use App\Modules\DigitalLibrary\Livewire\DigitalAssetUpload;
 use App\Modules\DigitalLibrary\Livewire\DigitalCategoryList;
+use App\Modules\DigitalLibrary\Livewire\DownloadsList;
+use App\Modules\DigitalLibrary\Livewire\Recommendations;
+use App\Modules\DigitalLibrary\Models\DigitalAsset;
 use App\Modules\DigitalLibrary\Observers\DigitalAssetObserver;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;

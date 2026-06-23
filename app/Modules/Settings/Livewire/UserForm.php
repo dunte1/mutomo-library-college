@@ -2,27 +2,41 @@
 
 namespace App\Modules\Settings\Livewire;
 
+use App\Models\Department;
+use App\Models\Program;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class UserForm extends Component
 {
     public ?int $userId = null;
+
     public bool $isEditing = false;
 
     public string $name = '';
+
     public string $email = '';
+
     public string $phone = '';
+
     public ?string $admission_number = null;
+
     public ?string $employee_id = null;
+
     public bool $is_active = true;
+
     public array $selectedRoles = [];
+
     public ?string $department_id = null;
+
     public ?string $program_id = null;
 
     public string $password = '';
+
     public string $password_confirmation = '';
 
     public function mount(?int $id = null): void
@@ -68,7 +82,7 @@ class UserForm extends Component
             'program_id' => ['nullable', 'exists:programs,id'],
         ];
 
-        if (!$this->isEditing) {
+        if (! $this->isEditing) {
             $rules['password'] = ['required', 'string', 'min:8', 'confirmed'];
         } else {
             $rules['password'] = ['nullable', 'string', 'min:8', 'confirmed'];
@@ -105,7 +119,7 @@ class UserForm extends Component
             $user = User::findOrFail($this->userId);
             $user->update($data);
             $user->syncRoles($this->selectedRoles);
-            app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
             session()->flash('success', 'User updated successfully.');
         } else {
             $data['password'] = Hash::make($this->password);
@@ -120,9 +134,9 @@ class UserForm extends Component
 
     public function render()
     {
-        $departments = \App\Models\Department::orderBy('name')->get();
-        $programs = \App\Models\Program::orderBy('name')->get();
-        $roles = \Spatie\Permission\Models\Role::orderBy('name')->get();
+        $departments = Department::orderBy('name')->get();
+        $programs = Program::orderBy('name')->get();
+        $roles = Role::orderBy('name')->get();
 
         return view('settings::livewire.user-form', [
             'departments' => $departments,

@@ -5,13 +5,16 @@ namespace App\Modules\Settings\Livewire;
 use App\Models\User;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Spatie\Permission\Models\Role;
 
 class UserList extends Component
 {
     use WithPagination;
 
     public string $search = '';
+
     public string $role = '';
+
     public string $status = '';
 
     protected $queryString = ['search', 'role', 'status'];
@@ -39,11 +42,12 @@ class UserList extends Component
     public function toggleActive(int $id): void
     {
         $user = User::findOrFail($id);
-        if ($user->isSuperAdmin() && !auth()->user()->isSuperAdmin()) {
+        if ($user->isSuperAdmin() && ! auth()->user()->isSuperAdmin()) {
             session()->flash('error', 'Cannot deactivate a super admin.');
+
             return;
         }
-        $user->update(['is_active' => !$user->is_active]);
+        $user->update(['is_active' => ! $user->is_active]);
         session()->flash('success', 'User status updated.');
     }
 
@@ -52,16 +56,16 @@ class UserList extends Component
         $users = User::with('roles')
             ->when($this->search, fn ($q) => $q->where(function ($q) {
                 $q->where('name', 'like', "%{$this->search}%")
-                  ->orWhere('email', 'like', "%{$this->search}%")
-                  ->orWhere('admission_number', 'like', "%{$this->search}%")
-                  ->orWhere('employee_id', 'like', "%{$this->search}%");
+                    ->orWhere('email', 'like', "%{$this->search}%")
+                    ->orWhere('admission_number', 'like', "%{$this->search}%")
+                    ->orWhere('employee_id', 'like', "%{$this->search}%");
             }))
             ->when($this->role, fn ($q) => $q->role($this->role))
             ->when($this->status !== '', fn ($q) => $q->where('is_active', $this->status === 'active'))
             ->orderBy('name')
             ->paginate(15);
 
-        $roles = \Spatie\Permission\Models\Role::orderBy('name')->get();
+        $roles = Role::orderBy('name')->get();
         $stats = [
             'total' => User::count(),
             'active' => User::where('is_active', true)->count(),

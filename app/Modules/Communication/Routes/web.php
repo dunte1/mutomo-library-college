@@ -3,17 +3,17 @@
 use App\Modules\Communication\Livewire\Analytics;
 use App\Modules\Communication\Livewire\AnnouncementForm;
 use App\Modules\Communication\Livewire\AnnouncementList;
+use App\Modules\Communication\Livewire\BroadcastMessageForm;
 use App\Modules\Communication\Livewire\BulletinForm;
 use App\Modules\Communication\Livewire\BulletinList;
 use App\Modules\Communication\Livewire\EventForm;
 use App\Modules\Communication\Livewire\EventList;
 use App\Modules\Communication\Livewire\MessageForm;
 use App\Modules\Communication\Livewire\MessageList;
+use App\Modules\Communication\Livewire\MessageLogList;
 use App\Modules\Communication\Livewire\MessageShow;
 use App\Modules\Communication\Livewire\TemplateForm;
 use App\Modules\Communication\Livewire\TemplateList;
-use App\Modules\Communication\Livewire\BroadcastMessageForm;
-use App\Modules\Communication\Livewire\MessageLogList;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('communication')->name('communication.')->group(function () {

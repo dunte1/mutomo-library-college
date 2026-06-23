@@ -2,13 +2,13 @@
 
 namespace App\Modules\Settings\Models;
 
+use App\Modules\Shared\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Modules\Shared\Traits\Auditable;
 
 class Testimonial extends Model
 {
-    use SoftDeletes, Auditable;
+    use Auditable, SoftDeletes;
 
     protected $fillable = [
         'author_name',
@@ -55,8 +55,8 @@ class Testimonial extends Model
     {
         return $query->where(function ($q) use ($term) {
             $q->where('author_name', 'like', "%{$term}%")
-              ->orWhere('author_role', 'like', "%{$term}%")
-              ->orWhere('content', 'like', "%{$term}%");
+                ->orWhere('author_role', 'like', "%{$term}%")
+                ->orWhere('content', 'like', "%{$term}%");
         });
     }
 
@@ -65,10 +65,11 @@ class Testimonial extends Model
         $parts = explode(' ', $this->author_name);
         $initials = '';
         foreach ($parts as $part) {
-            if (!empty(trim($part))) {
+            if (! empty(trim($part))) {
                 $initials .= strtoupper(mb_substr($part, 0, 1));
             }
         }
+
         return $initials ?: '?';
     }
 }

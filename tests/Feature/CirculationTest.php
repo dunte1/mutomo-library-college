@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Modules\Catalog\Models\BookCopy;
-use App\Modules\Circulation\Models\BorrowRecord;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -13,6 +12,7 @@ class CirculationTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected User $student;
 
     protected function setUp(): void
@@ -44,7 +44,7 @@ class CirculationTest extends TestCase
     public function test_api_issue_book(): void
     {
         $copy = BookCopy::where('status', 'available')->first();
-        if (!$copy) {
+        if (! $copy) {
             $this->markTestSkipped('No available copies');
         }
 

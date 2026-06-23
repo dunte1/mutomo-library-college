@@ -20,7 +20,7 @@ class SubscriptionActivation extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Subscription Activated - ' . config('app.name'),
+            subject: 'Subscription Activated - '.config('app.name'),
         );
     }
 

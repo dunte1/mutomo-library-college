@@ -24,6 +24,7 @@ class DepartmentList extends Component
         $department = Department::findOrFail($id);
         if ($department->users()->count() > 0) {
             $this->dispatch('notify', message: 'Cannot delete department with associated users.', type: 'error');
+
             return;
         }
         $department->delete();

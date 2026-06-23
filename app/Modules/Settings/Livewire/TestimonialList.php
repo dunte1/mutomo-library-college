@@ -11,6 +11,7 @@ class TestimonialList extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $filterStatus = '';
 
     protected $queryString = ['search', 'filterStatus'];

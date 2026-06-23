@@ -23,7 +23,7 @@ class LogUserActivity
                     'user_agent' => $request->userAgent(),
                 ])
                 ->event('page-visit')
-                ->log('Page Visit: ' . $request->path());
+                ->log('Page Visit: '.$request->path());
         }
 
         return $response;

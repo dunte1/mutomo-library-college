@@ -3,9 +3,9 @@
 namespace App\Services;
 
 use App\Models\DocumentVerification;
-use App\Modules\Settings\Models\Setting;
 use App\Modules\Settings\Services\SettingsService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -22,7 +22,7 @@ class DocumentService
             'type' => 'report',
             'author' => auth()->user()?->name ?? config('app.name'),
             'subject' => $name,
-            'keywords' => 'library, report, ' . strtolower($name),
+            'keywords' => 'library, report, '.strtolower($name),
             'generated_at' => $verification->generated_at->format('Y-m-d H:i:s'),
             'generated_by' => auth()->user()?->name ?? 'System',
             'document_id' => $verification->document_id,
@@ -38,15 +38,16 @@ class DocumentService
         $dompdf->getCanvas()->get_cpdf()->addInfo('Author', $documentMeta['author']);
         $dompdf->getCanvas()->get_cpdf()->addInfo('Subject', $documentMeta['subject']);
         $dompdf->getCanvas()->get_cpdf()->addInfo('Keywords', $documentMeta['keywords']);
-        $dompdf->getCanvas()->get_cpdf()->addInfo('Creator', config('app.name') . ' Library System');
+        $dompdf->getCanvas()->get_cpdf()->addInfo('Creator', config('app.name').' Library System');
 
         return $pdf;
     }
 
     public function savePdf(\Barryvdh\DomPDF\PDF $pdf, string $filename): string
     {
-        $path = 'documents/' . $filename;
+        $path = 'documents/'.$filename;
         Storage::disk('local')->put($path, $pdf->output());
+
         return $path;
     }
 
@@ -59,7 +60,7 @@ class DocumentService
         $logoPath = $branding['document_logo'] ?? '';
         $logoUrl = '';
         if ($logoPath && Storage::disk('public')->exists($logoPath)) {
-            $fullPath = storage_path('app/public/' . $logoPath);
+            $fullPath = storage_path('app/public/'.$logoPath);
             if (file_exists($fullPath)) {
                 $logoUrl = $fullPath;
             }
@@ -105,7 +106,8 @@ class DocumentService
                 ->margin(1)
                 ->generate($data);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('QR code generation failed', ['error' => $e->getMessage()]);
+            Log::error('QR code generation failed', ['error' => $e->getMessage()]);
+
             return '';
         }
     }

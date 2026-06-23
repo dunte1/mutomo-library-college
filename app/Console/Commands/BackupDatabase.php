@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Modules\Settings\Services\SettingsService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class BackupDatabase extends Command
 {
@@ -18,7 +17,7 @@ class BackupDatabase extends Command
     {
         $settings = $settingsService->getBackupSettings();
 
-        if (!($settings['auto_backup'] ?? true) && !$this->option('force')) {
+        if (! ($settings['auto_backup'] ?? true) && ! $this->option('force')) {
             $this->info('Automatic backups are disabled in settings. Use --force to override.');
 
             return Command::SUCCESS;
@@ -27,10 +26,10 @@ class BackupDatabase extends Command
         $this->info('Creating database backup...');
 
         try {
-            $filename = 'backup-' . now()->format('Y-m-d-H-i-s') . '.sql';
-            $path = storage_path('app/backups/' . $filename);
+            $filename = 'backup-'.now()->format('Y-m-d-H-i-s').'.sql';
+            $path = storage_path('app/backups/'.$filename);
 
-            if (!is_dir(dirname($path))) {
+            if (! is_dir(dirname($path))) {
                 mkdir(dirname($path), 0755, true);
             }
 
@@ -49,7 +48,7 @@ class BackupDatabase extends Command
             } elseif (in_array($db, ['mysql', 'mariadb'], true)) {
                 $cnfPath = tempnam(sys_get_temp_dir(), 'mycnf_');
                 $cnfContent = sprintf(
-                    "[client]%shost=%s%sport=%s%suser=%s%spassword=%s%s",
+                    '[client]%shost=%s%sport=%s%suser=%s%spassword=%s%s',
                     PHP_EOL,
                     $config['host'] ?? '127.0.0.1',
                     PHP_EOL,
@@ -84,7 +83,7 @@ class BackupDatabase extends Command
                 return Command::FAILURE;
             }
 
-            $size = file_exists($path) ? round(filesize($path) / 1024 / 1024, 2) . ' MB' : '0 B';
+            $size = file_exists($path) ? round(filesize($path) / 1024 / 1024, 2).' MB' : '0 B';
             $this->info("Backup created successfully: {$filename} ({$size})");
 
             Log::info('Database backup completed', [

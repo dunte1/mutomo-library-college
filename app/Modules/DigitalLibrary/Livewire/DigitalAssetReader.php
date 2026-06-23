@@ -3,17 +3,24 @@
 namespace App\Modules\DigitalLibrary\Livewire;
 
 use App\Modules\DigitalLibrary\Models\DigitalAsset;
+use App\Modules\DigitalLibrary\Models\ReadingHistory;
 use App\Modules\DigitalLibrary\Services\DigitalLibraryService;
 use Livewire\Component;
 
 class DigitalAssetReader extends Component
 {
     public DigitalAsset $asset;
+
     public int $currentPage = 1;
+
     public int $totalPages = 0;
+
     public int $progress = 0;
+
     public float $zoom = 1.0;
+
     public bool $fullscreen = false;
+
     public bool $showSidebar = true;
 
     public function mount(DigitalAsset $asset)
@@ -21,7 +28,7 @@ class DigitalAssetReader extends Component
         $this->asset = $asset;
         $this->asset->incrementViews();
 
-        $history = \App\Modules\DigitalLibrary\Models\ReadingHistory::where('user_id', auth()->id())
+        $history = ReadingHistory::where('user_id', auth()->id())
             ->where('digital_asset_id', $asset->id)
             ->first();
 
@@ -70,7 +77,7 @@ class DigitalAssetReader extends Component
 
     public function toggleSidebar(): void
     {
-        $this->showSidebar = !$this->showSidebar;
+        $this->showSidebar = ! $this->showSidebar;
     }
 
     protected function updateProgress(): void
@@ -93,7 +100,7 @@ class DigitalAssetReader extends Component
 
     public function getIsReadOnlyProperty(): bool
     {
-        return !$this->asset->allow_download && !$this->asset->allow_printing;
+        return ! $this->asset->allow_download && ! $this->asset->allow_printing;
     }
 
     public function render()

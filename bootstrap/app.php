@@ -1,8 +1,30 @@
 <?php
+
+use App\Http\Controllers\HealthCheckController;
+use App\Http\Middleware\CheckSubscriptionStatus;
+use App\Http\Middleware\LogUserActivity;
+use App\Http\Middleware\SecurityHeadersMiddleware;
+use App\Http\Middleware\TwoFactorMiddleware;
+use App\Modules\API\Providers\ApiServiceProvider;
+use App\Modules\Auth\Providers\AuthServiceProvider;
+use App\Modules\Catalog\Providers\CatalogServiceProvider;
+use App\Modules\Circulation\Providers\CirculationServiceProvider;
+use App\Modules\DigitalLibrary\Providers\DigitalLibraryServiceProvider;
+use App\Modules\Finance\Providers\FinanceServiceProvider;
+use App\Modules\Members\Providers\MembersServiceProvider;
+use App\Modules\Notifications\Providers\NotificationsServiceProvider;
+use App\Modules\Settings\Providers\SettingsServiceProvider;
+use App\Modules\Subscriptions\Providers\SubscriptionsServiceProvider;
+use App\Providers\ModuleServiceProvider;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Route;
+use Livewire\Livewire;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,46 +34,46 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         then: function () {
             Route::middleware('web')->group(base_path('routes/auth.php'));
-            Route::get('/health', \App\Http\Controllers\HealthCheckController::class)->middleware('auth');
+            Route::get('/health', HealthCheckController::class)->middleware('auth');
 
-            \Livewire\Livewire::setUpdateRoute(function ($handle) {
+            Livewire::setUpdateRoute(function ($handle) {
                 return Route::post('/livewire/update', $handle)->middleware('web');
             });
         },
     )
     ->withProviders([
-        \App\Providers\ModuleServiceProvider::class,
-        \App\Modules\Auth\Providers\AuthServiceProvider::class,
-        \App\Modules\Catalog\Providers\CatalogServiceProvider::class,
-        \App\Modules\Circulation\Providers\CirculationServiceProvider::class,
-        \App\Modules\DigitalLibrary\Providers\DigitalLibraryServiceProvider::class,
-        \App\Modules\Finance\Providers\FinanceServiceProvider::class,
-        \App\Modules\Members\Providers\MembersServiceProvider::class,
-        \App\Modules\Settings\Providers\SettingsServiceProvider::class,
-        \App\Modules\API\Providers\ApiServiceProvider::class,
-        \App\Modules\Notifications\Providers\NotificationsServiceProvider::class,
-        \App\Modules\Subscriptions\Providers\SubscriptionsServiceProvider::class,
+        ModuleServiceProvider::class,
+        AuthServiceProvider::class,
+        CatalogServiceProvider::class,
+        CirculationServiceProvider::class,
+        DigitalLibraryServiceProvider::class,
+        FinanceServiceProvider::class,
+        MembersServiceProvider::class,
+        SettingsServiceProvider::class,
+        ApiServiceProvider::class,
+        NotificationsServiceProvider::class,
+        SubscriptionsServiceProvider::class,
     ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-            '2fa' => \App\Http\Middleware\TwoFactorMiddleware::class,
-            'subscription' => \App\Http\Middleware\CheckSubscriptionStatus::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
+            'role_or_permission' => RoleOrPermissionMiddleware::class,
+            '2fa' => TwoFactorMiddleware::class,
+            'subscription' => CheckSubscriptionStatus::class,
         ]);
         $middleware->web(append: [
-            \App\Http\Middleware\LogUserActivity::class,
-            \App\Http\Middleware\SecurityHeadersMiddleware::class,
+            LogUserActivity::class,
+            SecurityHeadersMiddleware::class,
         ]);
         $middleware->api(append: [
             'throttle:api',
-            \App\Http\Middleware\SecurityHeadersMiddleware::class,
+            SecurityHeadersMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Ensure ModelNotFoundException renders the custom 404 page
-        $exceptions->renderable(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        $exceptions->renderable(function (ModelNotFoundException $e) {
             abort(404);
         });
     })->create();

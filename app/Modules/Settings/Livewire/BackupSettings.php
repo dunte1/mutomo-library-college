@@ -9,11 +9,17 @@ use Livewire\Component;
 class BackupSettings extends Component
 {
     public array $settings = [];
+
     public bool $saved = false;
+
     public bool $backingUp = false;
+
     public ?string $backupResult = null;
+
     public bool $backupSuccess = false;
+
     public ?string $lastBackupDate = null;
+
     public ?string $lastBackupSize = null;
 
     protected $rules = [
@@ -45,10 +51,10 @@ class BackupSettings extends Component
         $this->backupResult = null;
 
         try {
-            $filename = 'backup-' . now()->format('Y-m-d-H-i-s') . '.sql';
-            $path = storage_path('app/backups/' . $filename);
+            $filename = 'backup-'.now()->format('Y-m-d-H-i-s').'.sql';
+            $path = storage_path('app/backups/'.$filename);
 
-            if (!is_dir(dirname($path))) {
+            if (! is_dir(dirname($path))) {
                 mkdir(dirname($path), 0755, true);
             }
 
@@ -85,12 +91,12 @@ class BackupSettings extends Component
             }
 
             $this->backupSuccess = true;
-            $this->backupResult = 'Backup created successfully: ' . $filename;
+            $this->backupResult = 'Backup created successfully: '.$filename;
             $this->lastBackupDate = now()->format('d M Y H:i');
-            $this->lastBackupSize = file_exists($path) ? round(filesize($path) / 1024 / 1024, 2) . ' MB' : null;
+            $this->lastBackupSize = file_exists($path) ? round(filesize($path) / 1024 / 1024, 2).' MB' : null;
         } catch (\Throwable $e) {
             $this->backupSuccess = false;
-            $this->backupResult = 'Backup failed: ' . $e->getMessage();
+            $this->backupResult = 'Backup failed: '.$e->getMessage();
         }
 
         $this->backingUp = false;
@@ -110,7 +116,7 @@ class BackupSettings extends Component
                     ? now()->createFromTimestamp($disk->lastModified($latest))->format('d M Y H:i')
                     : null;
                 $this->lastBackupSize = $disk->size($latest)
-                    ? round($disk->size($latest) / 1024 / 1024, 2) . ' MB'
+                    ? round($disk->size($latest) / 1024 / 1024, 2).' MB'
                     : null;
             }
         }

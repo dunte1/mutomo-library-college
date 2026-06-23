@@ -32,6 +32,7 @@ Route::middleware(['auth', 'verified'])->prefix('finance')->name('finance.')->gr
 
     Route::get('/invoice/{invoice}/email', function (Invoice $invoice) {
         app(BillingService::class)->emailInvoice($invoice);
+
         return back()->with('success', 'Invoice emailed successfully.');
     })->name('invoice.email')->middleware('permission:generate-invoices');
 
@@ -41,6 +42,7 @@ Route::middleware(['auth', 'verified'])->prefix('finance')->name('finance.')->gr
 
     Route::get('/receipt/{receipt}/email', function (Receipt $receipt) {
         app(BillingService::class)->emailReceipt($receipt);
+
         return back()->with('success', 'Receipt emailed successfully.');
     })->name('receipt.email')->middleware('permission:generate-receipts');
 });

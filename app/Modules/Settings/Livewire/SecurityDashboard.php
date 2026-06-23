@@ -12,6 +12,7 @@ class SecurityDashboard extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $eventType = '';
 
     protected $queryString = ['search', 'eventType'];

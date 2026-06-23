@@ -3,21 +3,28 @@
 namespace App\Modules\Settings\Livewire;
 
 use App\Modules\Settings\Services\SettingsService;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Storage;
 
 class AppearanceSettings extends Component
 {
     use WithFileUploads;
 
     public array $settings = [];
+
     public $siteLogo;
+
     public $favicon;
+
     public $documentLogo;
+
     public bool $saved = false;
+
     public ?string $currentLogoUrl = null;
+
     public ?string $currentFaviconUrl = null;
+
     public ?string $currentDocumentLogoUrl = null;
 
     protected $rules = [
@@ -56,17 +63,17 @@ class AppearanceSettings extends Component
 
         $logo = $service->cached('site_logo');
         if ($logo) {
-            $this->currentLogoUrl = url('storage/' . $logo);
+            $this->currentLogoUrl = url('storage/'.$logo);
         }
 
         $favicon = $service->cached('favicon');
         if ($favicon) {
-            $this->currentFaviconUrl = url('storage/' . $favicon);
+            $this->currentFaviconUrl = url('storage/'.$favicon);
         }
 
         $docLogo = $service->cached('document_logo');
         if ($docLogo) {
-            $this->currentDocumentLogoUrl = url('storage/' . $docLogo);
+            $this->currentDocumentLogoUrl = url('storage/'.$docLogo);
         }
     }
 
@@ -79,25 +86,25 @@ class AppearanceSettings extends Component
         if ($this->siteLogo) {
             $path = $this->siteLogo->store('settings', 'public');
             $data['site_logo'] = $path;
-            $this->currentLogoUrl = url('storage/' . $path);
+            $this->currentLogoUrl = url('storage/'.$path);
             $this->siteLogo = null;
         }
 
         if ($this->favicon) {
             $path = $this->favicon->store('settings', 'public');
             $data['favicon'] = $path;
-            $this->currentFaviconUrl = url('storage/' . $path);
+            $this->currentFaviconUrl = url('storage/'.$path);
             $this->favicon = null;
         }
 
         if ($this->documentLogo) {
             $path = $this->documentLogo->store('settings', 'public');
             $data['document_logo'] = $path;
-            $this->currentDocumentLogoUrl = url('storage/' . $path);
+            $this->currentDocumentLogoUrl = url('storage/'.$path);
             $this->documentLogo = null;
         }
 
-        app(\App\Modules\Settings\Services\SettingsService::class)->updateSettings('appearance', $data);
+        app(SettingsService::class)->updateSettings('appearance', $data);
 
         $this->saved = true;
     }

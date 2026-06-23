@@ -3,6 +3,7 @@
 namespace App\Modules\Finance\Services;
 
 use App\Models\User;
+use App\Modules\Catalog\Models\Category;
 use App\Modules\Circulation\Models\BorrowRecord;
 use App\Modules\Circulation\Models\Fine;
 use App\Modules\Finance\Models\Transaction;
@@ -36,6 +37,7 @@ class AnalyticsService
 
             $data[$date->format('M Y')] = BorrowRecord::whereBetween('borrowed_at', [$start, $end])->count();
         }
+
         return $data;
     }
 
@@ -49,6 +51,7 @@ class AnalyticsService
 
             $data[$date->format('M Y')] = Fine::whereBetween('created_at', [$start, $end])->sum('amount');
         }
+
         return $data;
     }
 
@@ -64,13 +67,17 @@ class AnalyticsService
                 ->whereBetween('paid_at', [$start, $end])
                 ->sum('amount');
         }
+
         return $data;
     }
 
     public function overdueRate(): float
     {
         $total = BorrowRecord::count();
-        if ($total === 0) return 0;
+        if ($total === 0) {
+            return 0;
+        }
+
         return round((BorrowRecord::overdue()->count() / $total) * 100, 1);
     }
 
@@ -89,8 +96,8 @@ class AnalyticsService
         $driver = DB::connection()->getDriverName();
 
         $hourExpr = match ($driver) {
-            'mysql' => "HOUR(borrowed_at)",
-            'pgsql' => "EXTRACT(HOUR FROM borrowed_at)",
+            'mysql' => 'HOUR(borrowed_at)',
+            'pgsql' => 'EXTRACT(HOUR FROM borrowed_at)',
             'sqlite' => "strftime('%H', borrowed_at)",
             default => "strftime('%H', borrowed_at)",
         };
@@ -127,7 +134,7 @@ class AnalyticsService
 
     public function popularCategories(int $limit = 5): array
     {
-        return \App\Modules\Catalog\Models\Category::withCount(['books as borrow_count' => function ($q) {
+        return Category::withCount(['books as borrow_count' => function ($q) {
             $q->whereHas('copies.borrowRecords');
         }])
             ->orderByDesc('borrow_count')

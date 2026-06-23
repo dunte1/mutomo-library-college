@@ -2,13 +2,13 @@
 
 namespace App\Modules\Settings\Models;
 
+use App\Modules\Shared\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Modules\Shared\Traits\Auditable;
 
 class Feature extends Model
 {
-    use SoftDeletes, Auditable;
+    use Auditable, SoftDeletes;
 
     protected $fillable = [
         'title',
@@ -42,7 +42,7 @@ class Feature extends Model
     {
         return $query->where(function ($q) use ($term) {
             $q->where('title', 'like', "%{$term}%")
-              ->orWhere('description', 'like', "%{$term}%");
+                ->orWhere('description', 'like', "%{$term}%");
         });
     }
 }

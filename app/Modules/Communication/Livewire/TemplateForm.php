@@ -8,10 +8,15 @@ use Livewire\Component;
 class TemplateForm extends Component
 {
     public ?int $templateId = null;
+
     public string $name = '';
+
     public string $subject = '';
+
     public string $body = '';
+
     public string $category = '';
+
     public bool $isActive = true;
 
     protected function rules(): array

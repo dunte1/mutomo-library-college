@@ -5,8 +5,6 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 use Tests\TestCase;
 
 class NavigationAuditTest extends TestCase
@@ -20,7 +18,7 @@ class NavigationAuditTest extends TestCase
         parent::setUp();
         $this->seed();
         $this->user = User::where('email', 'admin@ollmchs.ac.ke')->first() ?? User::factory()->create(['email' => 'admin@ollmchs.ac.ke']);
-        if (!$this->user->hasRole('super-admin')) {
+        if (! $this->user->hasRole('super-admin')) {
             $this->user->assignRole('super-admin');
         }
     }

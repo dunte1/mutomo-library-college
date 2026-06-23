@@ -9,6 +9,7 @@ use App\Modules\Circulation\Services\FineCalculationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Log;
 
 class CirculationController extends Controller
 {
@@ -43,7 +44,7 @@ class CirculationController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user->can('view-circulation') && request('user_id') != $user->id) {
+        if (! $user->can('view-circulation') && request('user_id') != $user->id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -73,7 +74,8 @@ class CirculationController extends Controller
 
             return response()->json(['message' => 'Book issued successfully.', 'data' => $record], 201);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('API issue book failed', ['error' => $e->getMessage()]);
+            Log::error('API issue book failed', ['error' => $e->getMessage()]);
+
             return response()->json(['message' => 'Failed to issue book.'], 422);
         }
     }
@@ -95,7 +97,8 @@ class CirculationController extends Controller
 
             return response()->json(['message' => 'Book returned successfully.', 'data' => $record]);
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('API return book failed', ['error' => $e->getMessage()]);
+            Log::error('API return book failed', ['error' => $e->getMessage()]);
+
             return response()->json(['message' => 'Failed to return book.'], 422);
         }
     }

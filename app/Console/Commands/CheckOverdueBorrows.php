@@ -10,6 +10,7 @@ use Illuminate\Console\Command;
 class CheckOverdueBorrows extends Command
 {
     protected $signature = 'circulation:check-overdue';
+
     protected $description = 'Mark overdue borrows and assess fines';
 
     public function handle(FineCalculationService $fineService, NotificationService $notificationService): int

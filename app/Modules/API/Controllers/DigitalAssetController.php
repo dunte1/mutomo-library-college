@@ -14,8 +14,8 @@ class DigitalAssetController extends Controller
             ->when(request('type'), fn ($q) => $q->where('file_type', request('type')))
             ->when(request('category'), fn ($q) => $q->where('category_id', request('category')))
             ->when(request('search'), fn ($q) => $q->where(function ($q) {
-                $q->where('title', 'like', '%' . request('search') . '%')
-                    ->orWhere('author', 'like', '%' . request('search') . '%');
+                $q->where('title', 'like', '%'.request('search').'%')
+                    ->orWhere('author', 'like', '%'.request('search').'%');
             }))
             ->paginate(request('per_page', 15));
 
@@ -32,15 +32,15 @@ class DigitalAssetController extends Controller
 
     public function download(DigitalAsset $asset): JsonResponse
     {
-        if (!$asset->allow_download) {
+        if (! $asset->allow_download) {
             return response()->json(['message' => 'Download not allowed for this asset.'], 403);
         }
 
         $asset->incrementDownloads();
 
         return response()->json([
-            'url' => url('storage/' . $asset->file_path),
-            'filename' => $asset->slug . '.' . $asset->file_extension,
+            'url' => url('storage/'.$asset->file_path),
+            'filename' => $asset->slug.'.'.$asset->file_extension,
         ]);
     }
 }

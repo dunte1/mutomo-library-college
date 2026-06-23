@@ -11,7 +11,7 @@ class AuditHelper
         $user = auth()->user();
 
         $properties = $details;
-        if (!app()->runningInConsole()) {
+        if (! app()->runningInConsole()) {
             $properties = array_merge($properties, [
                 'ip' => request()->ip(),
                 'user_agent' => request()->userAgent(),

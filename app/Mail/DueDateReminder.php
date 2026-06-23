@@ -21,7 +21,7 @@ class DueDateReminder extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Book Due Date Reminder - ' . config('app.name'),
+            subject: 'Book Due Date Reminder - '.config('app.name'),
         );
     }
 

@@ -21,7 +21,7 @@ class OverdueNotice extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Overdue Book Return - ' . config('app.name'),
+            subject: 'Overdue Book Return - '.config('app.name'),
         );
     }
 

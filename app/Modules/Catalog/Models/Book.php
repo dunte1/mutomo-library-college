@@ -2,17 +2,17 @@
 
 namespace App\Modules\Catalog\Models;
 
+use App\Modules\DigitalLibrary\Models\DigitalAsset;
+use App\Modules\Shared\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Modules\Catalog\Models\BookCopy;
-use App\Modules\Shared\Traits\Auditable;
 
 class Book extends Model
 {
-    use SoftDeletes, Auditable;
+    use Auditable, SoftDeletes;
 
     protected $fillable = [
         'isbn',
@@ -113,17 +113,17 @@ class Book extends Model
     {
         return $query->where(function ($q) use ($term) {
             $q->where('title', 'like', "%{$term}%")
-              ->orWhere('isbn', 'like', "%{$term}%")
-              ->orWhere('description', 'like', "%{$term}%")
-              ->orWhereHas('authors', function ($q) use ($term) {
-                  $q->where('name', 'like', "%{$term}%");
-              })
-              ->orWhereHas('publisher', function ($q) use ($term) {
-                  $q->where('name', 'like', "%{$term}%");
-              })
-              ->orWhereHas('subjects', function ($q) use ($term) {
-                  $q->where('name', 'like', "%{$term}%");
-              });
+                ->orWhere('isbn', 'like', "%{$term}%")
+                ->orWhere('description', 'like', "%{$term}%")
+                ->orWhereHas('authors', function ($q) use ($term) {
+                    $q->where('name', 'like', "%{$term}%");
+                })
+                ->orWhereHas('publisher', function ($q) use ($term) {
+                    $q->where('name', 'like', "%{$term}%");
+                })
+                ->orWhereHas('subjects', function ($q) use ($term) {
+                    $q->where('name', 'like', "%{$term}%");
+                });
         });
     }
 
@@ -153,7 +153,7 @@ class Book extends Model
 
     public function digitalAssets(): HasMany
     {
-        return $this->hasMany(\App\Modules\DigitalLibrary\Models\DigitalAsset::class);
+        return $this->hasMany(DigitalAsset::class);
     }
 
     public function reviews()

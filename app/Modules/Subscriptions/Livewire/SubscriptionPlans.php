@@ -10,8 +10,9 @@ class SubscriptionPlans extends Component
 {
     public function subscribe(Plan $plan): void
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             $this->redirectRoute('login');
+
             return;
         }
 

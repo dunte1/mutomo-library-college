@@ -1,11 +1,11 @@
 <?php
 
-use App\Modules\Subscriptions\Livewire\MySubscription;
-use App\Modules\Subscriptions\Livewire\SubscriptionPlans;
-use App\Modules\Subscriptions\Livewire\SubscriptionCheckout;
-use App\Modules\Subscriptions\Livewire\Admin\PlanList;
 use App\Modules\Subscriptions\Livewire\Admin\PlanForm;
+use App\Modules\Subscriptions\Livewire\Admin\PlanList;
 use App\Modules\Subscriptions\Livewire\Admin\SubscriptionList;
+use App\Modules\Subscriptions\Livewire\MySubscription;
+use App\Modules\Subscriptions\Livewire\SubscriptionCheckout;
+use App\Modules\Subscriptions\Livewire\SubscriptionPlans;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('subscriptions')->name('subscriptions.')->group(function () {

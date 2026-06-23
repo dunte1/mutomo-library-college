@@ -5,16 +5,23 @@ namespace App\Modules\Catalog\Livewire;
 use App\Modules\Catalog\Models\Book;
 use App\Modules\Catalog\Models\BookReview;
 use App\Modules\Catalog\Services\BookService;
+use App\Modules\Circulation\Models\Reservation;
 use App\Modules\Circulation\Services\ReservationService;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
 class BookShow extends Component
 {
     public Book $book;
+
     public ?string $reviewText = null;
+
     public int $reviewRating = 5;
+
     public bool $canReserve = false;
+
     public ?string $reserveError = null;
+
     public ?string $reserveSuccess = null;
 
     public function mount(int $id): void
@@ -35,7 +42,7 @@ class BookShow extends Component
         } catch (\RuntimeException $e) {
             $this->reserveError = $e->getMessage();
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Place hold failed', ['error' => $e->getMessage()]);
+            Log::error('Place hold failed', ['error' => $e->getMessage()]);
             $this->reserveError = 'An unexpected error occurred.';
         }
     }
@@ -85,9 +92,9 @@ class BookShow extends Component
             'reviews' => $this->book->approvedReviews()->with('user')->latest()->get(),
             'userReview' => BookReview::where('book_id', $this->book->id)
                 ->where('user_id', auth()->id())->first(),
-            'hasActiveReservation' => \App\Modules\Circulation\Models\Reservation::where('user_id', auth()->id())
+            'hasActiveReservation' => Reservation::where('user_id', auth()->id())
                 ->where('book_id', $this->book->id)
-                ->where('status', \App\Modules\Circulation\Models\Reservation::STATUS_PENDING)
+                ->where('status', Reservation::STATUS_PENDING)
                 ->exists(),
         ]);
     }

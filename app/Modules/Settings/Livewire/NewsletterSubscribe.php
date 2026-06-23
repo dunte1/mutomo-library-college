@@ -8,8 +8,11 @@ use Livewire\Component;
 class NewsletterSubscribe extends Component
 {
     public string $email = '';
+
     public string $theme = 'hero';
+
     public bool $subscribed = false;
+
     public ?string $error = null;
 
     protected function rules(): array

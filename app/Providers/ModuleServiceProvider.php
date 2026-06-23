@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 
 class ModuleServiceProvider extends ServiceProvider
 {
@@ -40,7 +41,7 @@ class ModuleServiceProvider extends ServiceProvider
             // Register translations
             $translationsPath = "{$modulePath}/Translations";
             if (is_dir($translationsPath)) {
-                $this->loadTranslationsFrom($translationsPath, \Illuminate\Support\Str::kebab($module));
+                $this->loadTranslationsFrom($translationsPath, Str::kebab($module));
             }
         }
     }

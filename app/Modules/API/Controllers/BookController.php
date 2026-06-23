@@ -12,8 +12,8 @@ class BookController extends Controller
     {
         $books = Book::with(['authors', 'category', 'publisher'])
             ->when(request('search'), fn ($q) => $q->where(function ($q) {
-                $q->where('title', 'like', '%' . request('search') . '%')
-                    ->orWhere('isbn', 'like', '%' . request('search') . '%');
+                $q->where('title', 'like', '%'.request('search').'%')
+                    ->orWhere('isbn', 'like', '%'.request('search').'%');
             }))
             ->when(request('category'), fn ($q) => $q->whereHas('category', fn ($q) => $q->where('slug', request('category'))))
             ->when(request('author'), fn ($q) => $q->whereHas('authors', fn ($q) => $q->where('id', request('author'))))
@@ -33,7 +33,7 @@ class BookController extends Controller
     {
         $query = request('q');
 
-        if (!$query || strlen($query) < 2) {
+        if (! $query || strlen($query) < 2) {
             return response()->json(['data' => []]);
         }
 

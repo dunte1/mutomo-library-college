@@ -3,14 +3,15 @@
 namespace App\Modules\Settings\Livewire;
 
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class QueueMonitor extends Component
 {
     public array $queueStats = [];
+
     public array $failedJobs = [];
+
     public string $activeTab = 'overview';
 
     public function mount(): void
@@ -42,7 +43,7 @@ class QueueMonitor extends Component
             $this->refreshStats();
             $this->dispatch('notify', type: 'success', message: 'All failed jobs queued for retry.');
         } catch (\Throwable $e) {
-            $this->dispatch('notify', type: 'error', message: 'Failed to retry jobs: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to retry jobs: '.$e->getMessage());
         }
     }
 
@@ -54,7 +55,7 @@ class QueueMonitor extends Component
             $this->refreshStats();
             $this->dispatch('notify', type: 'success', message: 'Failed jobs table flushed.');
         } catch (\Throwable $e) {
-            $this->dispatch('notify', type: 'error', message: 'Failed to flush failed jobs: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to flush failed jobs: '.$e->getMessage());
         }
     }
 

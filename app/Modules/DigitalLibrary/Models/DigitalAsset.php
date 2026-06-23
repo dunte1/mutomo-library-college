@@ -3,14 +3,15 @@
 namespace App\Modules\DigitalLibrary\Models;
 
 use App\Models\User;
+use App\Modules\Catalog\Models\Book;
 use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DigitalAsset extends Model
 {
-    use SoftDeletes, Auditable;
+    use Auditable, SoftDeletes;
 
     protected $fillable = [
         'title', 'slug', 'description', 'file_path', 'file_type', 'mime_type',
@@ -50,7 +51,7 @@ class DigitalAsset extends Model
 
     public function book(): BelongsTo
     {
-        return $this->belongsTo(\App\Modules\Catalog\Models\Book::class);
+        return $this->belongsTo(Book::class);
     }
 
     public function scopeActive($query)
@@ -68,6 +69,7 @@ class DigitalAsset extends Model
         if ($level) {
             return $query->where('access_level', $level);
         }
+
         return $query->whereIn('access_level', ['public', 'restricted']);
     }
 

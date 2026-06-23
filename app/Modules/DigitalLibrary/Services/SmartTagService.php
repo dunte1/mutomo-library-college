@@ -22,7 +22,7 @@ class SmartTagService
             $tags[] = $source->publisher;
 
             if ($source->isbn) {
-                $tags[] = 'isbn:' . $source->isbn;
+                $tags[] = 'isbn:'.$source->isbn;
             }
         }
 

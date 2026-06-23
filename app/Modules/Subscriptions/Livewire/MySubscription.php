@@ -12,8 +12,9 @@ class MySubscription extends Component
         $subscription = Subscription::where('user_id', auth()->id())
             ->findOrFail($subscriptionId);
 
-        if (!$subscription->isActive()) {
+        if (! $subscription->isActive()) {
             $this->dispatch('notify', message: 'Only active subscriptions can be cancelled.', type: 'error');
+
             return;
         }
 

@@ -209,7 +209,7 @@ class CatalogSeeder extends Seeder
             for ($i = 0; $i < $copiesCount; $i++) {
                 BookCopy::create([
                     'book_id' => $book->id,
-                    'barcode' => 'OLLMCHS-' . str_pad($book->id, 4, '0', STR_PAD_LEFT) . '-' . str_pad($i + 1, 2, '0', STR_PAD_LEFT),
+                    'barcode' => 'OLLMCHS-'.str_pad($book->id, 4, '0', STR_PAD_LEFT).'-'.str_pad($i + 1, 2, '0', STR_PAD_LEFT),
                     'shelf_location' => $shelfLocation,
                     'status' => 'available',
                     'condition' => 'new',

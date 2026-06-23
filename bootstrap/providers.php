@@ -1,19 +1,35 @@
 <?php
 
+use App\Modules\API\Providers\ApiServiceProvider;
+use App\Modules\Assignments\Providers\AssignmentsServiceProvider;
+use App\Modules\Auth\Providers\AuthServiceProvider;
+use App\Modules\Catalog\Providers\CatalogServiceProvider;
+use App\Modules\Circulation\Providers\CirculationServiceProvider;
+use App\Modules\Communication\Providers\CommunicationServiceProvider;
+use App\Modules\DigitalLibrary\Providers\DigitalLibraryServiceProvider;
+use App\Modules\Finance\Providers\FinanceServiceProvider;
+use App\Modules\Members\Providers\MembersServiceProvider;
+use App\Modules\Notifications\Providers\NotificationsServiceProvider;
+use App\Modules\Reports\Providers\ReportsServiceProvider;
+use App\Modules\Settings\Providers\SettingsServiceProvider;
+use App\Providers\AppServiceProvider;
+use App\Providers\ModuleServiceProvider;
+use App\Providers\VoltServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\VoltServiceProvider::class,
-    App\Providers\ModuleServiceProvider::class,
-    App\Modules\Auth\Providers\AuthServiceProvider::class,
-    App\Modules\Catalog\Providers\CatalogServiceProvider::class,
-    App\Modules\Circulation\Providers\CirculationServiceProvider::class,
-    App\Modules\Communication\Providers\CommunicationServiceProvider::class,
-    App\Modules\DigitalLibrary\Providers\DigitalLibraryServiceProvider::class,
-    App\Modules\Finance\Providers\FinanceServiceProvider::class,
-    App\Modules\Members\Providers\MembersServiceProvider::class,
-    App\Modules\Notifications\Providers\NotificationsServiceProvider::class,
-    App\Modules\Settings\Providers\SettingsServiceProvider::class,
-    App\Modules\Reports\Providers\ReportsServiceProvider::class,
-    App\Modules\API\Providers\ApiServiceProvider::class,
-    App\Modules\Assignments\Providers\AssignmentsServiceProvider::class,
+    AppServiceProvider::class,
+    VoltServiceProvider::class,
+    ModuleServiceProvider::class,
+    AuthServiceProvider::class,
+    CatalogServiceProvider::class,
+    CirculationServiceProvider::class,
+    CommunicationServiceProvider::class,
+    DigitalLibraryServiceProvider::class,
+    FinanceServiceProvider::class,
+    MembersServiceProvider::class,
+    NotificationsServiceProvider::class,
+    SettingsServiceProvider::class,
+    ReportsServiceProvider::class,
+    ApiServiceProvider::class,
+    AssignmentsServiceProvider::class,
 ];

@@ -7,7 +7,7 @@ trait Auditable
     protected function logActivity(string $event, string $description, $performedOn = null): void
     {
         $properties = [];
-        if (!app()->runningInConsole()) {
+        if (! app()->runningInConsole()) {
             $properties = [
                 'ip' => request()->ip(),
                 'user_agent' => request()->userAgent(),

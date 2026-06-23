@@ -8,10 +8,15 @@ use Livewire\Component;
 class FeatureForm extends Component
 {
     public ?int $featureId = null;
+
     public string $title = '';
+
     public string $description = '';
+
     public ?string $icon = null;
+
     public int $sort_order = 0;
+
     public bool $is_active = true;
 
     public bool $isEditing = false;

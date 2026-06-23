@@ -15,13 +15,13 @@ class StripeWebhookController extends Controller
         $sigHeader = $request->header('Stripe-Signature');
         $webhookSecret = config('services.stripe.webhook_secret');
 
-        if (!$webhookSecret) {
+        if (! $webhookSecret) {
             return response()->json(['error' => 'Webhook secret not configured'], 500);
         }
 
         $result = $stripeService->handleWebhook($payload, $sigHeader, $webhookSecret);
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return response()->json(['error' => $result['error']], 400);
         }
 

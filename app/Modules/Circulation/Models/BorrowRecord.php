@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BorrowRecord extends Model
 {
-    use SoftDeletes, Auditable;
+    use Auditable, SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -33,19 +33,23 @@ class BorrowRecord extends Model
     {
         return [
             'borrowed_at' => 'datetime',
-            'due_at'      => 'datetime',
+            'due_at' => 'datetime',
             'returned_at' => 'datetime',
-            'renewed_at'  => 'datetime',
+            'renewed_at' => 'datetime',
             'renewal_count' => 'integer',
-            'max_renewals'  => 'integer',
+            'max_renewals' => 'integer',
         ];
     }
 
-    const STATUS_ACTIVE   = 'active';
+    const STATUS_ACTIVE = 'active';
+
     const STATUS_RETURNED = 'returned';
-    const STATUS_OVERDUE  = 'overdue';
-    const STATUS_LOST     = 'lost';
-    const STATUS_DAMAGED  = 'damaged';
+
+    const STATUS_OVERDUE = 'overdue';
+
+    const STATUS_LOST = 'lost';
+
+    const STATUS_DAMAGED = 'damaged';
 
     // Relationships
 
@@ -95,9 +99,12 @@ class BorrowRecord extends Model
 
     public function daysOverdue(): int
     {
-        if (!$this->isOverdue()) return 0;
+        if (! $this->isOverdue()) {
+            return 0;
+        }
 
         $from = $this->due_at->isPast() ? $this->due_at : now();
+
         return (int) $from->diffInDays(now());
     }
 
@@ -112,10 +119,10 @@ class BorrowRecord extends Model
     {
         return $query->where(function ($q) {
             $q->where('status', self::STATUS_OVERDUE)
-              ->orWhere(function ($q2) {
-                  $q2->where('status', self::STATUS_ACTIVE)
-                     ->where('due_at', '<', now());
-              });
+                ->orWhere(function ($q2) {
+                    $q2->where('status', self::STATUS_ACTIVE)
+                        ->where('due_at', '<', now());
+                });
         });
     }
 

@@ -9,10 +9,15 @@ use Livewire\Component;
 class CategoryForm extends Component
 {
     public ?int $categoryId = null;
+
     public string $name = '';
+
     public ?string $description = null;
+
     public ?int $parent_id = null;
+
     public int $sort_order = 0;
+
     public bool $is_active = true;
 
     public bool $isEditing = false;
@@ -60,6 +65,7 @@ class CategoryForm extends Component
             $category = Category::findOrFail($this->categoryId);
             if ($this->parent_id == $this->categoryId) {
                 session()->flash('error', 'A category cannot be its own parent.');
+
                 return;
             }
             $category->update($data);

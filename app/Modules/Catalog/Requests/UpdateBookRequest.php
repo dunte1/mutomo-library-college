@@ -21,7 +21,7 @@ class UpdateBookRequest extends FormRequest
             'description' => 'nullable|string',
             'language' => 'nullable|string|max:10',
             'pages' => 'nullable|integer|min:1',
-            'publication_year' => 'nullable|integer|min:1000|max:' . date('Y'),
+            'publication_year' => 'nullable|integer|min:1000|max:'.date('Y'),
             'edition' => 'nullable|string|max:50',
             'cover_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'publisher_id' => 'nullable|exists:publishers,id',

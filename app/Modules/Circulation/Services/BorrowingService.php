@@ -21,7 +21,7 @@ class BorrowingService
             $copy = BookCopy::findOrFail($bookCopyId);
             $user = User::findOrFail($userId);
 
-            if (!$copy->isAvailable()) {
+            if (! $copy->isAvailable()) {
                 throw new \RuntimeException('Book copy is not available for borrowing.');
             }
 
@@ -196,15 +196,25 @@ class BorrowingService
 
     public function getBorrowLimit(User $user): int
     {
-        if ($user->isStudent()) return 3;
-        if ($user->isLecturer()) return 5;
+        if ($user->isStudent()) {
+            return 3;
+        }
+        if ($user->isLecturer()) {
+            return 5;
+        }
+
         return 10;
     }
 
     public function getBorrowDuration(User $user): int
     {
-        if ($user->isStudent()) return 14;
-        if ($user->isLecturer()) return 30;
+        if ($user->isStudent()) {
+            return 14;
+        }
+        if ($user->isLecturer()) {
+            return 30;
+        }
+
         return 21;
     }
 

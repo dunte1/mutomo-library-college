@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Modules\Catalog\Models\Book;
-use App\Modules\Catalog\Models\Category;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -30,7 +29,7 @@ class CatalogTest extends TestCase
     public function test_book_can_be_viewed(): void
     {
         $book = Book::first();
-        if (!$book) {
+        if (! $book) {
             $this->markTestSkipped('No books seeded');
         }
         $response = $this->actingAs($this->user)->get(route('catalog.books.show', $book));

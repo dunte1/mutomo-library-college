@@ -4,6 +4,7 @@ namespace App\Modules\Members\Livewire;
 
 use App\Models\Department;
 use App\Models\Program;
+use App\Modules\Members\Models\Member;
 use App\Modules\Members\Services\MemberService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
@@ -15,24 +16,43 @@ class MemberForm extends Component
     use WithFileUploads;
 
     public ?int $memberId = null;
+
     public string $first_name = '';
+
     public string $last_name = '';
+
     public ?string $email = null;
+
     public ?string $phone = null;
+
     public ?string $date_of_birth = null;
+
     public ?string $address = null;
+
     public ?string $gender = null;
+
     public ?string $id_number = null;
+
     public ?string $admission_number = null;
+
     public ?int $department_id = null;
+
     public ?int $program_id = null;
+
     public ?string $class = null;
+
     public string $membership_type = 'student';
-    public string $status = \App\Modules\Members\Models\Member::STATUS_ACTIVE;
+
+    public string $status = Member::STATUS_ACTIVE;
+
     public ?string $joined_at = null;
+
     public ?string $expires_at = null;
+
     public ?string $notes = null;
+
     public $photo = null;
+
     public ?string $existingPhotoUrl = null;
 
     public bool $isEditing = false;
@@ -82,9 +102,9 @@ class MemberForm extends Component
         $uniqueIdNumber = 'unique:members,id_number';
         $uniqueAdmission = 'unique:members,admission_number';
         if ($this->isEditing && $this->memberId) {
-            $uniqueEmail .= ',' . $this->memberId;
-            $uniqueIdNumber .= ',' . $this->memberId;
-            $uniqueAdmission .= ',' . $this->memberId;
+            $uniqueEmail .= ','.$this->memberId;
+            $uniqueIdNumber .= ','.$this->memberId;
+            $uniqueAdmission .= ','.$this->memberId;
         }
 
         $rules = [
@@ -101,7 +121,7 @@ class MemberForm extends Component
             'department_id' => ['nullable', 'integer', 'exists:departments,id'],
             'program_id' => ['nullable', 'integer', 'exists:programs,id'],
             'membership_type' => ['required', 'in:student,teacher,staff,external'],
-            'status' => ['required', 'in:' . implode(',', [\App\Modules\Members\Models\Member::STATUS_ACTIVE, \App\Modules\Members\Models\Member::STATUS_SUSPENDED, \App\Modules\Members\Models\Member::STATUS_EXPIRED, \App\Modules\Members\Models\Member::STATUS_INACTIVE])],
+            'status' => ['required', 'in:'.implode(',', [Member::STATUS_ACTIVE, Member::STATUS_SUSPENDED, Member::STATUS_EXPIRED, Member::STATUS_INACTIVE])],
             'joined_at' => ['required', 'date'],
             'expires_at' => ['nullable', 'date', 'after_or_equal:joined_at'],
             'notes' => ['nullable', 'string', 'max:2000'],
@@ -122,7 +142,7 @@ class MemberForm extends Component
             $data['photo'] = $this->photo->store('members/photos', 'public');
         }
 
-        if (!$this->isEditing) {
+        if (! $this->isEditing) {
             // Always create a linked user account
             $data['create_user'] = true;
 

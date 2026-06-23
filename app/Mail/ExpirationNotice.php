@@ -22,8 +22,8 @@ class ExpirationNotice extends Mailable
     public function envelope(): Envelope
     {
         $subject = $this->noticeType === 'expired'
-            ? 'Membership Expired - ' . config('app.name')
-            : 'Membership Expiring Soon - ' . config('app.name');
+            ? 'Membership Expired - '.config('app.name')
+            : 'Membership Expiring Soon - '.config('app.name');
 
         return new Envelope(subject: $subject);
     }

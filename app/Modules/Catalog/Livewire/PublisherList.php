@@ -24,6 +24,7 @@ class PublisherList extends Component
         $publisher = Publisher::findOrFail($id);
         if ($publisher->books()->count() > 0) {
             $this->dispatch('notify', message: 'Cannot delete publisher with associated books.', type: 'error');
+
             return;
         }
         $publisher->delete();

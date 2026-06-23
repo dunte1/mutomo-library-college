@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class HealthCheckController extends Controller
@@ -71,7 +71,7 @@ class HealthCheckController extends Controller
     private function checkCache(): array
     {
         try {
-            $key = '_health_' . time();
+            $key = '_health_'.time();
             Cache::put($key, true, 1);
             $retrieved = Cache::get($key);
             Cache::forget($key);

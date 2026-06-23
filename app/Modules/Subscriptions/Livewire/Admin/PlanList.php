@@ -11,19 +11,21 @@ class PlanList extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $type = '';
+
     public string $billingCycle = '';
 
     protected $queryString = ['search', 'type', 'billingCycle'];
 
     public function toggleActive(Plan $plan): void
     {
-        $plan->update(['is_active' => !$plan->is_active]);
+        $plan->update(['is_active' => ! $plan->is_active]);
 
         activity()
             ->performedOn($plan)
             ->causedBy(auth()->user())
-            ->log(($plan->is_active ? 'Activated' : 'Deactivated') . " plan: {$plan->name}");
+            ->log(($plan->is_active ? 'Activated' : 'Deactivated')." plan: {$plan->name}");
 
         $this->dispatch('notify', message: 'Plan status updated.', type: 'success');
     }
@@ -32,6 +34,7 @@ class PlanList extends Component
     {
         if ($plan->subscriptions()->exists()) {
             $this->dispatch('notify', message: 'Cannot delete plan with active subscriptions.', type: 'error');
+
             return;
         }
 

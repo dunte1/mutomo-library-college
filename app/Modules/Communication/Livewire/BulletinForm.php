@@ -9,10 +9,15 @@ use Livewire\Component;
 class BulletinForm extends Component
 {
     public ?int $bulletinId = null;
+
     public string $title = '';
+
     public string $content = '';
+
     public ?int $department_id = null;
+
     public string $status = 'draft';
+
     public ?string $published_at = null;
 
     public bool $isEditing = false;

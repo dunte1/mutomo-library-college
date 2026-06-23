@@ -4,6 +4,7 @@ namespace App\Modules\Members\Livewire;
 
 use App\Modules\Members\Services\MemberService;
 use App\Services\ExportService;
+use Illuminate\Http\Response;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -12,9 +13,13 @@ class MemberList extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $status = '';
+
     public string $membershipType = '';
+
     public string $sort = 'created_at';
+
     public string $direction = 'desc';
 
     protected $queryString = [
@@ -45,7 +50,7 @@ class MemberList extends Component
         $this->reset(['search', 'status', 'membershipType', 'sort', 'direction']);
     }
 
-    public function exportCsv(): \Illuminate\Http\Response
+    public function exportCsv(): Response
     {
         return app(ExportService::class)->exportMembersCsv();
     }

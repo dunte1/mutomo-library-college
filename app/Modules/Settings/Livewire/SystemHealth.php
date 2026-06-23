@@ -8,8 +8,11 @@ use Livewire\Component;
 class SystemHealth extends Component
 {
     public array $checks = [];
+
     public array $overall = [];
+
     public array $optimizationLogs = [];
+
     public string $activeTab = 'health';
 
     public function mount(SystemHealthService $healthService): void
@@ -49,7 +52,7 @@ class SystemHealth extends Component
             $this->activeTab = 'optimization';
             $this->dispatch('notify', type: 'success', message: 'Cache rebuilt successfully.');
         } catch (\Throwable $e) {
-            $this->dispatch('notify', type: 'error', message: 'Failed to rebuild cache: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to rebuild cache: '.$e->getMessage());
         }
     }
 
@@ -63,7 +66,7 @@ class SystemHealth extends Component
             $this->activeTab = 'optimization';
             $this->dispatch('notify', type: 'success', message: 'System optimization completed.');
         } catch (\Throwable $e) {
-            $this->dispatch('notify', type: 'error', message: 'Failed to optimize system: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to optimize system: '.$e->getMessage());
         }
     }
 

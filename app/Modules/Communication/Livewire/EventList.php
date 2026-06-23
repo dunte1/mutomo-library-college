@@ -11,6 +11,7 @@ class EventList extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $statusFilter = '';
 
     protected $queryString = ['search', 'statusFilter'];

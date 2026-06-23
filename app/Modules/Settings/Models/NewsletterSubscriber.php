@@ -32,7 +32,7 @@ class NewsletterSubscriber extends Model
     {
         return $query->where(function ($q) use ($term) {
             $q->where('email', 'like', "%{$term}%")
-              ->orWhere('name', 'like', "%{$term}%");
+                ->orWhere('name', 'like', "%{$term}%");
         });
     }
 }

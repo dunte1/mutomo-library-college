@@ -8,9 +8,13 @@ use Livewire\Component;
 class DepartmentForm extends Component
 {
     public ?int $departmentId = null;
+
     public string $name = '';
+
     public string $code = '';
+
     public ?string $description = null;
+
     public bool $is_active = true;
 
     public bool $isEditing = false;
@@ -33,7 +37,7 @@ class DepartmentForm extends Component
     {
         $uniqueCode = 'unique:departments,code';
         if ($this->isEditing) {
-            $uniqueCode .= ',' . $this->departmentId;
+            $uniqueCode .= ','.$this->departmentId;
         }
 
         return [

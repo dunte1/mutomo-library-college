@@ -2,10 +2,8 @@
 
 namespace App\Modules\Subscriptions\Livewire;
 
-use App\Models\User;
 use App\Modules\Finance\Services\MpesaService;
 use App\Modules\Subscriptions\Models\Plan;
-use App\Modules\Subscriptions\Models\Subscription;
 use App\Modules\Subscriptions\Services\StripeService;
 use App\Modules\Subscriptions\Services\SubscriptionService;
 use Livewire\Component;
@@ -13,11 +11,17 @@ use Livewire\Component;
 class SubscriptionCheckout extends Component
 {
     public Plan $plan;
+
     public string $paymentMethod = 'mpesa';
+
     public string $phone = '';
+
     public bool $processing = false;
+
     public ?string $checkoutRequestId = null;
+
     public ?int $transactionId = null;
+
     public ?string $stripeUrl = null;
 
     protected function rules(): array
@@ -30,7 +34,7 @@ class SubscriptionCheckout extends Component
 
     public function mount(Plan $plan): void
     {
-        if (!$plan->is_active) {
+        if (! $plan->is_active) {
             abort(404);
         }
 
@@ -47,6 +51,7 @@ class SubscriptionCheckout extends Component
 
         if (auth()->user()->activeSubscription) {
             $this->dispatch('notify', message: 'You already have an active subscription.', type: 'error');
+
             return;
         }
 
@@ -87,6 +92,7 @@ class SubscriptionCheckout extends Component
     {
         if (auth()->user()->activeSubscription) {
             $this->dispatch('notify', message: 'You already have an active subscription.', type: 'error');
+
             return;
         }
 

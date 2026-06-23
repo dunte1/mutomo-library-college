@@ -2,14 +2,14 @@
 
 namespace App\Modules\Catalog\Models;
 
+use App\Modules\Shared\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Modules\Shared\Traits\Auditable;
 
 class Subject extends Model
 {
-    use SoftDeletes, Auditable;
+    use Auditable, SoftDeletes;
 
     protected $fillable = [
         'name',

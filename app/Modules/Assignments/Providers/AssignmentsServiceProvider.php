@@ -2,8 +2,8 @@
 
 namespace App\Modules\Assignments\Providers;
 
-use App\Modules\Assignments\Livewire\TeacherAssignments;
 use App\Modules\Assignments\Livewire\StudentAssignments;
+use App\Modules\Assignments\Livewire\TeacherAssignments;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;

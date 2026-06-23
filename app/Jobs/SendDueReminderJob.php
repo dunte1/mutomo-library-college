@@ -21,7 +21,9 @@ class SendDueReminderJob implements ShouldQueue
     public function handle(WhatsAppService $whatsapp): void
     {
         $user = $this->borrowRecord->user;
-        if (!$user) return;
+        if (! $user) {
+            return;
+        }
 
         $bookTitle = $this->borrowRecord->bookCopy?->book?->title ?? 'Unknown';
 
@@ -50,11 +52,11 @@ class SendDueReminderJob implements ShouldQueue
             $whatsappEnabled = Setting::where('key', 'whatsapp_notifications')->value('value');
             if ($whatsappEnabled && $whatsappEnabled !== 'false' && $user->phone) {
                 $message = "📚 *Library Due Date Reminder*\n\n"
-                    . "Hi {$user->name},\n\n"
-                    . "Your borrowed book \"{$bookTitle}\" is due in {$this->daysUntilDue} day(s) (Due: {$this->borrowRecord->due_at->format('d M Y')}).\n\n"
-                    . "Please return it on time to avoid overdue fines.\n\n"
-                    . "Thank you,\n"
-                    . config('app.name');
+                    ."Hi {$user->name},\n\n"
+                    ."Your borrowed book \"{$bookTitle}\" is due in {$this->daysUntilDue} day(s) (Due: {$this->borrowRecord->due_at->format('d M Y')}).\n\n"
+                    ."Please return it on time to avoid overdue fines.\n\n"
+                    ."Thank you,\n"
+                    .config('app.name');
                 $whatsapp->send($user->phone, $message);
             }
         } catch (\Throwable $e) {

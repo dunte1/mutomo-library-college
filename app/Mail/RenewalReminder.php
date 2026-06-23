@@ -21,7 +21,7 @@ class RenewalReminder extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Subscription Renewal Reminder - ' . config('app.name'),
+            subject: 'Subscription Renewal Reminder - '.config('app.name'),
         );
     }
 

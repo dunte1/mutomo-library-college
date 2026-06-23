@@ -4,6 +4,7 @@ use App\Modules\API\Controllers\AuthController;
 use App\Modules\API\Controllers\BookController;
 use App\Modules\API\Controllers\CirculationController;
 use App\Modules\API\Controllers\DigitalAssetController;
+use App\Modules\API\Controllers\MpesaCallbackController;
 use App\Modules\API\Controllers\PushNotificationController;
 use App\Modules\API\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
@@ -13,7 +14,7 @@ Route::name('api.')->group(function () {
         ->name('auth.login')
         ->middleware('throttle:6,1');
 
-    Route::post('/mpesa/callback', \App\Modules\API\Controllers\MpesaCallbackController::class)
+    Route::post('/mpesa/callback', MpesaCallbackController::class)
         ->name('mpesa.callback')
         ->middleware('throttle:10,1');
 

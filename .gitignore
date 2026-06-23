@@ -35,3 +35,7 @@ Thumbs.db
 /deployment-report/
 *.zip
 check_books.php
+pint_output.txt
+test_output.txt
+test_detail.txt
+test_verbose.txt

@@ -3,23 +3,32 @@
 namespace App\Modules\Settings\Livewire;
 
 use App\Modules\Settings\Models\AuthCarouselImage;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Storage;
 
 class AuthCarouselSettings extends Component
 {
     use WithFileUploads;
 
     public $images = [];
+
     public $newImage;
+
     public $newImages = [];
+
     public $editId = null;
+
     public $editTitle = '';
+
     public $editSubtitle = '';
+
     public bool $saved = false;
+
     public string $uploadMode = 'single';
+
     public ?int $bulkUploaded = null;
+
     public array $bulkErrors = [];
 
     public function mount(): void
@@ -72,7 +81,7 @@ class AuthCarouselSettings extends Component
                     $uploaded++;
                 }
             } catch (\Throwable $e) {
-                $errors[] = "Image #{" . ($index + 1) . "}: " . $e->getMessage();
+                $errors[] = 'Image #{'.($index + 1).'}: '.$e->getMessage();
             }
         }
 
@@ -80,7 +89,7 @@ class AuthCarouselSettings extends Component
         $this->loadImages();
         $this->saved = true;
 
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             $this->bulkErrors = $errors;
         }
 
@@ -123,7 +132,7 @@ class AuthCarouselSettings extends Component
     public function toggleActive($id): void
     {
         $image = AuthCarouselImage::findOrFail($id);
-        $image->update(['is_active' => !$image->is_active]);
+        $image->update(['is_active' => ! $image->is_active]);
         $this->loadImages();
     }
 

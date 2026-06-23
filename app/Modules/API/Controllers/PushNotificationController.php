@@ -3,7 +3,6 @@
 namespace App\Modules\API\Controllers;
 
 use App\Models\PushSubscription;
-use App\Modules\Communication\Models\NotificationLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -17,7 +16,7 @@ class PushNotificationController extends Controller
     {
         $publicKey = config('services.vapid.public_key');
 
-        if (!$publicKey) {
+        if (! $publicKey) {
             return response()->json(['error' => 'VAPID keys not configured. Run `php artisan vapid:generate`.'], 503);
         }
 

@@ -11,7 +11,9 @@ use Livewire\Component;
 class MemberShow extends Component
 {
     public Member $member;
+
     public string $tab = 'details';
+
     public ?array $summary = null;
 
     public function mount(int $id): void
@@ -27,7 +29,7 @@ class MemberShow extends Component
 
     public function suspend(): void
     {
-        app(MemberService::class)->suspendMember($this->member, 'Suspended by ' . auth()->user()->name);
+        app(MemberService::class)->suspendMember($this->member, 'Suspended by '.auth()->user()->name);
         $this->member->refresh();
         $this->dispatch('notify', type: 'success', message: 'Member suspended successfully.');
     }
@@ -49,7 +51,7 @@ class MemberShow extends Component
     public function clear(): void
     {
         try {
-            app(MemberService::class)->clearMember($this->member, 'Cleared by ' . auth()->user()->name);
+            app(MemberService::class)->clearMember($this->member, 'Cleared by '.auth()->user()->name);
             $this->member->refresh();
             $this->dispatch('notify', type: 'success', message: 'Member cleared successfully.');
         } catch (\RuntimeException $e) {

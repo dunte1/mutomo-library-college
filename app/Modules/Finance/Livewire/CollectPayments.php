@@ -10,12 +10,19 @@ use Livewire\Component;
 class CollectPayments extends Component
 {
     public string $search = '';
+
     public ?int $selectedUserId = null;
+
     public ?string $selectedUserName = null;
+
     public array $outstandingFines = [];
+
     public float $totalAmount = 0;
+
     public float $amount = 0;
+
     public string $paymentMethod = 'cash';
+
     public ?string $reference = null;
 
     protected $queryString = ['search'];
@@ -56,6 +63,7 @@ class CollectPayments extends Component
 
         if (empty($this->outstandingFines)) {
             $this->dispatch('notify', message: 'No outstanding fines to collect.', type: 'error');
+
             return;
         }
 

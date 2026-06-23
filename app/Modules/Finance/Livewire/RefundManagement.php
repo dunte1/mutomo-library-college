@@ -13,8 +13,11 @@ class RefundManagement extends Component
     use WithPagination;
 
     public string $search = '';
+
     public bool $showRefundModal = false;
+
     public ?int $selectedTransactionId = null;
+
     public ?string $refundReason = null;
 
     protected $queryString = ['search'];
@@ -38,6 +41,7 @@ class RefundManagement extends Component
 
         if ($transaction->status !== 'completed') {
             $this->dispatch('notify', message: 'Only completed transactions can be refunded.', type: 'error');
+
             return;
         }
 

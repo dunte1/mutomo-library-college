@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Modules\Finance\Models\Report;
 use App\Modules\Finance\Services\ReportingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ReportingServiceTest extends TestCase
@@ -43,7 +44,7 @@ class ReportingServiceTest extends TestCase
     public function test_csv_report_contains_data(): void
     {
         $report = $this->service->generateReport('catalog_inventory', [], 'csv');
-        $content = \Illuminate\Support\Facades\Storage::disk('local')->get($report->file_path);
+        $content = Storage::disk('local')->get($report->file_path);
 
         $this->assertStringContainsString('Total Books', $content);
     }

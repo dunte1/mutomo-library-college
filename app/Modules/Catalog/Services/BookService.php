@@ -32,7 +32,7 @@ class BookService
 
         $book = $this->bookRepository->create($data);
 
-        if (!empty($data['copies_count'])) {
+        if (! empty($data['copies_count'])) {
             for ($i = 0; $i < $data['copies_count']; $i++) {
                 $book->copies()->create([
                     'barcode' => $this->barcodeService->generate(),
@@ -95,7 +95,7 @@ class BookService
     {
         $total = $this->bookRepository->count();
         $active = $this->bookRepository->findWhere(['is_active' => true])->count();
-        $totalCopies = \App\Modules\Catalog\Models\BookCopy::count();
+        $totalCopies = BookCopy::count();
         $availableCopies = BookCopy::where('status', BookCopy::STATUS_AVAILABLE)->count();
         $borrowedCopies = BookCopy::where('status', BookCopy::STATUS_BORROWED)->count();
 

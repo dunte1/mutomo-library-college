@@ -9,11 +9,17 @@ use Livewire\Component;
 class ProgramForm extends Component
 {
     public ?int $programId = null;
+
     public string $name = '';
+
     public string $code = '';
+
     public ?int $department_id = null;
+
     public ?string $description = null;
+
     public int $duration_years = 3;
+
     public bool $is_active = true;
 
     public bool $isEditing = false;
@@ -38,7 +44,7 @@ class ProgramForm extends Component
     {
         $uniqueCode = 'unique:programs,code';
         if ($this->isEditing) {
-            $uniqueCode .= ',' . $this->programId;
+            $uniqueCode .= ','.$this->programId;
         }
 
         return [

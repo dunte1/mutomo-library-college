@@ -17,7 +17,7 @@ class DigitalLibraryService
     {
         $fileType = $this->classifyFileType($file);
         $extension = $file->getClientOriginalExtension();
-        $slug = Str::slug($data['title']) . '-' . Str::random(6);
+        $slug = Str::slug($data['title']).'-'.Str::random(6);
 
         $path = $file->store("digital-library/{$fileType}", 'public');
 
@@ -85,7 +85,9 @@ class DigitalLibraryService
 
     public function trackProgress(int $assetId, int $progress, ?int $lastPage = null): void
     {
-        if (!auth()->check()) return;
+        if (! auth()->check()) {
+            return;
+        }
 
         ReadingHistory::updateOrCreate(
             [
@@ -122,7 +124,7 @@ class DigitalLibraryService
     {
         $assets = DigitalAsset::active();
 
-        if (!empty($query)) {
+        if (! empty($query)) {
             $assets->where(function ($q) use ($query) {
                 $q->where('title', 'like', "%{$query}%")
                     ->orWhere('description', 'like', "%{$query}%")
@@ -131,15 +133,15 @@ class DigitalLibraryService
             });
         }
 
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $assets->ofType($filters['type']);
         }
 
-        if (!empty($filters['category_id'])) {
+        if (! empty($filters['category_id'])) {
             $assets->where('category_id', $filters['category_id']);
         }
 
-        if (!empty($filters['access_level'])) {
+        if (! empty($filters['access_level'])) {
             $assets->accessible($filters['access_level']);
         } else {
             $assets->accessible();

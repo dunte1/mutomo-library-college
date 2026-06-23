@@ -15,7 +15,7 @@ class FinanceService
     {
         $borrowRecord = $fine->borrowRecord;
 
-        if (!$borrowRecord || !$borrowRecord->user) {
+        if (! $borrowRecord || ! $borrowRecord->user) {
             throw new \RuntimeException('Fine has no associated borrow record or user.');
         }
 

@@ -3,26 +3,33 @@
 namespace App\Modules\Catalog\Livewire;
 
 use App\Modules\Catalog\Models\Author;
-use App\Modules\Catalog\Models\Book;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Publisher;
 use App\Modules\Catalog\Models\Subject;
 use App\Modules\Catalog\Services\BookService;
+use App\Services\ExportService;
+use Illuminate\Http\Response;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Services\ExportService;
 
 class BookList extends Component
 {
     use WithPagination;
 
     public string $search = '';
+
     public ?int $categoryId = null;
+
     public ?int $authorId = null;
+
     public ?int $publisherId = null;
+
     public ?int $subjectId = null;
+
     public ?int $year = null;
+
     public string $sort = 'title';
+
     public string $direction = 'asc';
 
     protected $queryString = [
@@ -45,7 +52,7 @@ class BookList extends Component
         $this->reset(['search', 'categoryId', 'authorId', 'publisherId', 'subjectId', 'year', 'sort', 'direction']);
     }
 
-    public function exportCsv(): \Illuminate\Http\Response
+    public function exportCsv(): Response
     {
         return app(ExportService::class)->exportBooksCsv();
     }

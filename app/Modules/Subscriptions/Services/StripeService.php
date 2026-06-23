@@ -19,7 +19,6 @@ use Stripe\Checkout\Session;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Stripe;
 use Stripe\Webhook;
-use Stripe\WebhookEndpoint;
 
 class StripeService
 {
@@ -42,8 +41,9 @@ class StripeService
 
     public function createCheckoutSession(Plan $plan, Subscription $subscription, string $successUrl, string $cancelUrl): ?Session
     {
-        if (!$this->initialized) {
+        if (! $this->initialized) {
             Log::error('Stripe not configured');
+
             return null;
         }
 
@@ -85,15 +85,17 @@ class StripeService
 
             return $session;
         } catch (Exception $e) {
-            Log::error('Stripe checkout session error: ' . $e->getMessage());
+            Log::error('Stripe checkout session error: '.$e->getMessage());
+
             return null;
         }
     }
 
     public function createOneTimeCheckoutSession(Plan $plan, Subscription $subscription, string $successUrl, string $cancelUrl): ?Session
     {
-        if (!$this->initialized) {
+        if (! $this->initialized) {
             Log::error('Stripe not configured');
+
             return null;
         }
 
@@ -106,7 +108,7 @@ class StripeService
                             'currency' => strtolower($plan->currency),
                             'product_data' => [
                                 'name' => $plan->name,
-                                'description' => $plan->description . ' (One-time payment)',
+                                'description' => $plan->description.' (One-time payment)',
                             ],
                             'unit_amount' => (int) round($plan->price * 100),
                         ],
@@ -133,7 +135,8 @@ class StripeService
 
             return $session;
         } catch (Exception $e) {
-            Log::error('Stripe one-time checkout error: ' . $e->getMessage());
+            Log::error('Stripe one-time checkout error: '.$e->getMessage());
+
             return null;
         }
     }
@@ -145,10 +148,12 @@ class StripeService
         try {
             $event = Webhook::constructEvent($payload, $sigHeader, $webhookSecret);
         } catch (SignatureVerificationException $e) {
-            Log::error('Stripe webhook signature verification failed: ' . $e->getMessage());
+            Log::error('Stripe webhook signature verification failed: '.$e->getMessage());
+
             return ['success' => false, 'error' => 'Invalid signature'];
         } catch (Exception $e) {
-            Log::error('Stripe webhook error: ' . $e->getMessage());
+            Log::error('Stripe webhook error: '.$e->getMessage());
+
             return ['success' => false, 'error' => $e->getMessage()];
         }
 
@@ -166,7 +171,7 @@ class StripeService
                 'invoice.payment_failed' => $this->handleInvoicePaymentFailed($event->data->object),
                 'customer.subscription.updated' => $this->handleSubscriptionUpdated($event->data->object),
                 'customer.subscription.deleted' => $this->handleSubscriptionDeleted($event->data->object),
-                default => ['success' => true, 'message' => 'Unhandled event type: ' . $event->type],
+                default => ['success' => true, 'message' => 'Unhandled event type: '.$event->type],
             };
 
             WebhookLog::where('event_type', $event->type)
@@ -181,7 +186,8 @@ class StripeService
                 ->first()
                 ?->update(['status' => 'failed', 'error' => $e->getMessage()]);
 
-            Log::error('Stripe webhook handler error: ' . $e->getMessage());
+            Log::error('Stripe webhook handler error: '.$e->getMessage());
+
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -189,12 +195,12 @@ class StripeService
     protected function handleCheckoutCompleted(object $session): array
     {
         $subscriptionId = $session->metadata->subscription_id ?? null;
-        if (!$subscriptionId) {
+        if (! $subscriptionId) {
             return ['success' => false, 'error' => 'No subscription_id in metadata'];
         }
 
         $subscription = Subscription::find($subscriptionId);
-        if (!$subscription) {
+        if (! $subscription) {
             return ['success' => false, 'error' => 'Subscription not found'];
         }
 
@@ -249,7 +255,7 @@ class StripeService
         // Auto-issue library card
         try {
             $member = Member::where('user_id', $subscription->user_id)->first();
-            if ($member && !$member->libraryCard) {
+            if ($member && ! $member->libraryCard) {
                 app(LibraryCardService::class)->autoIssueCard($member);
             }
         } catch (\Throwable $e) {
@@ -282,12 +288,12 @@ class StripeService
     protected function handleInvoicePaid(object $invoice): array
     {
         $subscriptionId = $invoice->subscription;
-        if (!$subscriptionId) {
+        if (! $subscriptionId) {
             return ['success' => false, 'error' => 'No subscription in invoice'];
         }
 
         $subscription = Subscription::where('payment_gateway_subscription_id', $subscriptionId)->first();
-        if (!$subscription) {
+        if (! $subscription) {
             return ['success' => false, 'error' => 'Subscription not found'];
         }
 
@@ -299,7 +305,7 @@ class StripeService
     protected function handleInvoicePaymentFailed(object $invoice): array
     {
         $subscriptionId = $invoice->subscription;
-        if (!$subscriptionId) {
+        if (! $subscriptionId) {
             return ['success' => false, 'error' => 'No subscription in invoice'];
         }
 
@@ -319,7 +325,7 @@ class StripeService
     protected function handleSubscriptionUpdated(object $stripeSubscription): array
     {
         $subscription = Subscription::where('payment_gateway_subscription_id', $stripeSubscription->id)->first();
-        if (!$subscription) {
+        if (! $subscription) {
             return ['success' => false, 'error' => 'Subscription not found'];
         }
 

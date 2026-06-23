@@ -11,8 +11,11 @@ class SystemLogViewer extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $event = '';
+
     public string $dateFrom = '';
+
     public string $dateTo = '';
 
     protected $queryString = ['search', 'event', 'dateFrom', 'dateTo'];
@@ -32,10 +35,10 @@ class SystemLogViewer extends Component
             ->when($this->search, function ($q) {
                 $q->where(function ($q) {
                     $q->where('description', 'like', "%{$this->search}%")
-                      ->orWhereHas('causer', function ($q) {
-                          $q->where('name', 'like', "%{$this->search}%")
-                            ->orWhere('email', 'like', "%{$this->search}%");
-                      });
+                        ->orWhereHas('causer', function ($q) {
+                            $q->where('name', 'like', "%{$this->search}%")
+                                ->orWhere('email', 'like', "%{$this->search}%");
+                        });
                 });
             })
             ->when($this->event, fn ($q) => $q->where('event', $this->event))

@@ -9,8 +9,11 @@ use Livewire\Component;
 class MaintenanceSettings extends Component
 {
     public bool $maintenanceMode = false;
+
     public string $secret = '';
+
     public string $message = '';
+
     public ?string $lastCommandResult = null;
 
     public function mount(): void
@@ -28,7 +31,7 @@ class MaintenanceSettings extends Component
 
         $params = ['--secret' => $this->secret];
 
-        if (!empty($this->message)) {
+        if (! empty($this->message)) {
             $params['--retry'] = $this->message;
         }
 

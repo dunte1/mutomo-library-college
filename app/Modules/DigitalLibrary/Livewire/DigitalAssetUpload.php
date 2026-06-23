@@ -2,6 +2,7 @@
 
 namespace App\Modules\DigitalLibrary\Livewire;
 
+use App\Modules\Catalog\Models\Book;
 use App\Modules\DigitalLibrary\Models\DigitalAssetCategory;
 use App\Modules\DigitalLibrary\Services\DigitalLibraryService;
 use Livewire\Component;
@@ -12,20 +13,35 @@ class DigitalAssetUpload extends Component
     use WithFileUploads;
 
     public $file;
+
     public $coverImage;
+
     public string $title = '';
+
     public ?string $description = null;
+
     public ?string $categoryId = null;
+
     public ?string $author = null;
+
     public ?string $publisher = null;
+
     public ?string $isbn = null;
+
     public ?string $publicationYear = null;
+
     public string $language = 'en';
+
     public ?string $keywords = null;
+
     public string $accessLevel = 'restricted';
+
     public bool $allowDownload = true;
+
     public bool $allowPrinting = false;
+
     public bool $isActive = true;
+
     public ?string $bookId = null;
 
     protected $rules = [
@@ -75,6 +91,7 @@ class DigitalAssetUpload extends Component
         ]);
 
         session()->flash('success', "Digital asset '{$asset->title}' uploaded successfully.");
+
         return $this->redirect(route('digital-library.show', $asset), navigate: true);
     }
 
@@ -82,7 +99,7 @@ class DigitalAssetUpload extends Component
     {
         return view('digital-library::livewire.digital-asset-upload', [
             'categories' => DigitalAssetCategory::active()->get(),
-            'books' => \App\Modules\Catalog\Models\Book::active()->orderBy('title')->get(),
+            'books' => Book::active()->orderBy('title')->get(),
         ])->layout('layouts.app');
     }
 }

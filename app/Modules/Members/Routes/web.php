@@ -4,8 +4,8 @@ use App\Modules\Members\Controllers\LibraryCardController;
 use App\Modules\Members\Livewire\LibraryCard;
 use App\Modules\Members\Livewire\MemberForm;
 use App\Modules\Members\Livewire\MemberList;
-use App\Modules\Members\Livewire\MemberShow;
 use App\Modules\Members\Livewire\MembershipRequestList;
+use App\Modules\Members\Livewire\MemberShow;
 use App\Modules\Members\Livewire\SuspensionList;
 use Illuminate\Support\Facades\Route;
 

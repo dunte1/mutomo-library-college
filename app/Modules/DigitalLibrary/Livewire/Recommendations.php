@@ -10,7 +10,9 @@ use Livewire\Component;
 class Recommendations extends Component
 {
     public ?User $targetUser = null;
+
     public string $tab = 'all';
+
     public array $predictiveAlert = [];
 
     public function mount(?int $userId = null)
@@ -19,7 +21,7 @@ class Recommendations extends Component
             $this->targetUser = User::find($userId);
         }
 
-        if (!$this->targetUser && auth()->check()) {
+        if (! $this->targetUser && auth()->check()) {
             $this->targetUser = auth()->user();
         }
 
@@ -34,7 +36,9 @@ class Recommendations extends Component
 
     public function getRecommendationsProperty()
     {
-        if (!$this->targetUser) return collect();
+        if (! $this->targetUser) {
+            return collect();
+        }
 
         $query = Recommendation::active()->forUser($this->targetUser->id);
 

@@ -18,8 +18,9 @@ class TwoFactorVerify extends Component
 
         $user = auth()->user();
 
-        if (!$user || !$user->two_factor_secret) {
+        if (! $user || ! $user->two_factor_secret) {
             session()->flash('error', 'Two-factor authentication is not configured.');
+
             return;
         }
 

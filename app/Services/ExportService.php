@@ -40,7 +40,7 @@ class ExportService
 
         return Response::stream($callback, 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="books-export-' . now()->format('Y-m-d') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="books-export-'.now()->format('Y-m-d').'.csv"',
         ]);
     }
 
@@ -81,7 +81,7 @@ class ExportService
 
         return Response::stream($callback, 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="circulation-export-' . now()->format('Y-m-d') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="circulation-export-'.now()->format('Y-m-d').'.csv"',
         ]);
     }
 
@@ -114,7 +114,7 @@ class ExportService
 
         return Response::stream($callback, 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="members-export-' . now()->format('Y-m-d') . '.csv"',
+            'Content-Disposition' => 'attachment; filename="members-export-'.now()->format('Y-m-d').'.csv"',
         ]);
     }
 }

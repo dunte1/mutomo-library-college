@@ -12,8 +12,11 @@ class ReservationList extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $status = '';
+
     public string $sort = 'reserved_at';
+
     public string $direction = 'desc';
 
     protected $queryString = ['search', 'status', 'sort', 'direction'];
@@ -46,7 +49,7 @@ class ReservationList extends Component
         $reservation->update([
             'status' => Reservation::STATUS_CANCELLED,
             'cancelled_at' => now(),
-            'notes' => 'Cancelled by staff: ' . auth()->user()->name,
+            'notes' => 'Cancelled by staff: '.auth()->user()->name,
         ]);
         $this->dispatch('notify', message: 'Reservation cancelled by staff.', type: 'success');
     }

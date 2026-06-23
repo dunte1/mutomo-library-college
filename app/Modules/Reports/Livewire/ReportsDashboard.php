@@ -4,9 +4,9 @@ namespace App\Modules\Reports\Livewire;
 
 use App\Modules\Catalog\Models\Book;
 use App\Modules\Circulation\Models\BorrowRecord;
-use App\Modules\Members\Models\Member;
 use App\Modules\DigitalLibrary\Models\DigitalAsset;
 use App\Modules\Finance\Models\Transaction;
+use App\Modules\Members\Models\Member;
 use Livewire\Component;
 
 class ReportsDashboard extends Component

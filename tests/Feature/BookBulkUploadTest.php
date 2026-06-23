@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Modules\Catalog\Livewire\BookBulkUpload;
 use App\Modules\Catalog\Models\Book;
 use App\Modules\Catalog\Models\BookCopy;
 use App\Modules\Catalog\Models\Category;
@@ -10,6 +11,8 @@ use App\Modules\Catalog\Models\Publisher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Tests\TestCase;
 
 class BookBulkUploadTest extends TestCase
@@ -41,7 +44,7 @@ class BookBulkUploadTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->call('downloadTemplate')
             ->assertOk();
     }
@@ -51,12 +54,12 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Test Book One,9781234567890,Fiction Author,Fiction,Test Publisher,en,200,2020,1st,2,A1-01,19.99\n"
-            . "Test Book Two,9780987654321,Science Author,Science,Another Publisher,en,300,2021,2nd,1,B2-05,29.99\n";
+            ."Test Book One,9781234567890,Fiction Author,Fiction,Test Publisher,en,200,2020,1st,2,A1-01,19.99\n"
+            ."Test Book Two,9780987654321,Science Author,Science,Another Publisher,en,300,2021,2nd,1,B2-05,29.99\n";
 
         $file = UploadedFile::fake()->createWithContent('books.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -86,20 +89,20 @@ class BookBulkUploadTest extends TestCase
 
         $this->actingAs($this->user);
 
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->fromArray([
             ['title', 'isbn', 'authors', 'category', 'publisher', 'language', 'pages', 'publication_year', 'edition', 'copies_count', 'shelf_location', 'price'],
             ['Excel Book', '9781112223334', 'Excel Author', 'Fiction', 'Excel Publisher', 'en', '150', '2019', '1st', '1', 'C1-10', '15.50'],
         ]);
 
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $tempFile = tempnam(sys_get_temp_dir(), 'test_') . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+        $tempFile = tempnam(sys_get_temp_dir(), 'test_').'.xlsx';
         $writer->save($tempFile);
 
         $file = UploadedFile::fake()->createWithContent('books.xlsx', file_get_contents($tempFile));
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -121,7 +124,7 @@ class BookBulkUploadTest extends TestCase
         $csvContent = "isbn,authors\n9781234567890,Some Author\n";
         $file = UploadedFile::fake()->createWithContent('no_title.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->assertHasErrors(['file']);
@@ -134,7 +137,7 @@ class BookBulkUploadTest extends TestCase
         $csvContent = "title,isbn,authors\n";
         $file = UploadedFile::fake()->createWithContent('empty.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->assertHasErrors(['file']);
@@ -147,7 +150,7 @@ class BookBulkUploadTest extends TestCase
         $csvContent = "title,isbn,authors\nBook One,9781234567890,Author One\n,9780987654321,\nBook Three,9781112223334,Author Three\n";
         $file = UploadedFile::fake()->createWithContent('mixed.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -167,11 +170,11 @@ class BookBulkUploadTest extends TestCase
         $publisher = Publisher::firstOrCreate(['name' => 'Test Publisher'], ['slug' => 'test-publisher']);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Imported Book,9781234567890,Test Author,{$category->name},{$publisher->name},en,200,2020,1st,3,A1-01,19.99\n";
+            ."Imported Book,9781234567890,Test Author,{$category->name},{$publisher->name},en,200,2020,1st,3,A1-01,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('import.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -199,11 +202,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . 'Book With Authors,9781234567890,"Author One, Author Two",Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99' . "\n";
+            .'Book With Authors,9781234567890,"Author One, Author Two",Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99'."\n";
 
         $file = UploadedFile::fake()->createWithContent('authors.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -220,11 +223,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "New Category Book,9781234567890,,New Category,New Publisher,en,200,2020,1st,1,,19.99\n";
+            ."New Category Book,9781234567890,,New Category,New Publisher,en,200,2020,1st,1,,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('new_entities.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -256,11 +259,11 @@ class BookBulkUploadTest extends TestCase
         ]);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Updated Title,9781234567890,,Fiction,Publisher One,en,250,2023,2nd,1,B1-02,25.00\n";
+            ."Updated Title,9781234567890,,Fiction,Publisher One,en,250,2023,2nd,1,B1-02,25.00\n";
 
         $file = UploadedFile::fake()->createWithContent('update.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -283,11 +286,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . 'Multi Author Book,9781234567890,"Author A, Author B, Author C",Fiction,Publisher One,en,200,2020,1st,1,,19.99' . "\n";
+            .'Multi Author Book,9781234567890,"Author A, Author B, Author C",Fiction,Publisher One,en,200,2020,1st,1,,19.99'."\n";
 
         $file = UploadedFile::fake()->createWithContent('multi_author.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -305,11 +308,11 @@ class BookBulkUploadTest extends TestCase
         Book::create(['title' => 'Duplicate Title', 'slug' => 'duplicate-title']);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Duplicate Title,9781234567890,,,Publisher One,en,200,2020,1st,1,,19.99\n";
+            ."Duplicate Title,9781234567890,,,Publisher One,en,200,2020,1st,1,,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('duplicate.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -326,11 +329,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Good Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99\n";
+            ."Good Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('partial_fail.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -344,11 +347,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Audited Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99\n";
+            ."Audited Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('audit.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -365,11 +368,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Test Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99\n";
+            ."Test Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('reset.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -387,11 +390,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "English Book,9781234567890,Author One,Fiction,Publisher One,,200,2020,1st,1,A1-01,19.99\n";
+            ."English Book,9781234567890,Author One,Fiction,Publisher One,,200,2020,1st,1,A1-01,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('default_lang.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -406,11 +409,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Default Copies,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,,A1-01,19.99\n";
+            ."Default Copies,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,,A1-01,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('default_copies.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -425,11 +428,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Zero Copies,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,0,A1-01,19.99\n";
+            ."Zero Copies,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,0,A1-01,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('zero_copies.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -445,11 +448,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Barcode Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,5,A1-01,19.99\n";
+            ."Barcode Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,5,A1-01,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('barcodes.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -468,11 +471,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Status Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,2,A1-01,19.99\n";
+            ."Status Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,2,A1-01,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('status.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -487,11 +490,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Condition Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99\n";
+            ."Condition Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('condition.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -506,11 +509,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Acquired Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99\n";
+            ."Acquired Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('acquired.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -525,11 +528,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Shelf Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,B3-15,19.99\n";
+            ."Shelf Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,B3-15,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('shelf.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -544,11 +547,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Price Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,A1-01,45.50\n";
+            ."Price Book,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,A1-01,45.50\n";
 
         $file = UploadedFile::fake()->createWithContent('price.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -569,15 +572,15 @@ class BookBulkUploadTest extends TestCase
         $copiesBefore = BookCopy::count();
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Batch Book 1,9781111111111,Author A,{$category->name},{$publisher->name},en,100,2018,1st,1,A1-01,10.00\n"
-            . "Batch Book 2,9782222222222,Author B,{$category->name},{$publisher->name},en,200,2019,2nd,2,A1-02,20.00\n"
-            . "Batch Book 3,9783333333333,Author C,{$category->name},{$publisher->name},en,300,2020,3rd,3,A1-03,30.00\n"
-            . "Batch Book 4,9784444444444,Author D,{$category->name},{$publisher->name},en,400,2021,4th,4,A1-04,40.00\n"
-            . "Batch Book 5,9785555555555,Author E,{$category->name},{$publisher->name},en,500,2022,5th,5,A1-05,50.00\n";
+            ."Batch Book 1,9781111111111,Author A,{$category->name},{$publisher->name},en,100,2018,1st,1,A1-01,10.00\n"
+            ."Batch Book 2,9782222222222,Author B,{$category->name},{$publisher->name},en,200,2019,2nd,2,A1-02,20.00\n"
+            ."Batch Book 3,9783333333333,Author C,{$category->name},{$publisher->name},en,300,2020,3rd,3,A1-03,30.00\n"
+            ."Batch Book 4,9784444444444,Author D,{$category->name},{$publisher->name},en,400,2021,4th,4,A1-04,40.00\n"
+            ."Batch Book 5,9785555555555,Author E,{$category->name},{$publisher->name},en,500,2022,5th,5,A1-05,50.00\n";
 
         $file = UploadedFile::fake()->createWithContent('batch.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -599,11 +602,11 @@ class BookBulkUploadTest extends TestCase
         );
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "SciFi Book,9781234567890,Author One,Science Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99\n";
+            ."SciFi Book,9781234567890,Author One,Science Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('slug_match.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -623,11 +626,11 @@ class BookBulkUploadTest extends TestCase
         );
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Penguin Book,9781234567890,Author One,Fiction,Penguin Random House,en,200,2020,1st,1,A1-01,19.99\n";
+            ."Penguin Book,9781234567890,Author One,Fiction,Penguin Random House,en,200,2020,1st,1,A1-01,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('publisher_slug.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -642,11 +645,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "Minimal Book,9781234567890,,,,,en,,,,,\n";
+            ."Minimal Book,9781234567890,,,,,en,,,,,\n";
 
         $file = UploadedFile::fake()->createWithContent('minimal.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')
@@ -665,11 +668,11 @@ class BookBulkUploadTest extends TestCase
         $this->actingAs($this->user);
 
         $csvContent = "title,isbn,authors,category,publisher,language,pages,publication_year,edition,copies_count,shelf_location,price\n"
-            . "My Great Book Title,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99\n";
+            ."My Great Book Title,9781234567890,Author One,Fiction,Publisher One,en,200,2020,1st,1,A1-01,19.99\n";
 
         $file = UploadedFile::fake()->createWithContent('slug.csv', $csvContent);
 
-        Livewire::test(\App\Modules\Catalog\Livewire\BookBulkUpload::class)
+        Livewire::test(BookBulkUpload::class)
             ->set('file', $file)
             ->call('parse')
             ->call('import')

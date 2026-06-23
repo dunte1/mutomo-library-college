@@ -3,6 +3,7 @@
 namespace App\Modules\Circulation\Livewire;
 
 use App\Modules\Circulation\Services\BorrowingService;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
 class PatronActions extends Component
@@ -15,7 +16,7 @@ class PatronActions extends Component
         } catch (\RuntimeException $e) {
             $this->dispatch('notify', message: $e->getMessage(), type: 'error');
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Patron action failed', ['error' => $e->getMessage()]);
+            Log::error('Patron action failed', ['error' => $e->getMessage()]);
             $this->dispatch('notify', message: 'An unexpected error occurred.', type: 'error');
         }
     }

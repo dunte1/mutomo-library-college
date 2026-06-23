@@ -6,12 +6,13 @@ use App\Models\PushSubscription;
 use App\Models\User;
 use App\Modules\Communication\Models\NotificationLog;
 use Illuminate\Support\Facades\Log;
-use Minishlink\WebPush\WebPush;
 use Minishlink\WebPush\Subscription;
+use Minishlink\WebPush\WebPush;
 
 class PushNotificationService
 {
     protected bool $enabled;
+
     protected ?WebPush $webPush = null;
 
     public function __construct()
@@ -22,8 +23,9 @@ class PushNotificationService
 
     public function send(User $user, string $title, string $body, array $data = []): bool
     {
-        if (!$this->enabled) {
+        if (! $this->enabled) {
             $this->log($user, $title, $body, 'VAPID keys not configured', 'failed');
+
             return false;
         }
 
@@ -31,6 +33,7 @@ class PushNotificationService
 
         if ($subscriptions->isEmpty()) {
             $this->log($user, $title, $body, 'No active push subscriptions', 'failed');
+
             return false;
         }
 
@@ -67,14 +70,17 @@ class PushNotificationService
             }
         }
 
-        try { $webPush->flush(); } catch (\Throwable $e) {}
+        try {
+            $webPush->flush();
+        } catch (\Throwable $e) {
+        }
 
         $status = $sent ? 'sent' : 'failed';
         $errorMsg = $errors ? implode('; ', array_slice($errors, 0, 3)) : null;
         $this->log($user, $title, $body, $errorMsg, $status);
 
-        if (!$sent && !empty($errors)) {
-            Log::error("Push notification failed for user {$user->id}: " . implode('; ', $errors));
+        if (! $sent && ! empty($errors)) {
+            Log::error("Push notification failed for user {$user->id}: ".implode('; ', $errors));
         }
 
         return $sent;
@@ -86,6 +92,7 @@ class PushNotificationService
         foreach ($users as $user) {
             $results[$user->id] = $this->send($user, $title, $body, $data);
         }
+
         return $results;
     }
 
@@ -95,9 +102,12 @@ class PushNotificationService
         $userIds = PushSubscription::active()->distinct()->pluck('user_id');
         User::whereIn('id', $userIds)->where('is_active', true)->chunk(100, function ($users) use ($title, $body, $data, &$count) {
             foreach ($users as $user) {
-                if ($this->send($user, $title, $body, $data)) { $count++; }
+                if ($this->send($user, $title, $body, $data)) {
+                    $count++;
+                }
             }
         });
+
         return $count;
     }
 
@@ -121,10 +131,14 @@ class PushNotificationService
             $this->webPush->setAutomaticPadding(false);
             $this->webPush->setReuseVAPIDHeaders(true);
         }
+
         return $this->webPush;
     }
 
-    public function isEnabled(): bool { return $this->enabled; }
+    public function isEnabled(): bool
+    {
+        return $this->enabled;
+    }
 
     public function activeSubscriberCount(): int
     {

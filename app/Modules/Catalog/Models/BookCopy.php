@@ -2,13 +2,14 @@
 
 namespace App\Modules\Catalog\Models;
 
+use App\Modules\Circulation\Models\BorrowRecord;
+use App\Modules\Shared\Traits\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Modules\Shared\Traits\Auditable;
 
 class BookCopy extends Model
 {
-    use SoftDeletes, Auditable;
+    use Auditable, SoftDeletes;
 
     protected $fillable = [
         'book_id',
@@ -35,15 +36,23 @@ class BookCopy extends Model
     }
 
     const STATUS_AVAILABLE = 'available';
+
     const STATUS_BORROWED = 'borrowed';
+
     const STATUS_RESERVED = 'reserved';
+
     const STATUS_DAMAGED = 'damaged';
+
     const STATUS_LOST = 'lost';
+
     const STATUS_WITHDRAWN = 'withdrawn';
 
     const CONDITION_NEW = 'new';
+
     const CONDITION_GOOD = 'good';
+
     const CONDITION_FAIR = 'fair';
+
     const CONDITION_POOR = 'poor';
 
     public function book()
@@ -53,12 +62,12 @@ class BookCopy extends Model
 
     public function borrowRecords()
     {
-        return $this->hasMany(\App\Modules\Circulation\Models\BorrowRecord::class);
+        return $this->hasMany(BorrowRecord::class);
     }
 
     public function currentBorrow()
     {
-        return $this->hasOne(\App\Modules\Circulation\Models\BorrowRecord::class)
+        return $this->hasOne(BorrowRecord::class)
             ->whereNull('returned_at')
             ->latest('borrowed_at');
     }

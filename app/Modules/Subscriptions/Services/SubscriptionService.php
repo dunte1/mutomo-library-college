@@ -2,7 +2,9 @@
 
 namespace App\Modules\Subscriptions\Services;
 
+use App\Mail\ExpirationNotice;
 use App\Mail\PaymentConfirmation;
+use App\Mail\RenewalReminder;
 use App\Mail\SubscriptionActivation;
 use App\Models\User;
 use App\Modules\Finance\Models\Transaction;
@@ -10,6 +12,8 @@ use App\Modules\Finance\Services\BillingService;
 use App\Modules\Finance\Services\FinanceService;
 use App\Modules\Members\Models\Member;
 use App\Modules\Members\Services\LibraryCardService;
+use App\Modules\Notifications\Services\NotificationService;
+use App\Modules\Settings\Models\Setting;
 use App\Modules\Subscriptions\Models\Plan;
 use App\Modules\Subscriptions\Models\Subscription;
 use Illuminate\Support\Facades\DB;
@@ -93,7 +97,7 @@ class SubscriptionService
             // Auto-issue library card if member exists and doesn't have one
             try {
                 $member = Member::where('user_id', $subscription->user_id)->first();
-                if ($member && !$member->libraryCard) {
+                if ($member && ! $member->libraryCard) {
                     $libraryCardService = app(LibraryCardService::class);
                     $libraryCardService->autoIssueCard($member);
                 }
@@ -180,7 +184,7 @@ class SubscriptionService
                         $user = $subscription->user;
                         if ($user && $user->email) {
                             Mail::to($user->email)->queue(
-                                new \App\Mail\ExpirationNotice($subscription, 'expired')
+                                new ExpirationNotice($subscription, 'expired')
                             );
                         }
                     } catch (\Throwable $e) {
@@ -189,7 +193,7 @@ class SubscriptionService
 
                     // Log in-app notification
                     try {
-                        app(\App\Modules\Notifications\Services\NotificationService::class)->send(
+                        app(NotificationService::class)->send(
                             $subscription->user,
                             'subscription',
                             'Membership Expired',
@@ -221,7 +225,7 @@ class SubscriptionService
                         $user = $subscription->user;
                         if ($user && $user->email) {
                             Mail::to($user->email)->queue(
-                                new \App\Mail\RenewalReminder($subscription, 0)
+                                new RenewalReminder($subscription, 0)
                             );
                         }
                     } catch (\Throwable $e) {
@@ -239,7 +243,7 @@ class SubscriptionService
     {
         $count = 0;
         Subscription::expiringSoon($days)
-            ->chunk(100, function ($subscriptions) use ($days, &$count) {
+            ->chunk(100, function ($subscriptions) use (&$count) {
                 foreach ($subscriptions as $subscription) {
                     $remainingDays = (int) now()->diffInDays($subscription->end_date, false);
 
@@ -248,7 +252,7 @@ class SubscriptionService
                         $user = $subscription->user;
                         if ($user && $user->email) {
                             Mail::to($user->email)->queue(
-                                new \App\Mail\ExpirationNotice($subscription, 'expiring_soon', $remainingDays)
+                                new ExpirationNotice($subscription, 'expiring_soon', $remainingDays)
                             );
                         }
                     } catch (\Throwable $e) {
@@ -257,7 +261,7 @@ class SubscriptionService
 
                     // In-app notification
                     try {
-                        app(\App\Modules\Notifications\Services\NotificationService::class)->send(
+                        app(NotificationService::class)->send(
                             $subscription->user,
                             'subscription',
                             'Membership Expiring Soon',
@@ -279,10 +283,10 @@ class SubscriptionService
     public function getPlanCostSettings(): array
     {
         return [
-            'individual_monthly' => (float) app(\App\Modules\Settings\Models\Setting::class)::value('individual_monthly_fee', 0),
-            'individual_yearly' => (float) app(\App\Modules\Settings\Models\Setting::class)::value('individual_yearly_fee', 0),
-            'school_monthly' => (float) app(\App\Modules\Settings\Models\Setting::class)::value('school_monthly_fee', 0),
-            'school_yearly' => (float) app(\App\Modules\Settings\Models\Setting::class)::value('school_yearly_fee', 0),
+            'individual_monthly' => (float) app(Setting::class)::value('individual_monthly_fee', 0),
+            'individual_yearly' => (float) app(Setting::class)::value('individual_yearly_fee', 0),
+            'school_monthly' => (float) app(Setting::class)::value('school_monthly_fee', 0),
+            'school_yearly' => (float) app(Setting::class)::value('school_yearly_fee', 0),
         ];
     }
 
@@ -362,7 +366,7 @@ class SubscriptionService
                 ->get()
                 ->toArray(),
             'monthly_breakdown' => $subscriptionTransactions->clone()
-                ->selectRaw($this->monthExpr() . ' as month, SUM(amount) as total, COUNT(*) as count')
+                ->selectRaw($this->monthExpr().' as month, SUM(amount) as total, COUNT(*) as count')
                 ->groupBy('month')
                 ->orderBy('month')
                 ->get()

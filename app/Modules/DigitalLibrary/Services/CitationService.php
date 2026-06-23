@@ -16,10 +16,10 @@ class CitationService
         $publisher = $source->publisher ?? null;
 
         $citation = match ($style) {
-            'apa' => Citation::generateAPA($author, (int)$year, $title, $publisher, null),
-            'mla' => Citation::generateMLA($author, $title, $publisher, (int)$year),
-            'chicago' => Citation::generateChicago($author, $title, $publisher, (int)$year),
-            default => Citation::generateAPA($author, (int)$year, $title, $publisher, null),
+            'apa' => Citation::generateAPA($author, (int) $year, $title, $publisher, null),
+            'mla' => Citation::generateMLA($author, $title, $publisher, (int) $year),
+            'chicago' => Citation::generateChicago($author, $title, $publisher, (int) $year),
+            default => Citation::generateAPA($author, (int) $year, $title, $publisher, null),
         };
 
         Citation::create([

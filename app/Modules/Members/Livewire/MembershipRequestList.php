@@ -24,7 +24,7 @@ class MembershipRequestList extends Component
             $user->update(['email_verified_at' => now()]);
             $this->dispatch('notify', type: 'success', message: 'Membership approved successfully.');
         } catch (\Throwable $e) {
-            $this->dispatch('notify', type: 'error', message: 'Failed to approve membership: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to approve membership: '.$e->getMessage());
         }
     }
 
@@ -38,7 +38,7 @@ class MembershipRequestList extends Component
             }
             $this->dispatch('notify', type: 'warning', message: 'Membership request rejected.');
         } catch (\Throwable $e) {
-            $this->dispatch('notify', type: 'error', message: 'Failed to reject membership: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to reject membership: '.$e->getMessage());
         }
     }
 
@@ -50,7 +50,7 @@ class MembershipRequestList extends Component
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('name', 'like', "%{$this->search}%")
-                  ->orWhere('email', 'like', "%{$this->search}%");
+                    ->orWhere('email', 'like', "%{$this->search}%");
             });
         }
 

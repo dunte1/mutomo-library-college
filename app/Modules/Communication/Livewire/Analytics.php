@@ -11,7 +11,9 @@ use Livewire\Component;
 class Analytics extends Component
 {
     public string $period = '30';
+
     public array $stats = [];
+
     public array $trends = [];
 
     public function mount(MessagingService $messagingService): void

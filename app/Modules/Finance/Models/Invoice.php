@@ -37,7 +37,7 @@ class Invoice extends Model
 
     public static function generateNumber(): string
     {
-        return 'INV-' . now()->format('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
+        return 'INV-'.now()->format('Ymd').'-'.strtoupper(substr(uniqid(), -6));
     }
 
     public function scopePending($query)

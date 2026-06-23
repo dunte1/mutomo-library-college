@@ -3,48 +3,48 @@
 namespace App\Modules\Settings\Providers;
 
 use App\Modules\Settings\Livewire\AccessLevelList;
+use App\Modules\Settings\Livewire\AiSettings;
 use App\Modules\Settings\Livewire\AppearanceSettings;
 use App\Modules\Settings\Livewire\AuditLogViewer;
+use App\Modules\Settings\Livewire\AuthCarouselSettings;
 use App\Modules\Settings\Livewire\BackupSettings;
+use App\Modules\Settings\Livewire\CacheManager;
 use App\Modules\Settings\Livewire\CirculationSettings;
 use App\Modules\Settings\Livewire\DepartmentForm;
 use App\Modules\Settings\Livewire\DepartmentList;
 use App\Modules\Settings\Livewire\DigitalLibrarySettings;
 use App\Modules\Settings\Livewire\EmailSettings;
+use App\Modules\Settings\Livewire\FeatureForm;
+use App\Modules\Settings\Livewire\FeatureList;
 use App\Modules\Settings\Livewire\GeneralSettings;
+use App\Modules\Settings\Livewire\GlobalSearch;
 use App\Modules\Settings\Livewire\LocalizationSettings;
+use App\Modules\Settings\Livewire\MaintenanceSettings;
+use App\Modules\Settings\Livewire\NewsletterSubscribe;
+use App\Modules\Settings\Livewire\NewsletterSubscriberList;
 use App\Modules\Settings\Livewire\NotificationSettings;
 use App\Modules\Settings\Livewire\ProgramForm;
 use App\Modules\Settings\Livewire\ProgramList;
+use App\Modules\Settings\Livewire\QueueMonitor;
 use App\Modules\Settings\Livewire\RoleForm;
 use App\Modules\Settings\Livewire\RoleList;
 use App\Modules\Settings\Livewire\SecurityDashboard;
 use App\Modules\Settings\Livewire\SecuritySettings;
 use App\Modules\Settings\Livewire\SettingsDashboard;
-use App\Modules\Settings\Livewire\GlobalSearch;
-use App\Modules\Settings\Livewire\SystemLogViewer;
-use App\Modules\Settings\Livewire\AuthCarouselSettings;
-use App\Modules\Settings\Livewire\AiSettings;
-use App\Modules\Settings\Livewire\MaintenanceSettings;
-use App\Modules\Settings\Livewire\SystemHealth;
-use App\Modules\Settings\Livewire\QueueMonitor;
-use App\Modules\Settings\Livewire\CacheManager;
 use App\Modules\Settings\Livewire\StorageManager;
 use App\Modules\Settings\Livewire\SubscriptionSettings;
-use App\Modules\Settings\Livewire\FeatureForm;
-use App\Modules\Settings\Livewire\FeatureList;
-use App\Modules\Settings\Livewire\WhyChooseUsForm;
-use App\Modules\Settings\Livewire\WhyChooseUsList;
-use App\Modules\Settings\Livewire\NewsletterSubscribe;
-use App\Modules\Settings\Livewire\NewsletterSubscriberList;
+use App\Modules\Settings\Livewire\SystemHealth;
+use App\Modules\Settings\Livewire\SystemLogViewer;
 use App\Modules\Settings\Livewire\TestimonialForm;
 use App\Modules\Settings\Livewire\TestimonialList;
 use App\Modules\Settings\Livewire\UserForm;
 use App\Modules\Settings\Livewire\UserList;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\ServiceProvider;
+use App\Modules\Settings\Livewire\WhyChooseUsForm;
+use App\Modules\Settings\Livewire\WhyChooseUsList;
 use App\Modules\Settings\Models\Setting;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 
 class SettingsServiceProvider extends ServiceProvider
@@ -87,7 +87,7 @@ class SettingsServiceProvider extends ServiceProvider
                 config(['app.library_email' => $libraryEmail]);
             }
         } catch (\Throwable $e) {
-            Log::debug('Could not load settings from database: ' . $e->getMessage());
+            Log::debug('Could not load settings from database: '.$e->getMessage());
         }
 
         Livewire::component('settings-dashboard', SettingsDashboard::class);

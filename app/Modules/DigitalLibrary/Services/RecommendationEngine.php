@@ -5,6 +5,7 @@ namespace App\Modules\DigitalLibrary\Services;
 use App\Models\User;
 use App\Modules\Catalog\Models\Book;
 use App\Modules\Circulation\Models\BorrowRecord;
+use App\Modules\DigitalLibrary\Models\DigitalAsset;
 use App\Modules\DigitalLibrary\Models\ReadingHistory;
 use App\Modules\DigitalLibrary\Models\Recommendation;
 
@@ -29,7 +30,7 @@ class RecommendationEngine
         $recommendations = array_merge($recommendations, $newArrivals);
 
         $unique = collect($recommendations)
-            ->unique(fn ($r) => ($r['book_id'] ?? 0) . '-' . ($r['digital_asset_id'] ?? 0))
+            ->unique(fn ($r) => ($r['book_id'] ?? 0).'-'.($r['digital_asset_id'] ?? 0))
             ->take($limit)
             ->values()
             ->toArray();
@@ -63,7 +64,9 @@ class RecommendationEngine
             ->unique()
             ->toArray();
 
-        if (empty($categoryIds)) return [];
+        if (empty($categoryIds)) {
+            return [];
+        }
 
         $excludedBookIds = BorrowRecord::where('user_id', $user->id)
             ->whereHas('bookCopy')
@@ -75,7 +78,7 @@ class RecommendationEngine
             ->toArray();
 
         $books = Book::whereHas('categories', fn ($q) => $q->whereIn('id', $categoryIds))
-            ->when(!empty($excludedBookIds), fn ($q) => $q->whereNotIn('id', $excludedBookIds))
+            ->when(! empty($excludedBookIds), fn ($q) => $q->whereNotIn('id', $excludedBookIds))
             ->withCount('copies')
             ->orderByDesc('copies_count')
             ->limit($limit)
@@ -99,13 +102,15 @@ class RecommendationEngine
             ->unique()
             ->toArray();
 
-        if (empty($categoryIds)) return [];
+        if (empty($categoryIds)) {
+            return [];
+        }
 
         $excludedIds = ReadingHistory::where('user_id', $user->id)
             ->pluck('digital_asset_id')
             ->toArray();
 
-        $assets = \App\Modules\DigitalLibrary\Models\DigitalAsset::whereIn('category_id', $categoryIds)
+        $assets = DigitalAsset::whereIn('category_id', $categoryIds)
             ->whereNotIn('id', $excludedIds)
             ->active()
             ->limit($limit)
@@ -122,7 +127,9 @@ class RecommendationEngine
     public function popularInDepartment(User $user, int $limit = 5): array
     {
         $departmentId = $user->department_id;
-        if (!$departmentId) return [];
+        if (! $departmentId) {
+            return [];
+        }
 
         $bookIds = BorrowRecord::whereHas('user', fn ($q) => $q->where('department_id', $departmentId))
             ->selectRaw('book_copy_id, COUNT(*) as borrow_count')
@@ -132,7 +139,9 @@ class RecommendationEngine
             ->pluck('book_copy_id')
             ->toArray();
 
-        if (empty($bookIds)) return [];
+        if (empty($bookIds)) {
+            return [];
+        }
 
         $books = Book::whereHas('copies', fn ($q) => $q->whereIn('id', $bookIds))
             ->limit($limit)
@@ -173,7 +182,7 @@ class RecommendationEngine
             'book_id' => $b->id,
             'type' => 'similar_book',
             'score' => 0.8,
-            'reason' => 'Shares categories with ' . $book->title,
+            'reason' => 'Shares categories with '.$book->title,
         ])->toArray();
     }
 

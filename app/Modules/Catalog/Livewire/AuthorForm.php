@@ -9,12 +9,19 @@ use Livewire\Component;
 class AuthorForm extends Component
 {
     public ?int $authorId = null;
+
     public string $name = '';
+
     public ?string $biography = null;
+
     public ?string $birth_date = null;
+
     public ?string $death_date = null;
+
     public ?string $nationality = null;
+
     public ?string $website = null;
+
     public bool $is_active = true;
 
     public bool $isEditing = false;

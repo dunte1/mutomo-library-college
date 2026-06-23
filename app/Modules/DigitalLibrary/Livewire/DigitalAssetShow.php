@@ -4,6 +4,7 @@ namespace App\Modules\DigitalLibrary\Livewire;
 
 use App\Modules\DigitalLibrary\Models\DigitalAsset;
 use App\Modules\DigitalLibrary\Services\CitationService;
+use App\Modules\DigitalLibrary\Services\DigitalLibraryService;
 use App\Modules\DigitalLibrary\Services\SmartTagService;
 use App\Services\DownloadService;
 use Livewire\Component;
@@ -11,10 +12,15 @@ use Livewire\Component;
 class DigitalAssetShow extends Component
 {
     public DigitalAsset $asset;
+
     public ?string $citation = null;
+
     public string $citationStyle = 'apa';
+
     public array $relatedBooks = [];
+
     public array $tags = [];
+
     public string $aiSummary = '';
 
     public function mount(DigitalAsset $asset)
@@ -39,14 +45,15 @@ class DigitalAssetShow extends Component
 
     public function updateProgress(int $progress, ?int $lastPage = null)
     {
-        app(\App\Modules\DigitalLibrary\Services\DigitalLibraryService::class)
+        app(DigitalLibraryService::class)
             ->trackProgress($this->asset->id, $progress, $lastPage);
     }
 
     public function download()
     {
-        if (!$this->asset->allow_download) {
+        if (! $this->asset->allow_download) {
             session()->flash('error', 'This asset does not allow downloading.');
+
             return;
         }
 
@@ -72,14 +79,20 @@ class DigitalAssetShow extends Component
     {
         $parts = [];
 
-        if ($asset->author) $parts[] = "Written by {$asset->author}";
-        if ($asset->publication_year) $parts[] = "published in {$asset->publication_year}";
-        if ($asset->publisher) $parts[] = "by {$asset->publisher}";
+        if ($asset->author) {
+            $parts[] = "Written by {$asset->author}";
+        }
+        if ($asset->publication_year) {
+            $parts[] = "published in {$asset->publication_year}";
+        }
+        if ($asset->publisher) {
+            $parts[] = "by {$asset->publisher}";
+        }
         if ($asset->keywords && count($asset->keywords)) {
-            $parts[] = 'covers: ' . implode(', ', array_slice($asset->keywords, 0, 5));
+            $parts[] = 'covers: '.implode(', ', array_slice($asset->keywords, 0, 5));
         }
 
-        return $parts ? 'A ' . $asset->file_type . ' resource ' . implode(', ', $parts) . '.' : 'No description available.';
+        return $parts ? 'A '.$asset->file_type.' resource '.implode(', ', $parts).'.' : 'No description available.';
     }
 
     public function getFileUrlProperty()

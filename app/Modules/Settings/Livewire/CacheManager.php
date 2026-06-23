@@ -4,13 +4,14 @@ namespace App\Modules\Settings\Livewire;
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 
 class CacheManager extends Component
 {
     public array $cacheStats = [];
+
     public string $activeTab = 'overview';
+
     public array $logs = [];
 
     public function mount(): void
@@ -39,7 +40,7 @@ class CacheManager extends Component
             $this->dispatch('notify', type: 'success', message: 'All cache cleared successfully.');
         } catch (\Throwable $e) {
             $this->logs = [$e->getMessage()];
-            $this->dispatch('notify', type: 'error', message: 'Failed to clear cache: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to clear cache: '.$e->getMessage());
         }
     }
 
@@ -53,7 +54,7 @@ class CacheManager extends Component
             $this->dispatch('notify', type: 'success', message: 'System optimized successfully.');
         } catch (\Throwable $e) {
             $this->logs = [$e->getMessage()];
-            $this->dispatch('notify', type: 'error', message: 'Failed to optimize: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to optimize: '.$e->getMessage());
         }
     }
 
@@ -67,7 +68,7 @@ class CacheManager extends Component
             $this->dispatch('notify', type: 'success', message: 'Config cache cleared.');
         } catch (\Throwable $e) {
             $this->logs = [$e->getMessage()];
-            $this->dispatch('notify', type: 'error', message: 'Failed to clear config cache: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to clear config cache: '.$e->getMessage());
         }
     }
 
@@ -81,7 +82,7 @@ class CacheManager extends Component
             $this->dispatch('notify', type: 'success', message: 'Route cache cleared.');
         } catch (\Throwable $e) {
             $this->logs = [$e->getMessage()];
-            $this->dispatch('notify', type: 'error', message: 'Failed to clear route cache: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to clear route cache: '.$e->getMessage());
         }
     }
 

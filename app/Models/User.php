@@ -8,6 +8,7 @@ use App\Modules\Circulation\Models\Reservation;
 use App\Modules\Communication\Models\Message;
 use App\Modules\Communication\Models\MessageRecipient;
 use App\Modules\Finance\Models\Transaction;
+use App\Modules\Members\Models\Member;
 use App\Modules\Subscriptions\Models\Subscription;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,7 +24,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens, HasRoles, LogsActivity, SoftDeletes;
+    use HasApiTokens, HasFactory, HasRoles, LogsActivity, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -75,7 +76,7 @@ class User extends Authenticatable
 
     public function member()
     {
-        return $this->hasOne(\App\Modules\Members\Models\Member::class, 'user_id');
+        return $this->hasOne(Member::class, 'user_id');
     }
 
     public function department()
@@ -155,12 +156,24 @@ class User extends Authenticatable
 
     public function getBorrowLimit(): int
     {
-        if ($this->hasRole('student')) return 5;
-        if ($this->hasRole('lecturer')) return 10;
-        if ($this->hasRole('assistant-librarian')) return 10;
-        if ($this->hasRole('librarian')) return 15;
-        if ($this->hasRole('admin')) return 20;
-        if ($this->hasRole('super-admin')) return 100;
+        if ($this->hasRole('student')) {
+            return 5;
+        }
+        if ($this->hasRole('lecturer')) {
+            return 10;
+        }
+        if ($this->hasRole('assistant-librarian')) {
+            return 10;
+        }
+        if ($this->hasRole('librarian')) {
+            return 15;
+        }
+        if ($this->hasRole('admin')) {
+            return 20;
+        }
+        if ($this->hasRole('super-admin')) {
+            return 100;
+        }
 
         return 5;
     }

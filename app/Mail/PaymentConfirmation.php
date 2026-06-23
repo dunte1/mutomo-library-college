@@ -21,7 +21,7 @@ class PaymentConfirmation extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Payment Confirmed - ' . config('app.name'),
+            subject: 'Payment Confirmed - '.config('app.name'),
         );
     }
 

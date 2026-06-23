@@ -8,12 +8,19 @@ use Livewire\Component;
 class TestimonialForm extends Component
 {
     public ?int $testimonialId = null;
+
     public string $author_name = '';
+
     public ?string $author_role = null;
+
     public string $content = '';
+
     public ?int $rating = null;
+
     public string $status = 'pending';
+
     public int $sort_order = 0;
+
     public bool $is_active = true;
 
     public bool $isEditing = false;

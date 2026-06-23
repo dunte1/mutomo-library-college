@@ -20,8 +20,9 @@ class NewReadingAssignment extends Mailable
     public function envelope(): Envelope
     {
         $prefix = $this->assignment->type === 'assignment' ? 'New Assignment' : 'New Recommendation';
+
         return new Envelope(
-            subject: $prefix . ' - ' . config('app.name'),
+            subject: $prefix.' - '.config('app.name'),
         );
     }
 

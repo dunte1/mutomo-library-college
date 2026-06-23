@@ -32,11 +32,11 @@ class LibraryCardService
             $sequence = 1;
         }
 
-        $cardNumber = $prefix . str_pad($sequence, 6, '0', STR_PAD_LEFT);
+        $cardNumber = $prefix.str_pad($sequence, 6, '0', STR_PAD_LEFT);
 
         while (LibraryCard::where('card_number', $cardNumber)->exists()) {
             $sequence++;
-            $cardNumber = $prefix . str_pad($sequence, 6, '0', STR_PAD_LEFT);
+            $cardNumber = $prefix.str_pad($sequence, 6, '0', STR_PAD_LEFT);
         }
 
         return $cardNumber;
@@ -57,6 +57,7 @@ class LibraryCardService
                 ->generate($verificationUrl);
         } catch (\Throwable $e) {
             report($e);
+
             return '';
         }
     }
@@ -158,12 +159,12 @@ class LibraryCardService
         $photoUrl = null;
 
         if ($card->passport_photo) {
-            $fullPath = storage_path('app/public/' . $card->passport_photo);
+            $fullPath = storage_path('app/public/'.$card->passport_photo);
             if (file_exists($fullPath)) {
                 $photoUrl = $fullPath;
             }
         } elseif ($member->photo) {
-            $fullPath = storage_path('app/public/' . $member->photo);
+            $fullPath = storage_path('app/public/'.$member->photo);
             if (file_exists($fullPath)) {
                 $photoUrl = $fullPath;
             }
@@ -178,7 +179,7 @@ class LibraryCardService
         $dompdf->getCanvas()->get_cpdf()->addInfo('Title', "Library Card - {$member->full_name}");
         $dompdf->getCanvas()->get_cpdf()->addInfo('Author', config('app.name'));
         $dompdf->getCanvas()->get_cpdf()->addInfo('Subject', "Library Card {$card->card_number}");
-        $dompdf->getCanvas()->get_cpdf()->addInfo('Keywords', 'library, card, ' . $card->card_number);
+        $dompdf->getCanvas()->get_cpdf()->addInfo('Keywords', 'library, card, '.$card->card_number);
 
         // Log download
         DownloadLog::create([
@@ -223,7 +224,7 @@ class LibraryCardService
     {
         try {
             $user = $member->registeredBy ?? User::where('is_active', true)->first();
-            if (!$user) {
+            if (! $user) {
                 $user = User::first();
             }
             if ($user) {

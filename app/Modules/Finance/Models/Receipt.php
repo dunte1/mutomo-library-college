@@ -35,6 +35,6 @@ class Receipt extends Model
 
     public static function generateNumber(): string
     {
-        return 'RCT-' . now()->format('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
+        return 'RCT-'.now()->format('Ymd').'-'.strtoupper(substr(uniqid(), -6));
     }
 }

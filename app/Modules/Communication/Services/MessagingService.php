@@ -2,6 +2,7 @@
 
 namespace App\Modules\Communication\Services;
 
+use App\Mail\NotificationMail;
 use App\Models\Department;
 use App\Models\Program;
 use App\Models\User;
@@ -10,11 +11,12 @@ use App\Modules\Communication\Models\Message;
 use App\Modules\Communication\Models\MessageAttachment;
 use App\Modules\Communication\Models\MessageRecipient;
 use App\Modules\Communication\Models\MessageTemplate;
+use App\Modules\Communication\Models\NotificationLog;
 use App\Modules\Notifications\Services\NotificationService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
 
 class MessagingService
 {
@@ -57,7 +59,7 @@ class MessagingService
 
     protected function addRecipients(Message $message, array $data): void
     {
-        if ($message->type === Message::TYPE_DIRECT && !empty($data['recipients'])) {
+        if ($message->type === Message::TYPE_DIRECT && ! empty($data['recipients'])) {
             foreach ($data['recipients'] as $recipientId) {
                 MessageRecipient::create([
                     'message_id' => $message->id,
@@ -67,7 +69,7 @@ class MessagingService
             }
         }
 
-        if ($message->type === Message::TYPE_GROUP && !empty($data['recipients'])) {
+        if ($message->type === Message::TYPE_GROUP && ! empty($data['recipients'])) {
             foreach ($data['recipients'] as $recipientId) {
                 MessageRecipient::create([
                     'message_id' => $message->id,
@@ -89,7 +91,7 @@ class MessagingService
             });
         }
 
-        if ($message->type === Message::TYPE_DEPARTMENT && !empty($data['department_id'])) {
+        if ($message->type === Message::TYPE_DEPARTMENT && ! empty($data['department_id'])) {
             $department = Department::find($data['department_id']);
             if ($department) {
                 $userIds = User::where('department_id', $department->id)
@@ -105,7 +107,7 @@ class MessagingService
             }
         }
 
-        if ($message->type === Message::TYPE_PROGRAM && !empty($data['program_id'])) {
+        if ($message->type === Message::TYPE_PROGRAM && ! empty($data['program_id'])) {
             $program = Program::find($data['program_id']);
             if ($program) {
                 $userIds = User::where('program_id', $program->id)
@@ -126,7 +128,7 @@ class MessagingService
     {
         foreach ($attachments as $attachment) {
             if ($attachment instanceof UploadedFile) {
-                $path = $attachment->store('message-attachments/' . $message->id, 'public');
+                $path = $attachment->store('message-attachments/'.$message->id, 'public');
                 MessageAttachment::create([
                     'message_id' => $message->id,
                     'file_path' => $path,
@@ -142,7 +144,9 @@ class MessagingService
     {
         $message->recipients()->chunk(50, function ($recipients) use ($message) {
             foreach ($recipients as $recipient) {
-                if (!$recipient->recipient) continue;
+                if (! $recipient->recipient) {
+                    continue;
+                }
 
                 $this->notificationService->send(
                     $recipient->recipient,
@@ -172,10 +176,12 @@ class MessagingService
     {
         $message->recipients()->chunk(50, function ($recipients) use ($message) {
             foreach ($recipients as $recipient) {
-                if (!$recipient->recipient || !$recipient->recipient->email) continue;
+                if (! $recipient->recipient || ! $recipient->recipient->email) {
+                    continue;
+                }
                 try {
-                    \Illuminate\Support\Facades\Mail::to($recipient->recipient)->queue(
-                        new \App\Mail\NotificationMail($message->subject, $message->body)
+                    Mail::to($recipient->recipient)->queue(
+                        new NotificationMail($message->subject, $message->body)
                     );
                     $this->logNotification($recipient->recipient, 'mail', $message);
                 } catch (\Throwable $e) {
@@ -187,11 +193,11 @@ class MessagingService
 
     protected function logNotification($user, string $channel, Message $message, ?string $error = null): void
     {
-        \App\Modules\Communication\Models\NotificationLog::create([
+        NotificationLog::create([
             'notifiable_type' => get_class($user),
             'notifiable_id' => $user->id,
             'channel' => $channel,
-            'type' => 'message_' . $message->type,
+            'type' => 'message_'.$message->type,
             'title' => $message->subject,
             'body' => $message->body,
             'status' => $error ? 'failed' : 'sent',
@@ -228,7 +234,7 @@ class MessagingService
             ->where('recipient_id', $user->id)
             ->first();
 
-        if ($recipient && !$recipient->is_read) {
+        if ($recipient && ! $recipient->is_read) {
             $recipient->markAsRead();
 
             CommunicationAnalytic::create([
@@ -261,6 +267,7 @@ class MessagingService
                     }
                 }
             });
+
         return $count;
     }
 
@@ -293,6 +300,7 @@ class MessagingService
     public function sendFromTemplate(User $sender, MessageTemplate $template, array $recipientIds, array $variables = []): Message
     {
         $rendered = $template->render($variables);
+
         return $this->sendMessage($sender, [
             'subject' => $rendered['subject'],
             'body' => $rendered['body'],

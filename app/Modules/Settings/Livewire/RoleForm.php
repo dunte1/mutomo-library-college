@@ -2,18 +2,22 @@
 
 namespace App\Modules\Settings\Livewire;
 
+use Illuminate\Validation\Rule;
 use Livewire\Component;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 
 class RoleForm extends Component
 {
     public ?int $roleId = null;
+
     public bool $isEditing = false;
 
     public string $name = '';
+
     public string $guard_name = 'web';
+
     public array $selectedPermissions = [];
 
     public function mount(?int $id = null): void
@@ -30,7 +34,7 @@ class RoleForm extends Component
 
     public function rules(): array
     {
-        $unique = \Illuminate\Validation\Rule::unique('roles', 'name')->where('guard_name', $this->guard_name);
+        $unique = Rule::unique('roles', 'name')->where('guard_name', $this->guard_name);
         if ($this->isEditing) {
             $unique = $unique->ignore($this->roleId);
         }
@@ -68,6 +72,7 @@ class RoleForm extends Component
             $role = Role::findOrFail($this->roleId);
             if (in_array($role->name, ['super-admin', 'admin']) && $this->name !== $role->name) {
                 session()->flash('error', 'Cannot rename core system roles.');
+
                 return;
             }
             $role->update(['name' => $this->name, 'guard_name' => $this->guard_name]);
@@ -93,6 +98,7 @@ class RoleForm extends Component
             ->get()
             ->groupBy(function ($permission) {
                 $parts = explode('-', $permission->name, 2);
+
                 return $parts[0] ?? 'other';
             });
 

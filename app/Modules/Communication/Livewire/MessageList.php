@@ -2,6 +2,7 @@
 
 namespace App\Modules\Communication\Livewire;
 
+use App\Modules\Communication\Models\Message;
 use App\Modules\Communication\Services\MessagingService;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -11,8 +12,11 @@ class MessageList extends Component
     use WithPagination;
 
     public string $tab = 'inbox';
+
     public string $search = '';
+
     public string $typeFilter = '';
+
     public string $priorityFilter = '';
 
     protected $queryString = ['tab', 'search', 'typeFilter', 'priorityFilter'];
@@ -29,7 +33,7 @@ class MessageList extends Component
 
     public function delete(int $id, MessagingService $messagingService): void
     {
-        $message = \App\Modules\Communication\Models\Message::findOrFail($id);
+        $message = Message::findOrFail($id);
         $messagingService->deleteMessage($message, auth()->user());
         $this->dispatch('notify', message: 'Message deleted successfully.', type: 'success');
     }

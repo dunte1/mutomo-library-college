@@ -5,9 +5,12 @@ use App\Jobs\SendDueReminderJob;
 use App\Jobs\SendOverdueNotificationJob;
 use App\Modules\Circulation\Models\BorrowRecord;
 use App\Modules\Finance\Services\MpesaService;
+use App\Modules\Settings\Services\SettingsService;
 use App\Modules\Subscriptions\Jobs\ProcessSubscriptionRenewals;
+use App\Modules\Subscriptions\Services\SubscriptionService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
@@ -28,9 +31,11 @@ Schedule::call(function () {
 })->dailyAt('08:00')->name('send-overdue-notifications');
 
 Schedule::call(function () {
-    $settings = app(\App\Modules\Settings\Services\SettingsService::class);
+    $settings = app(SettingsService::class);
     $notificationSettings = $settings->getNotificationSettings();
-    if (!($notificationSettings['due_date_reminders'] ?? false)) return;
+    if (! ($notificationSettings['due_date_reminders'] ?? false)) {
+        return;
+    }
 
     $daysBefore = $notificationSettings['reminder_days_before'] ?? 2;
     $targetDate = now()->addDays($daysBefore);
@@ -51,9 +56,9 @@ Schedule::job(new ProcessSubscriptionRenewals)->dailyAt('01:00')->name('process-
 
 // Send expiring-soon notifications for subscriptions expiring in 7 days
 Schedule::call(function () {
-    $service = app(\App\Modules\Subscriptions\Services\SubscriptionService::class);
+    $service = app(SubscriptionService::class);
     $notified = $service->sendExpiringSoonNotifications(7);
-    \Illuminate\Support\Facades\Log::info("Subscription expiring-soon notifications sent: {$notified}");
+    Log::info("Subscription expiring-soon notifications sent: {$notified}");
 })->dailyAt('08:00')->name('send-subscription-expiry-notices');
 
 // Automated database backup and cleanup

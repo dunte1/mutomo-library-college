@@ -5,18 +5,27 @@ namespace App\Modules\Circulation\Livewire;
 use App\Models\User;
 use App\Modules\Catalog\Models\BookCopy;
 use App\Modules\Circulation\Services\BorrowingService;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 
 class IssueBook extends Component
 {
     public string $searchUser = '';
+
     public string $searchBook = '';
+
     public ?int $selectedUserId = null;
+
     public ?int $selectedCopyId = null;
+
     public $selectedUser = null;
+
     public $selectedCopy = null;
+
     public string $barcode = '';
+
     public string $message = '';
+
     public string $messageType = '';
 
     protected $rules = [
@@ -72,7 +81,7 @@ class IssueBook extends Component
             $this->message = $e->getMessage();
             $this->messageType = 'error';
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Issue book failed', ['error' => $e->getMessage()]);
+            Log::error('Issue book failed', ['error' => $e->getMessage()]);
             $this->message = 'An unexpected error occurred.';
             $this->messageType = 'error';
         }
@@ -92,9 +101,9 @@ class IssueBook extends Component
             $users = User::with('department')
                 ->where(function ($q) {
                     $q->where('name', 'like', "%{$this->searchUser}%")
-                      ->orWhere('email', 'like', "%{$this->searchUser}%")
-                      ->orWhere('admission_number', 'like', "%{$this->searchUser}%")
-                      ->orWhere('employee_id', 'like', "%{$this->searchUser}%");
+                        ->orWhere('email', 'like', "%{$this->searchUser}%")
+                        ->orWhere('admission_number', 'like', "%{$this->searchUser}%")
+                        ->orWhere('employee_id', 'like', "%{$this->searchUser}%");
                 })
                 ->active()
                 ->limit(10)
@@ -106,7 +115,7 @@ class IssueBook extends Component
                 ->where('status', 'available')
                 ->whereHas('book', function ($q) {
                     $q->where('title', 'like', "%{$this->searchBook}%")
-                      ->orWhere('isbn', 'like', "%{$this->searchBook}%");
+                        ->orWhere('isbn', 'like', "%{$this->searchBook}%");
                 })
                 ->limit(10)
                 ->get();

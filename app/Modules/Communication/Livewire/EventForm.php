@@ -8,12 +8,19 @@ use Livewire\Component;
 class EventForm extends Component
 {
     public ?int $eventId = null;
+
     public string $title = '';
+
     public string $description = '';
+
     public string $location = '';
+
     public ?string $start_date = null;
+
     public ?string $end_date = null;
+
     public string $type = 'other';
+
     public string $status = 'upcoming';
 
     public bool $isEditing = false;

@@ -11,9 +11,13 @@ class DigitalCategoryList extends Component
     use WithPagination;
 
     public string $name = '';
+
     public string $description = '';
+
     public bool $isActive = true;
+
     public ?int $editingId = null;
+
     public bool $showForm = false;
 
     public function create(): void
@@ -80,7 +84,7 @@ class DigitalCategoryList extends Component
         $this->authorize('manage-digital-categories');
         try {
             $category = DigitalAssetCategory::findOrFail($id);
-            $category->update(['is_active' => !$category->is_active]);
+            $category->update(['is_active' => ! $category->is_active]);
             $this->dispatch('notify', type: 'success', message: 'Category status updated.');
         } catch (\Throwable $e) {
             $this->dispatch('notify', type: 'error', message: 'Failed to update category status.');

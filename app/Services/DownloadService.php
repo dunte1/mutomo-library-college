@@ -11,17 +11,18 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class DownloadService
 {
     protected int $rateLimit = 100;
+
     protected int $rateWindowMinutes = 60;
 
     public function allowDownload(Model $downloadable, string $permission, string $type = 'document'): bool
     {
         $user = auth()->user();
 
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
-        if (!Gate::allows($permission)) {
+        if (! Gate::allows($permission)) {
             return false;
         }
 
@@ -32,15 +33,15 @@ class DownloadService
         return true;
     }
 
-    public function download(Model $downloadable, string $filePath, string $fileName, string $title, string $type = 'document', string $permission = null): BinaryFileResponse|StreamedResponse|null
+    public function download(Model $downloadable, string $filePath, string $fileName, string $title, string $type = 'document', ?string $permission = null): BinaryFileResponse|StreamedResponse|null
     {
         $user = auth()->user();
 
-        if ($permission && !Gate::allows($permission)) {
+        if ($permission && ! Gate::allows($permission)) {
             abort(403, 'You do not have permission to download this file.');
         }
 
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             abort(404, 'File not found.');
         }
 
@@ -66,12 +67,14 @@ class DownloadService
     public function isRateLimited(int $userId): bool
     {
         $count = DownloadLog::recentForUser($userId, $this->rateWindowMinutes)->count();
+
         return $count >= $this->rateLimit;
     }
 
     public function getRemainingDownloads(int $userId): int
     {
         $count = DownloadLog::recentForUser($userId, $this->rateWindowMinutes)->count();
+
         return max(0, $this->rateLimit - $count);
     }
 

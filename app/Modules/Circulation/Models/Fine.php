@@ -37,8 +37,11 @@ class Fine extends Model
     }
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_PAID = 'paid';
+
     const STATUS_WAIVED = 'waived';
+
     const STATUS_DISPUTED = 'disputed';
 
     public function borrowRecord()

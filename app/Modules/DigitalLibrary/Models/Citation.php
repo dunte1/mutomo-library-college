@@ -27,16 +27,16 @@ class Citation extends Model
 
     public static function generateAPA(string $author, int $year, string $title, ?string $publisher, ?string $url): string
     {
-        return "{$author}. ({$year}). *{$title}*." . ($publisher ? " {$publisher}." : '') . ($url ? " {$url}" : '');
+        return "{$author}. ({$year}). *{$title}*.".($publisher ? " {$publisher}." : '').($url ? " {$url}" : '');
     }
 
     public static function generateMLA(string $author, string $title, ?string $publisher, int $year): string
     {
-        return "{$author}. *{$title}*." . ($publisher ? " {$publisher}, " : ' ') . "{$year}.";
+        return "{$author}. *{$title}*.".($publisher ? " {$publisher}, " : ' ')."{$year}.";
     }
 
     public static function generateChicago(string $author, string $title, ?string $publisher, int $year): string
     {
-        return "{$author}. *{$title}*. " . ($publisher ? "{$publisher}, " : '') . "{$year}.";
+        return "{$author}. *{$title}*. ".($publisher ? "{$publisher}, " : '')."{$year}.";
     }
 }

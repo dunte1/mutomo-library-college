@@ -13,9 +13,13 @@ class LibraryCard extends Component
     use WithFileUploads;
 
     public Member $member;
+
     public ?LibraryCardModel $card = null;
+
     public mixed $passportPhoto = null;
+
     public string $tab = 'view';
+
     public array $cardStats = [];
 
     protected $listeners = ['cardGenerated' => '$refresh'];
@@ -50,7 +54,7 @@ class LibraryCard extends Component
             $this->passportPhoto = null;
             $this->dispatch('notify', type: 'success', message: 'Library card generated successfully.');
         } catch (\Throwable $e) {
-            $this->dispatch('notify', type: 'error', message: 'Failed to generate card: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to generate card: '.$e->getMessage());
         }
     }
 
@@ -58,8 +62,9 @@ class LibraryCard extends Component
     {
         $this->authorize('manage-library-cards');
 
-        if (!$this->card) {
+        if (! $this->card) {
             $this->dispatch('notify', type: 'error', message: 'No active card to reissue.');
+
             return;
         }
 
@@ -74,13 +79,13 @@ class LibraryCard extends Component
             $this->passportPhoto = null;
             $this->dispatch('notify', type: 'success', message: 'Card reissued successfully.');
         } catch (\Throwable $e) {
-            $this->dispatch('notify', type: 'error', message: 'Failed to reissue card: ' . $e->getMessage());
+            $this->dispatch('notify', type: 'error', message: 'Failed to reissue card: '.$e->getMessage());
         }
     }
 
     protected function uploadAndSyncPhoto(): ?string
     {
-        if (!$this->passportPhoto) {
+        if (! $this->passportPhoto) {
             return null;
         }
 
@@ -95,8 +100,9 @@ class LibraryCard extends Component
     {
         $this->authorize('manage-library-cards');
 
-        if (!$this->card || !$this->card->isActive()) {
+        if (! $this->card || ! $this->card->isActive()) {
             $this->dispatch('notify', type: 'error', message: 'No active card to mark as lost.');
+
             return;
         }
 
@@ -113,8 +119,9 @@ class LibraryCard extends Component
 
     public function downloadCard(): void
     {
-        if (!$this->card) {
+        if (! $this->card) {
             $this->dispatch('notify', type: 'error', message: 'No active card to download.');
+
             return;
         }
 

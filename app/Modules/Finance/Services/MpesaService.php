@@ -16,9 +16,13 @@ use Illuminate\Support\Facades\Mail;
 class MpesaService
 {
     protected string $consumerKey;
+
     protected string $consumerSecret;
+
     protected string $passKey;
+
     protected string $shortCode;
+
     protected string $environment;
 
     public function __construct()
@@ -38,7 +42,7 @@ class MpesaService
 
         $formattedPhone = $this->formatPhone($phone);
         $timestamp = now()->format('YmdHis');
-        $password = base64_encode($this->shortCode . $this->passKey . $timestamp);
+        $password = base64_encode($this->shortCode.$this->passKey.$timestamp);
 
         $callbackUrl = route('api.mpesa.callback', [], false);
 
@@ -58,7 +62,7 @@ class MpesaService
 
         $token = $this->getAccessToken();
 
-        if (!$token) {
+        if (! $token) {
             $mpesaTxn = MpesaTransaction::create([
                 'phone_number' => $phone,
                 'amount' => $amount,
@@ -108,7 +112,9 @@ class MpesaService
 
         $mpesaTxn = MpesaTransaction::where('checkout_request_id', $checkoutRequestId)->first();
 
-        if (!$mpesaTxn) return;
+        if (! $mpesaTxn) {
+            return;
+        }
 
         if ($resultCode === 0) {
             $metadata = $stkCallback['CallbackMetadata']['Item'] ?? [];
@@ -174,7 +180,7 @@ class MpesaService
                 // Auto-issue library card
                 try {
                     $member = Member::where('user_id', $mpesaTxn->user_id)->first();
-                    if ($member && !$member->libraryCard) {
+                    if ($member && ! $member->libraryCard) {
                         app(LibraryCardService::class)->autoIssueCard($member);
                     }
                 } catch (\Throwable $e) {
@@ -226,12 +232,12 @@ class MpesaService
     public function queryStatus(string $checkoutRequestId): array
     {
         $token = $this->getAccessToken();
-        if (!$token) {
+        if (! $token) {
             return ['success' => false, 'message' => 'Failed to get access token'];
         }
 
         $timestamp = now()->format('YmdHis');
-        $password = base64_encode($this->shortCode . $this->passKey . $timestamp);
+        $password = base64_encode($this->shortCode.$this->passKey.$timestamp);
 
         try {
             $response = Http::withToken($token)
@@ -244,7 +250,8 @@ class MpesaService
 
             return $response->json();
         } catch (\Exception $e) {
-            Log::error('M-Pesa status query error: ' . $e->getMessage());
+            Log::error('M-Pesa status query error: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Query failed'];
         }
     }
@@ -287,7 +294,8 @@ class MpesaService
 
             return $response->json('access_token');
         } catch (\Exception $e) {
-            Log::error('M-Pesa access token error: ' . $e->getMessage());
+            Log::error('M-Pesa access token error: '.$e->getMessage());
+
             return null;
         }
     }
@@ -300,9 +308,16 @@ class MpesaService
     private function formatPhone(string $phone): string
     {
         $phone = preg_replace('/[^0-9]/', '', $phone);
-        if (strlen($phone) === 9) $phone = '254' . $phone;
-        if (str_starts_with($phone, '0')) $phone = '254' . substr($phone, 1);
-        if (str_starts_with($phone, '+')) $phone = substr($phone, 1);
+        if (strlen($phone) === 9) {
+            $phone = '254'.$phone;
+        }
+        if (str_starts_with($phone, '0')) {
+            $phone = '254'.substr($phone, 1);
+        }
+        if (str_starts_with($phone, '+')) {
+            $phone = substr($phone, 1);
+        }
+
         return $phone;
     }
 }

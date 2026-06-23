@@ -8,8 +8,11 @@ use Livewire\Component;
 class DocumentLookup extends Component
 {
     public string $documentId = '';
+
     public ?DocumentVerification $document = null;
+
     public bool $searched = false;
+
     public bool $notFound = false;
 
     public function verify(): void
@@ -34,7 +37,7 @@ class DocumentLookup extends Component
 
     public function mount(string $id = ''): void
     {
-        if (!empty($id)) {
+        if (! empty($id)) {
             $this->documentId = $id;
             $this->verify();
         }

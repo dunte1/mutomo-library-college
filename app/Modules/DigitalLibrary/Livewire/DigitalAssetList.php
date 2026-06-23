@@ -12,10 +12,15 @@ class DigitalAssetList extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $type = '';
+
     public string $categoryId = '';
+
     public string $accessLevel = '';
+
     public string $sort = 'created_at';
+
     public string $direction = 'desc';
 
     protected $queryString = ['search', 'type', 'categoryId', 'accessLevel', 'sort', 'direction'];

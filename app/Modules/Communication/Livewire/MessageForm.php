@@ -2,12 +2,12 @@
 
 namespace App\Modules\Communication\Livewire;
 
-use App\Modules\Communication\Models\Message;
-use App\Modules\Communication\Models\MessageTemplate;
-use App\Modules\Communication\Services\MessagingService;
 use App\Models\Department;
 use App\Models\Program;
 use App\Models\User;
+use App\Modules\Communication\Models\Message;
+use App\Modules\Communication\Models\MessageTemplate;
+use App\Modules\Communication\Services\MessagingService;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Spatie\Permission\Models\Role;
@@ -17,16 +17,27 @@ class MessageForm extends Component
     use WithFileUploads;
 
     public ?int $messageId = null;
+
     public string $subject = '';
+
     public string $body = '';
+
     public string $priority = 'normal';
+
     public string $type = 'direct';
+
     public ?string $scheduled_at = null;
+
     public array $selectedRecipients = [];
+
     public ?int $department_id = null;
+
     public ?int $program_id = null;
+
     public array $attachments = [];
+
     public ?int $template_id = null;
+
     public string $recipientSearch = '';
 
     protected function rules(): array
@@ -61,7 +72,9 @@ class MessageForm extends Component
 
     public function updatedTemplateId(): void
     {
-        if (!$this->template_id) return;
+        if (! $this->template_id) {
+            return;
+        }
 
         $template = MessageTemplate::find($this->template_id);
         if ($template) {
@@ -86,8 +99,8 @@ class MessageForm extends Component
             $search = $this->recipientSearch;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('admission_number', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('admission_number', 'like', "%{$search}%");
             });
         }
 
@@ -144,15 +157,15 @@ class MessageForm extends Component
     public function render()
     {
         $templates = MessageTemplate::active()->orderBy('name')->get();
-        
+
         $usersQuery = User::with('department')->where('is_active', true);
 
         if ($this->recipientSearch) {
             $search = $this->recipientSearch;
             $usersQuery->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('admission_number', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('admission_number', 'like', "%{$search}%");
             });
         }
 
@@ -162,7 +175,7 @@ class MessageForm extends Component
         $roles = Role::whereNotIn('name', ['super-admin', 'guest'])->orderBy('name')->get(['id', 'name']);
 
         $selectedUsers = [];
-        if (!empty($this->selectedRecipients)) {
+        if (! empty($this->selectedRecipients)) {
             $selectedUsers = User::with('department')
                 ->whereIn('id', $this->selectedRecipients)
                 ->get(['id', 'name', 'email', 'department_id'])

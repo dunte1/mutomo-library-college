@@ -3,10 +3,12 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Minishlink\WebPush\VAPID;
 
 class GenerateVapidKeys extends Command
 {
     protected $signature = 'vapid:generate';
+
     protected $description = 'Generate VAPID public/private key pair for Web Push notifications';
 
     public function handle(): int
@@ -19,14 +21,15 @@ class GenerateVapidKeys extends Command
             // Try the library method first (works on most systems)
             $keys = $this->generateViaLibrary();
         } catch (\Throwable $e) {
-            $this->warn('Library method failed: ' . $e->getMessage());
+            $this->warn('Library method failed: '.$e->getMessage());
             $this->info('Falling back to OpenSSL CLI...');
 
             // Fall back to OpenSSL CLI (works on systems where PHP's OpenSSL has config issues)
             try {
                 $keys = $this->generateViaCli();
             } catch (\Throwable $e2) {
-                $this->error('Failed to generate VAPID keys: ' . $e2->getMessage());
+                $this->error('Failed to generate VAPID keys: '.$e2->getMessage());
+
                 return Command::FAILURE;
             }
         }
@@ -56,16 +59,17 @@ class GenerateVapidKeys extends Command
         }
 
         $candidates = [
-            PHP_BINDIR . '\\openssl.cnf',
-            PHP_BINDIR . '\\..\\ssl\\openssl.cnf',
+            PHP_BINDIR.'\\openssl.cnf',
+            PHP_BINDIR.'\\..\\ssl\\openssl.cnf',
             'C:\\laragon\\bin\\php\\php-8.3.30-Win32-vs16-x64\\openssl.cnf',
             'C:\\Program Files\\Git\\usr\\ssl\\openssl.cnf',
-            getenv('SystemRoot') . '\\System32\\openssl.cnf',
+            getenv('SystemRoot').'\\System32\\openssl.cnf',
         ];
 
         foreach ($candidates as $path) {
             if (file_exists($path)) {
-                putenv('OPENSSL_CONF=' . $path);
+                putenv('OPENSSL_CONF='.$path);
+
                 return;
             }
         }
@@ -76,7 +80,7 @@ class GenerateVapidKeys extends Command
      */
     private function generateViaLibrary(): array
     {
-        return \Minishlink\WebPush\VAPID::createVapidKeys();
+        return VAPID::createVapidKeys();
     }
 
     /**
@@ -88,18 +92,18 @@ class GenerateVapidKeys extends Command
     {
         // Find openssl binary
         $openssl = $this->findOpensslBinary();
-        if (!$openssl) {
+        if (! $openssl) {
             throw new \RuntimeException('Could not find openssl binary in PATH.');
         }
 
         // Create temp directory
-        $tmpDir = sys_get_temp_dir() . '/vapid-' . uniqid();
-        if (!mkdir($tmpDir, 0700, true) && !is_dir($tmpDir)) {
-            throw new \RuntimeException('Failed to create temp directory: ' . $tmpDir);
+        $tmpDir = sys_get_temp_dir().'/vapid-'.uniqid();
+        if (! mkdir($tmpDir, 0700, true) && ! is_dir($tmpDir)) {
+            throw new \RuntimeException('Failed to create temp directory: '.$tmpDir);
         }
 
-        $privateKeyPath = $tmpDir . '/private.pem';
-        $publicKeyPath  = $tmpDir . '/public.pem';
+        $privateKeyPath = $tmpDir.'/private.pem';
+        $publicKeyPath = $tmpDir.'/public.pem';
 
         try {
             // Step 1: Generate EC private key (prime256v1 = P-256)
@@ -109,8 +113,8 @@ class GenerateVapidKeys extends Command
                 $privateKeyPath
             );
             $output = shell_exec($cmd);
-            if (!file_exists($privateKeyPath)) {
-                throw new \RuntimeException('Failed to generate EC key. Output: ' . ($output ?? '(none)'));
+            if (! file_exists($privateKeyPath)) {
+                throw new \RuntimeException('Failed to generate EC key. Output: '.($output ?? '(none)'));
             }
 
             // Step 2: Extract public key
@@ -121,15 +125,15 @@ class GenerateVapidKeys extends Command
                 $publicKeyPath
             );
             $output = shell_exec($cmd);
-            if (!file_exists($publicKeyPath)) {
-                throw new \RuntimeException('Failed to extract public key. Output: ' . ($output ?? '(none)'));
+            if (! file_exists($publicKeyPath)) {
+                throw new \RuntimeException('Failed to extract public key. Output: '.($output ?? '(none)'));
             }
 
             // Step 3: Read the PEM files and extract raw key bytes
             $privatePem = file_get_contents($privateKeyPath);
-            $publicPem  = file_get_contents($publicKeyPath);
+            $publicPem = file_get_contents($publicKeyPath);
 
-            if (!$privatePem || !$publicPem) {
+            if (! $privatePem || ! $publicPem) {
                 throw new \RuntimeException('Failed to read generated key files.');
             }
 
@@ -138,22 +142,22 @@ class GenerateVapidKeys extends Command
             $privateKey = openssl_pkey_get_private($privatePem);
             if ($privateKey) {
                 $details = openssl_pkey_get_details($privateKey);
-                if (!$details || !isset($details['ec'])) {
+                if (! $details || ! isset($details['ec'])) {
                     throw new \RuntimeException('Failed to extract EC key details.');
                 }
                 // x and y are already binary (32 bytes each), not hex
-                $vapidPublicKey  = $this->base64urlEncode("\x04" . $details['ec']['x'] . $details['ec']['y']);
+                $vapidPublicKey = $this->base64urlEncode("\x04".$details['ec']['x'].$details['ec']['y']);
                 $vapidPrivateKey = $this->base64urlEncode(str_pad($details['ec']['d'], 32, "\0", STR_PAD_LEFT));
                 openssl_pkey_free($privateKey);
             } else {
                 // Pure PHP fallback: parse the DER-encoded private key manually
                 $vapidKeys = $this->parseEcPrivateKeyPem($privatePem, $publicPem);
-                $vapidPublicKey  = $vapidKeys['publicKey'];
+                $vapidPublicKey = $vapidKeys['publicKey'];
                 $vapidPrivateKey = $vapidKeys['privateKey'];
             }
 
             return [
-                'publicKey'  => $vapidPublicKey,
+                'publicKey' => $vapidPublicKey,
                 'privateKey' => $vapidPrivateKey,
             ];
         } finally {
@@ -179,8 +183,8 @@ class GenerateVapidKeys extends Command
 
         foreach ($paths as $path) {
             $candidates = [
-                $path . DIRECTORY_SEPARATOR . 'openssl.exe',
-                $path . DIRECTORY_SEPARATOR . 'openssl',
+                $path.DIRECTORY_SEPARATOR.'openssl.exe',
+                $path.DIRECTORY_SEPARATOR.'openssl',
             ];
             foreach ($candidates as $candidate) {
                 if (file_exists($candidate) && is_executable($candidate)) {
@@ -216,14 +220,14 @@ class GenerateVapidKeys extends Command
 
         // Extract base64 content from PEM (strip headers/footers)
         $privateB64 = preg_replace('/^-+[^-]+-+\s*/m', '', $privatePem);
-        $privateB64 = str_replace(["\n", " "], '', $privateB64);
+        $privateB64 = str_replace(["\n", ' '], '', $privateB64);
         $publicB64 = preg_replace('/^-+[^-]+-+\s*/m', '', $publicPem);
-        $publicB64 = str_replace(["\n", " "], '', $publicB64);
+        $publicB64 = str_replace(["\n", ' '], '', $publicB64);
 
         $privateDer = base64_decode($privateB64);
-        $publicDer  = base64_decode($publicB64);
+        $publicDer = base64_decode($publicB64);
 
-        if (!$privateDer || !$publicDer) {
+        if (! $privateDer || ! $publicDer) {
             throw new \RuntimeException('Failed to decode PEM data.');
         }
 
@@ -239,24 +243,24 @@ class GenerateVapidKeys extends Command
         // For the public key: SubjectPublicKeyInfo contains the uncompressed EC point (0x04 + x + y)
         $publicKeyBytes = $this->extractEcPublicKeyFromDer($publicDer);
 
-        if (!$privateKeyBytes || !$publicKeyBytes) {
+        if (! $privateKeyBytes || ! $publicKeyBytes) {
             throw new \RuntimeException('Failed to extract key bytes from DER.');
         }
 
         if (strlen($privateKeyBytes) !== 32) {
             throw new \RuntimeException(
-                'Invalid private key length: ' . strlen($privateKeyBytes) . ' (expected 32)'
+                'Invalid private key length: '.strlen($privateKeyBytes).' (expected 32)'
             );
         }
 
         if (strlen($publicKeyBytes) !== 65) {
             throw new \RuntimeException(
-                'Invalid public key length: ' . strlen($publicKeyBytes) . ' (expected 65)'
+                'Invalid public key length: '.strlen($publicKeyBytes).' (expected 65)'
             );
         }
 
         return [
-            'publicKey'  => $this->base64urlEncode($publicKeyBytes),
+            'publicKey' => $this->base64urlEncode($publicKeyBytes),
             'privateKey' => $this->base64urlEncode($privateKeyBytes),
         ];
     }
@@ -271,23 +275,31 @@ class GenerateVapidKeys extends Command
         $len = strlen($der);
 
         // Expect SEQUENCE (0x30)
-        if ($pos >= $len || ord($der[$pos]) !== 0x30) return null;
+        if ($pos >= $len || ord($der[$pos]) !== 0x30) {
+            return null;
+        }
         $pos++;
         // Read sequence length
         $seqLen = $this->readDerLength($der, $pos);
         $end = $pos + $seqLen;
 
         // Version (INTEGER, should be 1)
-        if ($pos >= $end || ord($der[$pos]) !== 0x02) return null;
+        if ($pos >= $end || ord($der[$pos]) !== 0x02) {
+            return null;
+        }
         $pos++;
         $intLen = $this->readDerLength($der, $pos);
         $pos += $intLen;
 
         // Private key (OCTET STRING, 0x04)
-        if ($pos >= $end || ord($der[$pos]) !== 0x04) return null;
+        if ($pos >= $end || ord($der[$pos]) !== 0x04) {
+            return null;
+        }
         $pos++;
         $keyLen = $this->readDerLength($der, $pos);
-        if ($pos + $keyLen > $end) return null;
+        if ($pos + $keyLen > $end) {
+            return null;
+        }
         $key = substr($der, $pos, $keyLen);
         $pos += $keyLen;
 
@@ -305,25 +317,33 @@ class GenerateVapidKeys extends Command
         $len = strlen($der);
 
         // Expect SEQUENCE (0x30)
-        if ($pos >= $len || ord($der[$pos]) !== 0x30) return null;
+        if ($pos >= $len || ord($der[$pos]) !== 0x30) {
+            return null;
+        }
         $pos++;
         $seqLen = $this->readDerLength($der, $pos);
         $end = $pos + $seqLen;
 
         // Skip AlgorithmIdentifier SEQUENCE
-        if ($pos >= $end || ord($der[$pos]) !== 0x30) return null;
+        if ($pos >= $end || ord($der[$pos]) !== 0x30) {
+            return null;
+        }
         $pos++;
         $algLen = $this->readDerLength($der, $pos);
         $pos += $algLen;
 
         // BIT STRING containing the public key
-        if ($pos >= $end || ord($der[$pos]) !== 0x03) return null;
+        if ($pos >= $end || ord($der[$pos]) !== 0x03) {
+            return null;
+        }
         $pos++;
         $bitLen = $this->readDerLength($der, $pos);
         // Skip unused bits byte
         $pos++;
         $keyLen = $bitLen - 1;
-        if ($pos + $keyLen > $end) return null;
+        if ($pos + $keyLen > $end) {
+            return null;
+        }
 
         // The key should start with 0x04 (uncompressed)
         $key = substr($der, $pos, $keyLen);
@@ -346,7 +366,9 @@ class GenerateVapidKeys extends Command
      */
     private function readDerLength(string $data, int &$pos): int
     {
-        if ($pos >= strlen($data)) return 0;
+        if ($pos >= strlen($data)) {
+            return 0;
+        }
         $byte = ord($data[$pos]);
         $pos++;
 
@@ -357,10 +379,13 @@ class GenerateVapidKeys extends Command
         $numBytes = $byte & 0x7F;
         $length = 0;
         for ($i = 0; $i < $numBytes; $i++) {
-            if ($pos >= strlen($data)) return 0;
+            if ($pos >= strlen($data)) {
+                return 0;
+            }
             $length = ($length << 8) | ord($data[$pos]);
             $pos++;
         }
+
         return $length;
     }
 
@@ -377,7 +402,9 @@ class GenerateVapidKeys extends Command
      */
     private function cleanupTemp(string $path): void
     {
-        if (!is_dir($path)) return;
+        if (! is_dir($path)) {
+            return;
+        }
 
         $files = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS),

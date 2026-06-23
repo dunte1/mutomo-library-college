@@ -3,8 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Modules\Circulation\Models\BorrowRecord;
 use App\Modules\Circulation\Models\Fine;
 use App\Modules\Finance\Models\Invoice;
+use App\Modules\Finance\Models\Receipt;
 use App\Modules\Finance\Models\Transaction;
 use Illuminate\Database\Seeder;
 
@@ -16,15 +18,19 @@ class FinanceSeeder extends Seeder
         $financeOfficer = User::where('email', 'finance@ollmchs.ac.ke')->first();
         $student = User::where('email', 'student@ollmchs.ac.ke')->first();
 
-        if (!$librarian) return;
+        if (! $librarian) {
+            return;
+        }
 
         $recorder = $financeOfficer ?? $librarian;
 
-        if (!$student) return;
+        if (! $student) {
+            return;
+        }
 
         // Create a pending fine for demo
         $pendingFine = Fine::create([
-            'borrow_record_id' => \App\Modules\Circulation\Models\BorrowRecord::first()?->id ?? 1,
+            'borrow_record_id' => BorrowRecord::first()?->id ?? 1,
             'user_id' => $student->id,
             'reason' => 'overdue',
             'amount' => 350,
@@ -35,7 +41,7 @@ class FinanceSeeder extends Seeder
 
         // Create a paid transaction + receipt + invoice for demo
         $paidFine = Fine::create([
-            'borrow_record_id' => \App\Modules\Circulation\Models\BorrowRecord::skip(1)->first()?->id ?? 1,
+            'borrow_record_id' => BorrowRecord::skip(1)->first()?->id ?? 1,
             'user_id' => $student->id,
             'reason' => 'overdue',
             'amount' => 500,
@@ -59,8 +65,8 @@ class FinanceSeeder extends Seeder
             'recorded_by' => $recorder->id,
         ]);
 
-        \App\Modules\Finance\Models\Receipt::create([
-            'receipt_number' => \App\Modules\Finance\Models\Receipt::generateNumber(),
+        Receipt::create([
+            'receipt_number' => Receipt::generateNumber(),
             'transaction_id' => $txn->id,
             'user_id' => $student->id,
             'amount' => $paidFine->amount,

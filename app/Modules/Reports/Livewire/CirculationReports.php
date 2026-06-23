@@ -10,6 +10,7 @@ use Livewire\Component;
 class CirculationReports extends Component
 {
     public array $stats = [];
+
     public string $period = '30';
 
     public function mount(): void

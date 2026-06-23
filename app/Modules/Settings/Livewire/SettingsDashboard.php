@@ -2,6 +2,7 @@
 
 namespace App\Modules\Settings\Livewire;
 
+use Illuminate\Support\Facades\Route;
 use Livewire\Component;
 
 class SettingsDashboard extends Component
@@ -105,7 +106,7 @@ class SettingsDashboard extends Component
         ];
 
         // Only include groups whose routes exist
-        $this->groups = array_values(array_filter($allGroups, fn($g) => \Illuminate\Support\Facades\Route::has($g['route'])));
+        $this->groups = array_values(array_filter($allGroups, fn ($g) => Route::has($g['route'])));
     }
 
     public function render()

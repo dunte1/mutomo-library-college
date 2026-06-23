@@ -112,35 +112,35 @@ class BookRepository implements BaseRepositoryInterface
     {
         $query = $this->model->with(['authors', 'publisher', 'category']);
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->search($filters['search']);
         }
 
-        if (!empty($filters['category_id'])) {
+        if (! empty($filters['category_id'])) {
             $query->byCategory($filters['category_id']);
         }
 
-        if (!empty($filters['author_id'])) {
+        if (! empty($filters['author_id'])) {
             $query->byAuthor($filters['author_id']);
         }
 
-        if (!empty($filters['publisher_id'])) {
+        if (! empty($filters['publisher_id'])) {
             $query->byPublisher($filters['publisher_id']);
         }
 
-        if (!empty($filters['subject_id'])) {
+        if (! empty($filters['subject_id'])) {
             $query->bySubject($filters['subject_id']);
         }
 
-        if (!empty($filters['year'])) {
+        if (! empty($filters['year'])) {
             $query->byYear($filters['year']);
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['language'])) {
+        if (! empty($filters['language'])) {
             $query->where('language', $filters['language']);
         }
 

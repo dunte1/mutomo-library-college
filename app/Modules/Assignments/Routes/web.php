@@ -1,7 +1,7 @@
 <?php
 
-use App\Modules\Assignments\Livewire\TeacherAssignments;
 use App\Modules\Assignments\Livewire\StudentAssignments;
+use App\Modules\Assignments\Livewire\TeacherAssignments;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('assignments')->name('assignments.')->group(function () {

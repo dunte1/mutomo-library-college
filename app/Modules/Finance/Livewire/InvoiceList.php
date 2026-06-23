@@ -13,7 +13,9 @@ class InvoiceList extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $status = '';
+
     public string $type = '';
 
     protected $queryString = ['search', 'status', 'type'];

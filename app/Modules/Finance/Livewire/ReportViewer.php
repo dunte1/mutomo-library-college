@@ -11,9 +11,13 @@ use Livewire\Component;
 class ReportViewer extends Component
 {
     public string $selectedType = 'circulation_summary';
+
     public string $format = 'pdf';
+
     public array $params = [];
+
     public string $activeTab = 'generate';
+
     public ?Report $generatedReport = null;
 
     public function generate()
@@ -37,8 +41,9 @@ class ReportViewer extends Component
     {
         $report = Report::findOrFail($reportId);
 
-        if (!$report->file_path || !Storage::disk('local')->exists($report->file_path)) {
+        if (! $report->file_path || ! Storage::disk('local')->exists($report->file_path)) {
             session()->flash('error', 'Report file not found.');
+
             return;
         }
 
@@ -47,7 +52,7 @@ class ReportViewer extends Component
         return app(DownloadService::class)->download(
             $report,
             Storage::disk('local')->path($report->file_path),
-            $report->name . $extension,
+            $report->name.$extension,
             $report->name,
             'report',
             'generate-reports'

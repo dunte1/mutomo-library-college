@@ -32,8 +32,11 @@ class Reservation extends Model
     }
 
     const STATUS_PENDING = 'pending';
+
     const STATUS_FULFILLED = 'fulfilled';
+
     const STATUS_CANCELLED = 'cancelled';
+
     const STATUS_EXPIRED = 'expired';
 
     public function user()

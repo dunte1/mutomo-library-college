@@ -24,6 +24,7 @@ class AuthorList extends Component
         $author = Author::findOrFail($id);
         if ($author->books()->count() > 0) {
             $this->dispatch('notify', message: 'Cannot delete author with associated books.', type: 'error');
+
             return;
         }
         $author->delete();
