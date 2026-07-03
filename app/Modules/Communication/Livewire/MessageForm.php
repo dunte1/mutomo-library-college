@@ -57,16 +57,41 @@ class MessageForm extends Component
         ];
     }
 
-    public function mount(?int $id = null): void
+    public ?string $forwardSubject = '';
+
+    public ?string $forwardBody = '';
+
+    public ?int $forwardRecipientId = null;
+
+    protected $queryString = [
+        'forwardSubject' => ['except' => ''],
+        'forwardBody' => ['except' => ''],
+        'forwardRecipientId' => ['except' => ''],
+    ];
+
+    public function mount(): void
     {
+        abort_unless(auth()->user()->can('send-messages'), 403);
+
+        $id = request()->query('id');
+
         if ($id) {
-            $message = Message::findOrFail($id);
+            $message = Message::with(['recipients', 'attachments'])->findOrFail($id);
             $this->messageId = $message->id;
             $this->subject = $message->subject;
             $this->body = $message->body;
             $this->priority = $message->priority;
             $this->type = $message->type;
             $this->scheduled_at = $message->scheduled_at?->format('Y-m-d H:i');
+            $this->selectedRecipients = $message->recipients->pluck('recipient_id')->filter()->values()->toArray();
+        }
+
+        if ($this->forwardSubject) {
+            $this->subject = $this->forwardSubject;
+            $this->body = $this->forwardBody;
+            if ($this->forwardRecipientId) {
+                $this->selectedRecipients = [$this->forwardRecipientId];
+            }
         }
     }
 
@@ -137,6 +162,7 @@ class MessageForm extends Component
         $this->validate();
 
         $data = [
+            'message_id' => $this->messageId,
             'subject' => $this->subject,
             'body' => $this->body,
             'priority' => $this->priority,
@@ -148,10 +174,48 @@ class MessageForm extends Component
             'attachments' => $this->attachments,
         ];
 
-        $messagingService->sendMessage(auth()->user(), $data);
+        if ($this->messageId) {
+            $draft = Message::where('sender_id', auth()->id())
+                ->where('status', Message::STATUS_DRAFT)
+                ->findOrFail($this->messageId);
+            $draft->update([
+                'subject' => $this->subject,
+                'body' => $this->body,
+                'priority' => $this->priority,
+                'type' => $this->type,
+            ]);
+            $messagingService->sendMessage(auth()->user(), $data);
+        } else {
+            $messagingService->sendMessage(auth()->user(), $data);
+        }
 
         $this->dispatch('notify', message: 'Message sent successfully.', type: 'success');
         $this->redirect(route('communication.messages.index'), navigate: true);
+    }
+
+    public function saveDraft(MessagingService $messagingService): void
+    {
+        $this->validate([
+            'subject' => ['required', 'string', 'max:255'],
+            'body' => ['required', 'string'],
+        ]);
+
+        $data = [
+            'message_id' => $this->messageId,
+            'subject' => $this->subject,
+            'body' => $this->body,
+            'priority' => $this->priority,
+            'type' => $this->type,
+            'recipients' => $this->selectedRecipients,
+            'department_id' => $this->department_id,
+            'program_id' => $this->program_id,
+            'attachments' => $this->attachments,
+        ];
+
+        $messagingService->saveDraft(auth()->user(), $data);
+
+        $this->dispatch('notify', message: 'Draft saved.', type: 'success');
+        $this->redirect(route('communication.messages.index', ['tab' => 'drafts']), navigate: true);
     }
 
     public function render()

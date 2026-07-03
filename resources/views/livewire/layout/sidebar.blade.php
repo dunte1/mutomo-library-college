@@ -406,32 +406,40 @@ new class extends Component {
             @endif
             {{-- Individual report types (will be created in Phase 4) --}}
             @if(\Illuminate\Support\Facades\Route::has('reports.catalog'))
+            @can('view-reports')
             <a href="{{ route('reports.catalog') }}" wire:navigate
                 class="sidebar-link {{ request()->routeIs('reports.catalog*') ? 'sidebar-link-active' : '' }} ml-4"
                >
                 <span class="text-sm">Catalog Reports</span>
             </a>
+            @endcan
             @endif
             @if(\Illuminate\Support\Facades\Route::has('reports.circulation'))
+            @can('view-reports')
             <a href="{{ route('reports.circulation') }}" wire:navigate
                 class="sidebar-link {{ request()->routeIs('reports.circulation*') ? 'sidebar-link-active' : '' }} ml-4"
                >
                 <span class="text-sm">Circulation Reports</span>
             </a>
+            @endcan
             @endif
             @if(\Illuminate\Support\Facades\Route::has('reports.members'))
+            @can('view-reports')
             <a href="{{ route('reports.members') }}" wire:navigate
                 class="sidebar-link {{ request()->routeIs('reports.members*') ? 'sidebar-link-active' : '' }} ml-4"
                >
                 <span class="text-sm">Member Reports</span>
             </a>
+            @endcan
             @endif
             @if(\Illuminate\Support\Facades\Route::has('reports.digital-library'))
+            @can('view-reports')
             <a href="{{ route('reports.digital-library') }}" wire:navigate
                 class="sidebar-link {{ request()->routeIs('reports.digital-library*') ? 'sidebar-link-active' : '' }} ml-4"
                >
                 <span class="text-sm">Digital Library Reports</span>
             </a>
+            @endcan
             @endif
             {{-- Finance Reports -- existing route under finance prefix --}}
             @can('generate-reports')
@@ -451,9 +459,11 @@ new class extends Component {
             @endcan
 
             {{-- === COMMUNICATION & ENGAGEMENT === --}}
+            @canany(['manage-announcements', 'manage-bulletins', 'manage-events', 'view-messages', 'send-notifications', 'view-notification-logs', 'manage-broadcasts', 'manage-templates', 'view-message-logs'])
             <div class="pt-3">
                 <p class="sidebar-group-label">Communication &amp; Engagement</p>
             </div>
+            @endcanany
             @can('manage-announcements')
             <a href="{{ route('communication.announcements.index') }}" wire:navigate
                 class="sidebar-link {{ request()->routeIs('communication.announcements*') ? 'sidebar-link-active' : '' }}"
@@ -847,16 +857,6 @@ new class extends Component {
                 </svg>
                 <span>My Profile</span>
             </a>
-            @if(\Illuminate\Support\Facades\Route::has('settings.notifications'))
-            <a href="{{ route('settings.notifications') }}" wire:navigate
-                class="sidebar-link {{ request()->routeIs('settings.notifications') ? 'sidebar-link-active' : '' }}"
-               >
-                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                <span>Notifications</span>
-            </a>
-            @endif
         @endrole
     </nav>
 

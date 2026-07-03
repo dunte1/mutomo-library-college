@@ -32,6 +32,8 @@ class TemplateForm extends Component
 
     public function mount(?int $id = null): void
     {
+        abort_unless(auth()->user()->can('manage-templates'), 403);
+
         if ($id) {
             $template = MessageTemplate::findOrFail($id);
             $this->templateId = $template->id;

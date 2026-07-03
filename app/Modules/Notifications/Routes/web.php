@@ -7,5 +7,5 @@ Route::middleware(['auth', 'verified'])
     ->prefix('notifications')
     ->name('notifications.')
     ->group(function () {
-        Route::get('/', NotificationList::class)->name('index');
+        Route::get('/', NotificationList::class)->name('index')->middleware('permission:view-notification-logs');
     });

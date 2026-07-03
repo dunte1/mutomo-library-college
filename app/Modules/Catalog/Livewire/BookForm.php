@@ -98,6 +98,7 @@ class BookForm extends Component
     public function mount(?int $id = null): void
     {
         if ($id) {
+            abort_unless(auth()->user()->can('edit-books'), 403);
             $this->isEditing = true;
             $this->bookId = $id;
             $book = app(BookService::class)->find($id);
@@ -122,6 +123,8 @@ class BookForm extends Component
             if ($book->cover_image) {
                 $this->existingCoverUrl = Storage::url($book->cover_image);
             }
+        } else {
+            abort_unless(auth()->user()->can('create-books'), 403);
         }
     }
 

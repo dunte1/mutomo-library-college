@@ -79,6 +79,8 @@ class TeacherAssignments extends Component
 
     public function mount(): void
     {
+        abort_unless(auth()->user()->can('create-assignments'), 403);
+
         $this->resetForm();
     }
 

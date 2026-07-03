@@ -25,6 +25,8 @@ class AnnouncementForm extends Component
 
     public function mount(?int $id = null): void
     {
+        abort_unless(auth()->user()->can('manage-announcements'), 403);
+
         if ($id) {
             $this->isEditing = true;
             $this->announcementId = $id;

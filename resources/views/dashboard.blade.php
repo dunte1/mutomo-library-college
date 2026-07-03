@@ -12,7 +12,20 @@
     use App\Modules\DigitalLibrary\Services\DigitalLibraryService;
 
     $user = auth()->user();
-    $isStaff = $user->hasAnyRole(['super-admin', 'admin', 'librarian', 'assistant-librarian', 'finance-officer']);
+    $isStaff = $user->hasAnyPermission([
+        'create-books', 'edit-books', 'delete-books', 'import-books', 'export-books',
+        'manage-inventory', 'borrow-books', 'return-books', 'manage-reservations',
+        'create-members', 'edit-members', 'delete-members', 'suspend-members',
+        'upload-digital-assets', 'manage-fines', 'collect-payments', 'generate-invoices',
+        'generate-receipts', 'process-refunds', 'view-financial-reports',
+        'manage-settings', 'manage-roles', 'manage-permissions',
+        'manage-announcements', 'manage-bulletins', 'manage-events',
+        'send-notifications', 'manage-templates', 'manage-broadcasts',
+        'generate-reports', 'schedule-reports',
+        'create-assignments', 'manage-departments', 'manage-programs',
+        'manage-library-cards', 'manage-membership-requests',
+        'manage-subscriptions', 'manage-pricing', 'manage-system-optimization',
+    ]);
 @endphp
 
 @if($isStaff)
@@ -45,6 +58,7 @@
         <x-slot name="subtitle">Welcome back, {{ $user->name }}. Here's your library overview.</x-slot>
 
         <div class="stat-carousel mb-6">
+            @can('view-books')
             <div class="stat-card">
                 <div class="flex items-center justify-between mb-3">
                     <p class="text-sm font-medium text-surface-500 dark:text-surface-400">Total Books</p>
@@ -57,7 +71,9 @@
                 <p class="text-3xl font-bold text-surface-900 dark:text-white">{{ number_format($totalBooks) }}</p>
                 <p class="text-xs text-surface-500 dark:text-surface-400 mt-1">Across all categories</p>
             </div>
+            @endcan
 
+            @can('view-circulation')
             <div class="stat-card">
                 <div class="flex items-center justify-between mb-3">
                     <p class="text-sm font-medium text-surface-500 dark:text-surface-400">Active Borrows</p>
@@ -83,7 +99,9 @@
                 <p class="text-3xl font-bold text-surface-900 dark:text-white">{{ number_format($overdueBooks) }}</p>
                 <p class="text-xs text-surface-500 dark:text-surface-400 mt-1">Requires attention</p>
             </div>
+            @endcan
 
+            @can('view-members')
             <div class="stat-card">
                 <div class="flex items-center justify-between mb-3">
                     <p class="text-sm font-medium text-surface-500 dark:text-surface-400">Registered Members</p>
@@ -96,6 +114,7 @@
                 <p class="text-3xl font-bold text-surface-900 dark:text-white">{{ number_format(User::count()) }}</p>
                 <p class="text-xs text-surface-500 dark:text-surface-400 mt-1">Active library members</p>
             </div>
+            @endcan
 
             @if($canCreateAssignments)
             <div class="stat-card">
@@ -127,7 +146,9 @@
                             </button>
                             <h3 class="font-semibold text-surface-900 dark:text-white">Recent Activity</h3>
                         </div>
+                        @can('view-circulation')
                         <a href="{{ route('circulation.index') }}" wire:navigate class="text-sm text-primary-600 dark:text-primary-400 hover:underline">View All</a>
+                        @endcan
                     </div>
                     <div class="card-body" x-show="open">
                         @forelse($recentBorrows as $borrow)
@@ -166,30 +187,38 @@
                         </button>
                     </div>
                     <div class="card-body space-y-3" x-show="open">
+                        @can('create-books')
                         <a href="{{ route('catalog.books.create') }}" wire:navigate class="btn-primary w-full justify-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
                             Add New Book
                         </a>
+                        @endcan
+                        @can('borrow-books')
                         <a href="{{ route('circulation.issue') }}" wire:navigate class="btn-outline w-full justify-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                             </svg>
                             Issue Book
                         </a>
+                        @endcan
+                        @can('return-books')
                         <a href="{{ route('circulation.return') }}" wire:navigate class="btn-outline w-full justify-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
                             Return Book
                         </a>
+                        @endcan
+                        @can('generate-reports')
                         <a href="{{ route('finance.reports') }}" wire:navigate class="btn-outline w-full justify-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                             Generate Report
                         </a>
+                        @endcan
                     </div>
                 </div>
 
@@ -286,6 +315,7 @@
                  @click="fabOpen = false"
                  class="fab-menu-backdrop" :class="{ 'show': fabOpen }"></div>
             <div class="fab-menu" :class="{ 'show': fabOpen }">
+                @can('create-books')
                 <div class="fab-menu-item" style="transition-delay: 0.05s">
                     <span class="fab-label">Add New Book</span>
                     <a href="{{ route('catalog.books.create') }}" wire:navigate class="fab-btn" style="background: linear-gradient(135deg, #1E4FA3, #153168);">
@@ -294,6 +324,8 @@
                         </svg>
                     </a>
                 </div>
+                @endcan
+                @can('borrow-books')
                 <div class="fab-menu-item" style="transition-delay: 0.1s">
                     <span class="fab-label">Issue Book</span>
                     <a href="{{ route('circulation.issue') }}" wire:navigate class="fab-btn" style="background: linear-gradient(135deg, #059669, #047857);">
@@ -302,6 +334,8 @@
                         </svg>
                     </a>
                 </div>
+                @endcan
+                @can('return-books')
                 <div class="fab-menu-item" style="transition-delay: 0.15s">
                     <span class="fab-label">Return Book</span>
                     <a href="{{ route('circulation.return') }}" wire:navigate class="fab-btn" style="background: linear-gradient(135deg, #D62839, #b91c1c);">
@@ -310,6 +344,7 @@
                         </svg>
                     </a>
                 </div>
+                @endcan
             </div>
             <button @click="fabOpen = !fabOpen"
                     class="fab" :class="{ 'active': fabOpen }">

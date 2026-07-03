@@ -62,6 +62,7 @@ class MemberForm extends Component
     public function mount(?int $id = null): void
     {
         if ($id) {
+            abort_unless(auth()->user()->can('edit-members'), 403);
             $this->isEditing = true;
             $this->memberId = $id;
             $member = app(MemberService::class)->find($id);
@@ -86,6 +87,7 @@ class MemberForm extends Component
             $this->existingPhotoUrl = $member->photo ? Storage::url($member->photo) : null;
 
         } else {
+            abort_unless(auth()->user()->can('create-members'), 403);
             $this->joined_at ??= now()->toDateString();
             $this->expires_at ??= now()->addYear()->toDateString();
         }

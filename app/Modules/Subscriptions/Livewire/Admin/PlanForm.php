@@ -46,6 +46,8 @@ class PlanForm extends Component
 
     public function mount(?Plan $plan = null): void
     {
+        abort_unless(auth()->user()->can('manage-pricing'), 403);
+
         if ($plan && $plan->exists) {
             $this->editing = true;
             $this->plan = $plan;
