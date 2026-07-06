@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../bloc/assignments_bloc.dart';
-import '../models/assignment_model.dart';
 import '../../../core/widgets/skeleton.dart';
 
 class AssignmentListScreen extends StatefulWidget {

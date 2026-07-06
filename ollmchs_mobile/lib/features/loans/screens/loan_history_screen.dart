@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -133,12 +134,12 @@ class _LoanHistoryScreenState extends State<LoanHistoryScreen> {
                       leading: loan.bookCover != null
                           ? ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                loan.bookCover!,
+                              child: CachedNetworkImage(
+                                imageUrl: loan.bookCover!,
                                 width: 48,
                                 height: 64,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Icon(
+                                errorWidget: (_, __, ___) => Icon(
                                   Icons.book,
                                   size: 32,
                                   color: theme.colorScheme.primary,

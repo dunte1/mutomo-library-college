@@ -5,6 +5,7 @@ import '../../features/auth/bloc/auth_bloc.dart';
 import '../../features/auth/bloc/auth_state.dart';
 import '../../features/auth/models/user_model.dart';
 import '../helpers/permission_helper.dart';
+import '../utils/responsive.dart';
 
 class _TabItem {
   final String label;
@@ -92,20 +93,59 @@ class BottomNavShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tabs = _allowedTabs(context);
+    final selectedIndex = _currentIndex(context, tabs);
+
+    if (context.isCompact) {
+      return Scaffold(
+        body: child,
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: selectedIndex,
+          onDestinationSelected: (i) => _onTap(context, tabs, i),
+          destinations: tabs
+              .map(
+                (t) => NavigationDestination(
+                  icon: Icon(t.icon),
+                  selectedIcon: Icon(t.selectedIcon),
+                  label: t.label,
+                ),
+              )
+              .toList(),
+        ),
+      );
+    }
+
     return Scaffold(
-      body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex(context, tabs),
-        onDestinationSelected: (i) => _onTap(context, tabs, i),
-        destinations: tabs
-            .map(
-              (t) => NavigationDestination(
-                icon: Icon(t.icon),
-                selectedIcon: Icon(t.selectedIcon),
-                label: t.label,
+      body: Row(
+        children: [
+          NavigationRail(
+            selectedIndex: selectedIndex,
+            onDestinationSelected: (i) => _onTap(context, tabs, i),
+            leading: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Icon(
+                Icons.local_library,
+                size: 32,
+                color: Theme.of(context).colorScheme.primary,
               ),
-            )
-            .toList(),
+            ),
+            labelType: context.isExpanded
+                ? NavigationRailLabelType.all
+                : NavigationRailLabelType.none,
+            extended: context.isExpanded,
+            minExtendedWidth: 200,
+            destinations: tabs
+                .map(
+                  (t) => NavigationRailDestination(
+                    icon: Icon(t.icon),
+                    selectedIcon: Icon(t.selectedIcon),
+                    label: Text(t.label),
+                  ),
+                )
+                .toList(),
+          ),
+          const VerticalDivider(width: 1),
+          Expanded(child: child),
+        ],
       ),
     );
   }

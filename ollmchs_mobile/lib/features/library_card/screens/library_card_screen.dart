@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -165,10 +166,12 @@ class _LibraryCardScreenState extends State<LibraryCardScreen> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: state.qrCodeUrl!.startsWith('http')
-                                  ? Image.network(
-                                      state.qrCodeUrl!,
+                                  ? CachedNetworkImage(
+                                      imageUrl: state.qrCodeUrl!,
                                       height: 100,
                                       width: 100,
+                                      placeholder: (_, __) => Container(color: Colors.grey[200]),
+                                      errorWidget: (_, __, ___) => Icon(Icons.broken_image, color: Colors.grey),
                                     )
                                   : SvgPicture.string(
                                       state.qrCodeUrl!,

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -104,7 +105,12 @@ class _ActiveLoansScreenState extends State<ActiveLoansScreen>
                 height: 56,
                 color: theme.colorScheme.surfaceContainerHighest,
                 child: loan.bookCover != null
-                    ? Image.network(loan.bookCover!, fit: BoxFit.cover)
+                    ? CachedNetworkImage(
+                        imageUrl: loan.bookCover!,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => Container(color: Colors.grey[200]),
+                        errorWidget: (_, __, ___) => Icon(Icons.broken_image, color: Colors.grey),
+                      )
                     : const Icon(Icons.book),
               ),
               title: Text(
@@ -275,7 +281,12 @@ class _ActiveLoansScreenState extends State<ActiveLoansScreen>
                 height: 56,
                 color: theme.colorScheme.surfaceContainerHighest,
                 child: loan.bookCover != null
-                    ? Image.network(loan.bookCover!, fit: BoxFit.cover)
+                    ? CachedNetworkImage(
+                        imageUrl: loan.bookCover!,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => Container(color: Colors.grey[200]),
+                        errorWidget: (_, __, ___) => Icon(Icons.broken_image, color: Colors.grey),
+                      )
                     : const Icon(Icons.book),
               ),
               title: Text(

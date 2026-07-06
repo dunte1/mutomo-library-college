@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
 import 'core/routing/app_router.dart';
+import 'core/widgets/keyboard_shortcuts.dart';
 import 'core/constants/environment.dart';
 import 'core/network/api_client.dart';
 import 'core/storage/local_storage_service.dart';
@@ -136,13 +137,15 @@ class OllmchsLibraryApp extends StatelessWidget {
         ],
         child: BlocBuilder<ThemeCubit, ThemeMode>(
           builder: (context, themeMode) {
-            return MaterialApp.router(
-              title: Environment.appName,
-              debugShowCheckedModeBanner: false,
-              theme: AppTheme.lightTheme,
-              darkTheme: AppTheme.darkTheme,
-              themeMode: themeMode,
-              routerConfig: AppRouter.router,
+            return AppKeyboardShortcuts(
+              child: MaterialApp.router(
+                title: Environment.appName,
+                debugShowCheckedModeBanner: false,
+                theme: AppTheme.lightTheme,
+                darkTheme: AppTheme.darkTheme,
+                themeMode: themeMode,
+                routerConfig: AppRouter.router,
+              ),
             );
           },
         ),

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/reservations_bloc.dart';
@@ -88,9 +89,11 @@ class _ReservationListScreenState extends State<ReservationListScreen> {
                         height: 56,
                         color: theme.colorScheme.surfaceContainerHighest,
                         child: reservation.bookCover != null
-                            ? Image.network(
-                                reservation.bookCover!,
+                            ? CachedNetworkImage(
+                                imageUrl: reservation.bookCover!,
                                 fit: BoxFit.cover,
+                                placeholder: (_, __) => Container(color: Colors.grey[200]),
+                                errorWidget: (_, __, ___) => Icon(Icons.broken_image, color: Colors.grey),
                               )
                             : const Icon(Icons.book),
                       ),

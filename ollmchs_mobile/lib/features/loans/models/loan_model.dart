@@ -37,6 +37,26 @@ class LoanModel {
     this.daysOverdue,
   });
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'book_copy_id': bookCopyId,
+    'book_id': bookId,
+    'book_title': bookTitle,
+    'book_cover': bookCover,
+    'barcode': barcode,
+    'author': author,
+    'borrowed_at': borrowedAt.toIso8601String(),
+    'due_at': dueAt.toIso8601String(),
+    'returned_at': returnedAt?.toIso8601String(),
+    'renewed_at': renewedAt?.toIso8601String(),
+    'renewal_count': renewalCount,
+    'max_renewals': maxRenewals,
+    'can_renew': canRenew,
+    'status': status,
+    'days_remaining': daysRemaining,
+    'days_overdue': daysOverdue,
+  };
+
   bool get isOverdue => status == 'overdue' || (daysOverdue ?? 0) > 0;
   bool get isActive => status == 'active' || status == 'borrowed';
   bool get isReturned => status == 'returned' || returnedAt != null;
@@ -114,6 +134,16 @@ class LoanHistoryModel {
     this.returnedAt,
     required this.status,
   });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'book_title': bookTitle,
+    'book_cover': bookCover,
+    'borrowed_at': borrowedAt.toIso8601String(),
+    'due_at': dueAt.toIso8601String(),
+    'returned_at': returnedAt?.toIso8601String(),
+    'status': status,
+  };
 
   factory LoanHistoryModel.fromJson(Map<String, dynamic> json) {
     final book = json['book'] as Map<String, dynamic>?;

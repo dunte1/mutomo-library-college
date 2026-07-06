@@ -91,7 +91,7 @@ class _TeacherAssignmentListScreenState
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String?>(
-                        value: _typeFilter,
+                        initialValue: _typeFilter,
                         decoration: const InputDecoration(
                           labelText: 'Type',
                           isDense: true,
@@ -123,7 +123,7 @@ class _TeacherAssignmentListScreenState
                     const SizedBox(width: 8),
                     Expanded(
                       child: DropdownButtonFormField<String?>(
-                        value: _statusFilter,
+                        initialValue: _statusFilter,
                         decoration: const InputDecoration(
                           labelText: 'Status',
                           isDense: true,

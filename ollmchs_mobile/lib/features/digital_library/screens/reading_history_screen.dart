@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -80,10 +81,10 @@ class _ReadingHistoryScreenState extends State<ReadingHistoryScreen> {
                       height: 56,
                       color: theme.colorScheme.surfaceContainerHighest,
                       child: item.assetCover != null
-                          ? Image.network(
-                              item.assetCover!,
+                          ? CachedNetworkImage(
+                              imageUrl: item.assetCover!,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
+                              errorWidget: (_, __, ___) =>
                                   const Icon(Icons.auto_stories),
                             )
                           : const Icon(Icons.auto_stories),

@@ -17,6 +17,16 @@ class BookCopyModel {
     this.currentBorrower,
   });
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'barcode': barcode,
+    'rfid_tag': rfidTag,
+    'shelf_location': shelfLocation,
+    'status': status,
+    'condition': condition,
+    'current_borrower': currentBorrower,
+  };
+
   bool get isAvailable => status == 'available';
   bool get isBorrowed => status == 'borrowed';
   bool get isReserved => status == 'reserved';

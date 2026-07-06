@@ -159,7 +159,7 @@ class _TeacherAssignmentFormScreenState
 
                     if (_assignTo == 'student')
                       DropdownButtonFormField<int>(
-                        value: _studentId,
+                        initialValue: _studentId,
                         decoration: const InputDecoration(
                           labelText: 'Select Student',
                           border: OutlineInputBorder(),
@@ -181,7 +181,7 @@ class _TeacherAssignmentFormScreenState
                       ),
                     if (_assignTo == 'program')
                       DropdownButtonFormField<int>(
-                        value: _programId,
+                        initialValue: _programId,
                         decoration: const InputDecoration(
                           labelText: 'Select Program',
                           border: OutlineInputBorder(),
@@ -206,7 +206,7 @@ class _TeacherAssignmentFormScreenState
                       ),
                     if (_assignTo == 'department')
                       DropdownButtonFormField<int>(
-                        value: _departmentId,
+                        initialValue: _departmentId,
                         decoration: const InputDecoration(
                           labelText: 'Select Department',
                           border: OutlineInputBorder(),
@@ -320,7 +320,7 @@ class _TeacherAssignmentFormScreenState
 
                   // Book
                   DropdownButtonFormField<int?>(
-                    value: _bookId,
+                    initialValue: _bookId,
                     decoration: const InputDecoration(
                       labelText: 'Linked Book (optional)',
                       border: OutlineInputBorder(),
@@ -344,7 +344,7 @@ class _TeacherAssignmentFormScreenState
 
                   // Digital Asset
                   DropdownButtonFormField<int?>(
-                    value: _digitalAssetId,
+                    initialValue: _digitalAssetId,
                     decoration: const InputDecoration(
                       labelText: 'Linked Digital Asset (optional)',
                       border: OutlineInputBorder(),

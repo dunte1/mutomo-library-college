@@ -21,6 +21,18 @@ class ReservationModel {
     required this.status,
   });
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'book_id': bookId,
+    'book_title': bookTitle,
+    'book_cover': bookCover,
+    'author': author,
+    'reserved_at': reservedAt.toIso8601String(),
+    'expires_at': expiresAt?.toIso8601String(),
+    'position': position,
+    'status': status,
+  };
+
   bool get isActive => status == 'active' || status == 'pending';
   bool get isAvailable => status == 'available';
 

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -103,10 +104,10 @@ class _DigitalAssetListScreenState extends State<DigitalAssetListScreen> {
                                         .colorScheme
                                         .surfaceContainerHighest,
                                     child: asset.thumbnailUrl != null
-                                        ? Image.network(
-                                            asset.thumbnailUrl!,
+                                        ? CachedNetworkImage(
+                                            imageUrl: asset.thumbnailUrl!,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) =>
+                                            errorWidget: (_, __, ___) =>
                                                 Icon(icon, size: 48),
                                           )
                                         : Icon(icon, size: 48),
@@ -219,10 +220,10 @@ class _DigitalAssetListScreenState extends State<DigitalAssetListScreen> {
                               width: double.infinity,
                               color: theme.colorScheme.surfaceContainerHighest,
                               child: rec.coverImage != null
-                                  ? Image.network(
-                                      rec.coverImage!,
+                                  ? CachedNetworkImage(
+                                      imageUrl: rec.coverImage!,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => const Icon(
+                                      errorWidget: (_, __, ___) => const Icon(
                                         Icons.auto_stories,
                                         size: 32,
                                       ),

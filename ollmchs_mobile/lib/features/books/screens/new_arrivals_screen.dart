@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -105,7 +106,7 @@ class _NewArrivalsScreenState extends State<NewArrivalsScreen> {
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<int?>(
-                  value: _categoryId,
+                  initialValue: _categoryId,
                   decoration: const InputDecoration(
                     labelText: 'Category',
                     border: OutlineInputBorder(),
@@ -194,10 +195,10 @@ class _NewArrivalsScreenState extends State<NewArrivalsScreen> {
                                         .colorScheme
                                         .surfaceContainerHighest,
                                     child: book.coverImage != null
-                                        ? Image.network(
-                                            book.coverImage!,
+                                        ? CachedNetworkImage(
+                                            imageUrl: book.coverImage!,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) =>
+                                            errorWidget: (_, __, ___) =>
                                                 const Icon(
                                                   Icons.book,
                                                   size: 48,

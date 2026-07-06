@@ -1,5 +1,6 @@
 import '../../../core/network/api_client.dart';
 import '../models/book_model.dart';
+import '../../../core/storage/hive_cache_service.dart';
 
 class PaginatedResult<T> {
   final List<T> items;
@@ -15,8 +16,10 @@ class PaginatedResult<T> {
 
 class BooksRepository {
   final ApiClient _api;
+  final HiveCacheService _cache;
 
-  BooksRepository(this._api);
+  BooksRepository(this._api, {HiveCacheService? cache})
+      : _cache = cache ?? HiveCacheService();
 
   Future<PaginatedResult<BookModel>> getBooks({
     int page = 1,
@@ -27,31 +30,68 @@ class BooksRepository {
     if (search != null && search.isNotEmpty) params['search'] = search;
     if (category != null) params['category'] = category;
 
-    final response = await _api.get('/v1/books', queryParameters: params);
-    final data = response.data;
-
-    return _parsePaginated(data);
+    try {
+      final response = await _api.get('/v1/books', queryParameters: params);
+      final data = response.data;
+      final rawList =
+          (data['data'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+      await _cache.cacheBooks(rawList);
+      return _parsePaginated(data);
+    } catch (e) {
+      if (page == 1) {
+        final cached = _cache.getCachedBooks();
+        if (cached != null) {
+          return PaginatedResult(
+            items: cached
+                .map((e) => BookModel.fromJson(e))
+                .toList(),
+            hasMore: false,
+            total: cached.length,
+          );
+        }
+      }
+      rethrow;
+    }
   }
 
   Future<BookModel> getBookDetail(int id) async {
-    final response = await _api.get('/v1/books/$id');
-    final book =
-        response.data['data'] as Map<String, dynamic>? ??
-        response.data as Map<String, dynamic>;
-    return BookModel.fromJson(book);
+    try {
+      final response = await _api.get('/v1/books/$id');
+      final book =
+          response.data['data'] as Map<String, dynamic>? ??
+          response.data as Map<String, dynamic>;
+      await _cache.put('book_detail_$id', book,
+          ttl: const Duration(hours: 2));
+      return BookModel.fromJson(book);
+    } catch (e) {
+      final cached = _cache.get<Map<String, dynamic>>('book_detail_$id');
+      if (cached != null) return BookModel.fromJson(cached);
+      rethrow;
+    }
   }
 
   Future<List<BookModel>> getFeaturedBooks() async {
-    final response = await _api.get(
-      '/v1/books',
-      queryParameters: {'featured': true, 'per_page': 10},
-    );
-    final data = response.data;
-    final list = data['data'] as List<dynamic>? ?? [];
-
-    return list
-        .map((e) => BookModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    try {
+      final response = await _api.get(
+        '/v1/books',
+        queryParameters: {'featured': true, 'per_page': 10},
+      );
+      final data = response.data;
+      final rawList =
+          (data['data'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+      await _cache.cacheBooks(rawList);
+      return rawList
+          .map((e) => BookModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      final cached = _cache.getCachedBooks();
+      if (cached != null) {
+        return cached
+            .map((e) => BookModel.fromJson(e))
+            .toList();
+      }
+      rethrow;
+    }
   }
 
   Future<PaginatedResult<BookModel>> searchBooks({
@@ -93,4 +133,5 @@ class BooksRepository {
       total: total,
     );
   }
+
 }

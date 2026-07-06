@@ -45,6 +45,29 @@ class BookModel {
     this.copies = const [],
   });
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'isbn': isbn,
+    'isbn13': isbn13,
+    'description': description,
+    'publication_year': publicationYear,
+    'page_count': pageCount,
+    'cover_image': coverImage,
+    'language': language,
+    'publisher': publisher,
+    'category': category,
+    'category_id': categoryId,
+    'authors': authors,
+    'total_copies': totalCopies,
+    'available_copies': availableCopies,
+    'is_featured': isFeatured,
+    'location': location,
+    'dewey_decimal': deweyDecimal,
+    'created_at': createdAt?.toIso8601String(),
+    'copies': copies.map((c) => c.toJson()).toList(),
+  };
+
   factory BookModel.fromJson(Map<String, dynamic> json) {
     final copiesJson = json['copies'] as List<dynamic>?;
     return BookModel(

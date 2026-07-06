@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -196,10 +197,12 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
                           border: Border.all(color: theme.colorScheme.outline),
                         ),
                         child: _qrCodeUrl!.startsWith('http')
-                            ? Image.network(
-                                _qrCodeUrl!,
+                            ? CachedNetworkImage(
+                                imageUrl: _qrCodeUrl!,
                                 height: 200,
                                 width: 200,
+                                placeholder: (_, __) => Container(color: Colors.grey[200]),
+                                errorWidget: (_, __, ___) => Icon(Icons.broken_image, color: Colors.grey),
                               )
                             : SvgPicture.string(
                                 _qrCodeUrl!,

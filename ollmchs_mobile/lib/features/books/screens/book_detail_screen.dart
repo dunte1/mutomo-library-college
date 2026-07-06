@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/books_bloc.dart';
@@ -49,10 +50,10 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                     width: double.infinity,
                     color: theme.colorScheme.surfaceContainerHighest,
                     child: book.coverImage != null
-                        ? Image.network(
-                            book.coverImage!,
+                        ? CachedNetworkImage(
+                            imageUrl: book.coverImage!,
                             fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) =>
+                            errorWidget: (_, __, ___) =>
                                 const Icon(Icons.book, size: 80),
                           )
                         : const Icon(Icons.book, size: 80),

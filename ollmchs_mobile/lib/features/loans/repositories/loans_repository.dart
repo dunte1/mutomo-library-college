@@ -1,28 +1,66 @@
 import '../../../core/network/api_client.dart';
 import '../models/loan_model.dart';
 import '../../books/repositories/books_repository.dart';
+import '../../../core/storage/hive_cache_service.dart';
 
 class LoansRepository {
   final ApiClient _api;
+  final HiveCacheService _cache;
 
-  LoansRepository(this._api);
+  LoansRepository(this._api, {HiveCacheService? cache})
+      : _cache = cache ?? HiveCacheService();
 
   Future<List<LoanModel>> getActiveLoans() async {
-    final response = await _api.get('/v1/loans/active');
-    final data = response.data['data'] as List<dynamic>? ?? [];
-    return data
-        .map((e) => LoanModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    try {
+      final response = await _api.get('/v1/loans/active');
+      final rawList = (response.data['data'] as List<dynamic>?)
+              ?.cast<Map<String, dynamic>>() ??
+          [];
+      await _cache.cacheLoans(rawList);
+      return rawList
+          .map((e) => LoanModel.fromJson(e))
+          .toList();
+    } catch (e) {
+      final cached = _cache.getCachedLoans();
+      if (cached != null) {
+        return cached
+            .map((e) => LoanModel.fromJson(e))
+            .toList();
+      }
+      rethrow;
+    }
   }
 
   Future<PaginatedResult<LoanHistoryModel>> getLoanHistory({
     int page = 1,
   }) async {
-    final response = await _api.get(
-      '/v1/loans/history',
-      queryParameters: {'page': page, 'per_page': 20},
-    );
-    return _parseHistory(response.data);
+    try {
+      final response = await _api.get(
+        '/v1/loans/history',
+        queryParameters: {'page': page, 'per_page': 20},
+      );
+      final rawList = (response.data['data'] as List<dynamic>?)
+              ?.cast<Map<String, dynamic>>() ??
+          [];
+      await _cache.put('loan_history_page_$page', rawList,
+          ttl: const Duration(hours: 1));
+      return _parseHistory(response.data);
+    } catch (e) {
+      final cached =
+          _cache.get<List<dynamic>>('loan_history_page_$page');
+      if (cached != null) {
+        final items = cached
+            .cast<Map<String, dynamic>>()
+            .map((e) => LoanHistoryModel.fromJson(e))
+            .toList();
+        return PaginatedResult(
+          items: items,
+          hasMore: false,
+          total: items.length,
+        );
+      }
+      rethrow;
+    }
   }
 
   Future<LoanModel> getLoanDetail(int id) async {
@@ -55,4 +93,5 @@ class LoansRepository {
       total: meta['total'] as int? ?? list.length,
     );
   }
+
 }

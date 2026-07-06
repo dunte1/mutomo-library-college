@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -45,12 +46,12 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                   if (a.imageUrl != null)
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        a.imageUrl!,
+                      child: CachedNetworkImage(
+                        imageUrl: a.imageUrl!,
                         width: double.infinity,
                         height: 200,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                        errorWidget: (_, __, ___) => const SizedBox.shrink(),
                       ),
                     ),
                   const SizedBox(height: 16),
