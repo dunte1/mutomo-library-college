@@ -57,6 +57,12 @@ class DigitalAssetShow extends Component
             return;
         }
 
+        if ($this->isUnsafePath($this->asset->file_path)) {
+            session()->flash('error', 'Invalid file path.');
+
+            return;
+        }
+
         $this->asset->incrementDownloads();
 
         return app(DownloadService::class)->download(
@@ -103,5 +109,17 @@ class DigitalAssetShow extends Component
     public function render()
     {
         return view('digital-library::livewire.digital-asset-show')->layout('layouts.app');
+    }
+
+    private function isUnsafePath(string $path): bool
+    {
+        if (str_contains($path, '..')) {
+            return true;
+        }
+
+        $resolved = realpath(storage_path("app/public/{$path}"));
+        $allowed = realpath(storage_path('app/public'));
+
+        return $resolved === false || $allowed === false || ! str_starts_with($resolved, $allowed);
     }
 }

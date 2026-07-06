@@ -5,12 +5,14 @@ namespace App\Modules\Finance\Models;
 use App\Models\User;
 use App\Modules\Circulation\Models\Fine;
 use App\Modules\Subscriptions\Models\Subscription;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Transaction extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'user_id', 'fine_id', 'subscription_id', 'transaction_number', 'type', 'payment_method',
         'amount', 'currency', 'reference', 'description', 'status', 'paid_at', 'recorded_by',

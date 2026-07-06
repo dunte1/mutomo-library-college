@@ -7,6 +7,8 @@ use App\Mail\PaymentConfirmation;
 use App\Mail\RenewalReminder;
 use App\Mail\SubscriptionActivation;
 use App\Models\User;
+use App\Modules\Communication\Services\SmsService;
+use App\Modules\Communication\Services\WhatsAppService;
 use App\Modules\Finance\Models\Transaction;
 use App\Modules\Finance\Services\BillingService;
 use App\Modules\Finance\Services\FinanceService;
@@ -22,6 +24,54 @@ use Illuminate\Support\Facades\Mail;
 
 class SubscriptionService
 {
+    public function getTrialDays(): int
+    {
+        return (int) app(Setting::class)::value('trial_days', 7);
+    }
+
+    public function createTrialSubscription(User $user): ?Subscription
+    {
+        $trialDays = $this->getTrialDays();
+
+        if ($trialDays <= 0) {
+            return null;
+        }
+
+        $freePlan = Plan::active()->where('price', 0)->first();
+
+        if (! $freePlan) {
+            $freePlan = Plan::where('slug', 'free-trial')->orWhere('price', 0)->first();
+        }
+
+        if (! $freePlan) {
+            return null;
+        }
+
+        $now = now();
+        $trialEnd = $now->copy()->addDays($trialDays);
+
+        return DB::transaction(function () use ($user, $freePlan, $now, $trialEnd, $trialDays) {
+            $subscription = Subscription::create([
+                'user_id' => $user->id,
+                'plan_id' => $freePlan->id,
+                'status' => 'trial',
+                'start_date' => $now,
+                'end_date' => $trialEnd,
+                'renewal_date' => $trialEnd,
+                'billing_cycle' => 'monthly',
+                'auto_renew' => false,
+                'trial_ends_at' => $trialEnd,
+            ]);
+
+            activity()
+                ->performedOn($subscription)
+                ->causedBy($user)
+                ->log("Trial subscription created for {$trialDays} days");
+
+            return $subscription;
+        });
+    }
+
     public function createSubscription(User $user, Plan $plan, array $options = []): Subscription
     {
         $now = now();
@@ -110,6 +160,13 @@ class SubscriptionService
                 $user = $subscription->user;
                 if ($user && $user->email) {
                     Mail::to($user->email)->queue(new SubscriptionActivation($subscription));
+                }
+                if ($user) {
+                    $this->sendNotification(
+                        $user,
+                        'Subscription Activated',
+                        "Your {$subscription->plan->name} subscription is now active. Welcome!"
+                    );
                 }
             } catch (\Throwable $e) {
                 Log::warning("Failed to send subscription activation email: {$e->getMessage()}");
@@ -212,6 +269,78 @@ class SubscriptionService
         return $count;
     }
 
+    public function processTrialExpirations(): int
+    {
+        $count = 0;
+        Subscription::trialExpiring()
+            ->chunk(100, function ($subscriptions) use (&$count) {
+                foreach ($subscriptions as $subscription) {
+                    $trialDays = $this->getTrialDays();
+
+                    if ($trialDays > 0) {
+                        $subscription->applyGracePeriod(3);
+                    }
+
+                    $subscription->markAsExpired();
+
+                    try {
+                        $user = $subscription->user;
+                        if ($user && $user->email) {
+                            Mail::to($user->email)->queue(
+                                new ExpirationNotice($subscription, 'expired')
+                            );
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning("Failed to send trial expiration notice: {$e->getMessage()}");
+                    }
+
+                    try {
+                        app(NotificationService::class)->send(
+                            $subscription->user,
+                            'subscription',
+                            'Trial Expired',
+                            "Your trial for {$subscription->plan->name} has ended. Subscribe to continue.",
+                            'clock',
+                            route('subscriptions.plans'),
+                        );
+                    } catch (\Throwable $e) {
+                        Log::warning("Failed to send in-app trial expiration: {$e->getMessage()}");
+                    }
+
+                    $count++;
+                }
+            });
+
+        return $count;
+    }
+
+    public function processGracePeriodExpirations(): int
+    {
+        $count = 0;
+        Subscription::where('status', 'expired')
+            ->whereDate('grace_period_ends_at', '<=', now())
+            ->chunk(100, function ($subscriptions) use (&$count) {
+                foreach ($subscriptions as $subscription) {
+                    $subscription->suspend();
+
+                    try {
+                        $user = $subscription->user;
+                        if ($user && $user->email) {
+                            Mail::to($user->email)->queue(
+                                new ExpirationNotice($subscription, 'expired')
+                            );
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning("Failed to send grace period expiration notice: {$e->getMessage()}");
+                    }
+
+                    $count++;
+                }
+            });
+
+        return $count;
+    }
+
     public function processDueRenewals(): int
     {
         $count = 0;
@@ -242,42 +371,71 @@ class SubscriptionService
     public function sendExpiringSoonNotifications(int $days = 7): int
     {
         $count = 0;
+
+        // Active subscriptions expiring soon
         Subscription::expiringSoon($days)
-            ->chunk(100, function ($subscriptions) use (&$count) {
+            ->chunk(100, function ($subscriptions) use (&$count, $days) {
                 foreach ($subscriptions as $subscription) {
-                    $remainingDays = (int) now()->diffInDays($subscription->end_date, false);
+                    $this->sendExpirationAlert($subscription, $days);
+                    $count++;
+                }
+            });
 
-                    // Send expiring soon email
-                    try {
-                        $user = $subscription->user;
-                        if ($user && $user->email) {
-                            Mail::to($user->email)->queue(
-                                new ExpirationNotice($subscription, 'expiring_soon', $remainingDays)
-                            );
-                        }
-                    } catch (\Throwable $e) {
-                        Log::warning("Failed to send expiring soon notice: {$e->getMessage()}");
-                    }
-
-                    // In-app notification
-                    try {
-                        app(NotificationService::class)->send(
-                            $subscription->user,
-                            'subscription',
-                            'Membership Expiring Soon',
-                            "Your {$subscription->plan->name} subscription expires in {$remainingDays} day(s). Renew to keep your access.",
-                            'clock',
-                            route('subscriptions.my'),
-                        );
-                    } catch (\Throwable $e) {
-                        Log::warning("Failed to send in-app expiring notice: {$e->getMessage()}");
-                    }
-
+        // Trial subscriptions ending soon
+        Subscription::trialEndingSoon($days)
+            ->chunk(100, function ($subscriptions) use (&$count, $days) {
+                foreach ($subscriptions as $subscription) {
+                    $this->sendExpirationAlert($subscription, $days);
                     $count++;
                 }
             });
 
         return $count;
+    }
+
+    protected function sendExpirationAlert(Subscription $subscription, int $days): void
+    {
+        $remainingDays = (int) now()->diffInDays($subscription->end_date ?? $subscription->trial_ends_at, false);
+
+        // Send expiring soon email
+        try {
+            $user = $subscription->user;
+            if ($user && $user->email) {
+                Mail::to($user->email)->queue(
+                    new ExpirationNotice($subscription, 'expiring_soon', $remainingDays)
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Failed to send expiring soon notice: {$e->getMessage()}");
+        }
+
+        // In-app notification
+        try {
+            app(NotificationService::class)->send(
+                $subscription->user,
+                'subscription',
+                'Trial Ending Soon',
+                "Your {$subscription->plan->name} trial ends in {$remainingDays} day(s). Subscribe to keep your access.",
+                'clock',
+                route('subscriptions.my'),
+            );
+        } catch (\Throwable $e) {
+            Log::warning("Failed to send in-app trial ending notice: {$e->getMessage()}");
+        }
+
+        // WhatsApp/SMS notification
+        try {
+            $user = $subscription->user;
+            if ($user) {
+                $this->sendNotification(
+                    $user,
+                    'Trial Ending Soon',
+                    "Your {$subscription->plan->name} trial ends in {$remainingDays} day(s). Subscribe at " . route('subscriptions.plans') . " to keep your access."
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Failed to send trial ending WhatsApp/SMS: {$e->getMessage()}");
+        }
     }
 
     public function getPlanCostSettings(): array
@@ -313,6 +471,23 @@ class SubscriptionService
                     'is_active' => $def['price'] > 0,
                 ]
             );
+        }
+    }
+
+    protected function sendNotification(User $user, string $subject, string $message): void
+    {
+        if ($user->phone) {
+            try {
+                app(WhatsAppService::class)->send($user->phone, $message);
+            } catch (\Throwable $e) {
+                Log::warning("WhatsApp notification failed: {$e->getMessage()}");
+            }
+
+            try {
+                app(SmsService::class)->send($user->phone, $message);
+            } catch (\Throwable $e) {
+                Log::warning("SMS notification failed: {$e->getMessage()}");
+            }
         }
     }
 

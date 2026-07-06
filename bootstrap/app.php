@@ -5,17 +5,6 @@ use App\Http\Middleware\CheckSubscriptionStatus;
 use App\Http\Middleware\LogUserActivity;
 use App\Http\Middleware\SecurityHeadersMiddleware;
 use App\Http\Middleware\TwoFactorMiddleware;
-use App\Modules\API\Providers\ApiServiceProvider;
-use App\Modules\Auth\Providers\AuthServiceProvider;
-use App\Modules\Catalog\Providers\CatalogServiceProvider;
-use App\Modules\Circulation\Providers\CirculationServiceProvider;
-use App\Modules\DigitalLibrary\Providers\DigitalLibraryServiceProvider;
-use App\Modules\Finance\Providers\FinanceServiceProvider;
-use App\Modules\Members\Providers\MembersServiceProvider;
-use App\Modules\Notifications\Providers\NotificationsServiceProvider;
-use App\Modules\Settings\Providers\SettingsServiceProvider;
-use App\Modules\Subscriptions\Providers\SubscriptionsServiceProvider;
-use App\Providers\ModuleServiceProvider;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -41,19 +30,6 @@ return Application::configure(basePath: dirname(__DIR__))
             });
         },
     )
-    ->withProviders([
-        ModuleServiceProvider::class,
-        AuthServiceProvider::class,
-        CatalogServiceProvider::class,
-        CirculationServiceProvider::class,
-        DigitalLibraryServiceProvider::class,
-        FinanceServiceProvider::class,
-        MembersServiceProvider::class,
-        SettingsServiceProvider::class,
-        ApiServiceProvider::class,
-        NotificationsServiceProvider::class,
-        SubscriptionsServiceProvider::class,
-    ])
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => RoleMiddleware::class,

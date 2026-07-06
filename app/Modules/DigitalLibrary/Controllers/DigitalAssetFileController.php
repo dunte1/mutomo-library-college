@@ -14,6 +14,8 @@ class DigitalAssetFileController extends Controller
 
         abort_if(! $asset->is_active, 404);
 
+        abort_if($this->isUnsafePath($asset->file_path), 403);
+
         $filePath = storage_path("app/public/{$asset->file_path}");
 
         abort_if(! file_exists($filePath), 404);
@@ -24,5 +26,17 @@ class DigitalAssetFileController extends Controller
             'Content-Type' => $asset->mime_type ?: 'application/pdf',
             'Content-Disposition' => 'inline',
         ]);
+    }
+
+    private function isUnsafePath(string $path): bool
+    {
+        if (str_contains($path, '..')) {
+            return true;
+        }
+
+        $resolved = realpath(storage_path("app/public/{$path}"));
+        $allowed = realpath(storage_path('app/public'));
+
+        return $resolved === false || $allowed === false || ! str_starts_with($resolved, $allowed);
     }
 }

@@ -12,6 +12,7 @@ use App\Modules\Communication\Livewire\MessageForm;
 use App\Modules\Communication\Livewire\MessageList;
 use App\Modules\Communication\Livewire\MessageLogList;
 use App\Modules\Communication\Livewire\MessageShow;
+use App\Modules\Communication\Livewire\Preferences;
 use App\Modules\Communication\Livewire\TemplateForm;
 use App\Modules\Communication\Livewire\TemplateList;
 use Illuminate\Support\Facades\Route;
@@ -41,4 +42,6 @@ Route::middleware(['auth', 'verified'])->prefix('communication')->name('communic
     Route::get('/analytics', Analytics::class)->name('analytics')->middleware('permission:view-communication-analytics');
 
     Route::get('/broadcasts', BroadcastMessageForm::class)->name('broadcasts')->middleware('permission:manage-broadcasts');
+
+    Route::get('/preferences', Preferences::class)->name('preferences')->middleware('auth');
 });

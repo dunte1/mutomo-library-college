@@ -2,6 +2,7 @@
 
 namespace App\Modules\DigitalLibrary\Providers;
 
+use App\Modules\DigitalLibrary\Livewire\DigitalAssetEdit;
 use App\Modules\DigitalLibrary\Livewire\DigitalAssetList;
 use App\Modules\DigitalLibrary\Livewire\DigitalAssetReader;
 use App\Modules\DigitalLibrary\Livewire\DigitalAssetShow;
@@ -32,6 +33,7 @@ class DigitalLibraryServiceProvider extends ServiceProvider
         DigitalAsset::observe(DigitalAssetObserver::class);
 
         Livewire::component('digital-asset-list', DigitalAssetList::class);
+        Livewire::component('digital-asset-edit', DigitalAssetEdit::class);
         Livewire::component('digital-asset-reader', DigitalAssetReader::class);
         Livewire::component('digital-asset-upload', DigitalAssetUpload::class);
         Livewire::component('digital-asset-show', DigitalAssetShow::class);

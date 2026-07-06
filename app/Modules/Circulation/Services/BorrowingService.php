@@ -5,6 +5,8 @@ namespace App\Modules\Circulation\Services;
 use App\Models\User;
 use App\Modules\Catalog\Models\BookCopy;
 use App\Modules\Circulation\Models\BorrowRecord;
+use App\Modules\Circulation\Models\Reservation;
+use App\Modules\Notifications\Services\NotificationService;
 use App\Modules\Shared\Helpers\AuditHelper;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +15,7 @@ class BorrowingService
 {
     public function __construct(
         protected FineCalculationService $fineService,
+        protected NotificationService $notificationService,
     ) {}
 
     public function issueBook(int $userId, int $bookCopyId, ?int $issuedBy = null): BorrowRecord
@@ -55,6 +58,17 @@ class BorrowingService
                 'due_at' => $record->due_at->toDateString(),
             ]);
 
+            $book = $copy->book;
+            $fineRate = config('fines.daily_rate', 50);
+            $this->notificationService->send(
+                $user,
+                'borrow',
+                'Book Borrowed',
+                "You have borrowed '{$book->title}'. It is due on {$record->due_at->format('M d, Y')}. Overdue fine: KES {$fineRate}/day.",
+                'book-open',
+                route('circulation.index'),
+            );
+
             return $record->load(['user', 'bookCopy.book']);
         });
     }
@@ -90,6 +104,33 @@ class BorrowingService
                 'user_id' => $record->user_id,
                 'days_overdue' => $record->daysOverdue(),
             ]);
+
+            $book = $record->bookCopy->book;
+            $user = $record->user;
+            $message = $record->isOverdue()
+                ? "'{$book->title}' has been returned. A fine may apply for the overdue period."
+                : "'{$book->title}' has been returned successfully. Thank you!";
+            $this->notificationService->send(
+                $user,
+                'return',
+                'Book Returned',
+                $message,
+                'check-circle',
+                route('circulation.index'),
+            );
+
+            $nextReservation = Reservation::where('book_id', $record->bookCopy->book_id)
+                ->where('status', Reservation::STATUS_PENDING)
+                ->where('expires_at', '>', now())
+                ->orderBy('reserved_at')
+                ->first();
+
+            if ($nextReservation) {
+                $this->notificationService->sendHoldAvailable(
+                    $nextReservation->user,
+                    $record->bookCopy->book->title,
+                );
+            }
 
             return $record->fresh()->load(['user', 'bookCopy.book', 'fine']);
         });
@@ -196,14 +237,7 @@ class BorrowingService
 
     public function getBorrowLimit(User $user): int
     {
-        if ($user->isStudent()) {
-            return 3;
-        }
-        if ($user->isLecturer()) {
-            return 5;
-        }
-
-        return 10;
+        return $user->getBorrowLimit();
     }
 
     public function getBorrowDuration(User $user): int

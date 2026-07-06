@@ -2,6 +2,7 @@
 
 namespace App\Modules\API\Controllers;
 
+use App\Modules\API\Resources\DigitalAssetResource;
 use App\Modules\DigitalLibrary\Models\DigitalAsset;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
@@ -27,7 +28,7 @@ class DigitalAssetController extends Controller
         $asset->load('category');
         $asset->incrementViews();
 
-        return response()->json(['data' => $asset]);
+        return response()->json(['data' => new DigitalAssetResource($asset)]);
     }
 
     public function download(DigitalAsset $asset): JsonResponse

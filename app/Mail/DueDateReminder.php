@@ -35,6 +35,7 @@ class DueDateReminder extends Mailable
                 'barcode' => $this->borrowRecord->bookCopy?->barcode ?? 'N/A',
                 'dueDate' => $this->borrowRecord->due_at->format('d M Y'),
                 'daysUntilDue' => $this->daysUntilDue,
+                'finePerDay' => config('fines.daily_rate', 50),
                 'libraryName' => config('app.name'),
                 'libraryPhone' => config('app.library_phone', ''),
                 'libraryEmail' => config('app.library_email', ''),

@@ -4,14 +4,12 @@ namespace App\Modules\DigitalLibrary\Services;
 
 use App\Modules\DigitalLibrary\Models\DigitalAsset;
 use App\Modules\DigitalLibrary\Models\ReadingHistory;
-use App\Traits\Auditable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class DigitalLibraryService
 {
-    use Auditable;
 
     public function upload(UploadedFile $file, array $data): DigitalAsset
     {
@@ -45,8 +43,6 @@ class DigitalLibraryService
             'uploaded_by' => auth()->id(),
         ]);
 
-        $this->logActivity('uploaded', "Uploaded digital asset: {$asset->title}", $asset);
-
         return $asset;
     }
 
@@ -61,7 +57,9 @@ class DigitalLibraryService
         $title = $asset->title;
         $asset->delete();
 
-        $this->logActivity('deleted', "Deleted digital asset: {$title}");
+        activity()->event('deleted')
+            ->withProperties(['ip' => request()->ip(), 'user_agent' => request()->userAgent()])
+            ->log("Deleted digital asset: {$title}");
     }
 
     public function trackView(DigitalAsset $asset): void
@@ -148,8 +146,14 @@ class DigitalLibraryService
         }
 
         $allowedSortFields = ['title', 'created_at', 'file_size', 'publication_year', 'language', 'author'];
-        $sortField = in_array($filters['sort'] ?? 'created_at', $allowedSortFields) ? $filters['sort'] : 'created_at';
-        $sortDir = in_array(strtolower($filters['direction'] ?? 'desc'), ['asc', 'desc']) ? strtolower($filters['direction']) : 'desc';
+        $sortField = $filters['sort'] ?? 'created_at';
+        if (! in_array($sortField, $allowedSortFields)) {
+            $sortField = 'created_at';
+        }
+        $sortDir = strtolower($filters['direction'] ?? 'desc');
+        if (! in_array($sortDir, ['asc', 'desc'])) {
+            $sortDir = 'desc';
+        }
         $assets->orderBy($sortField, $sortDir);
 
         return $assets->paginate($filters['per_page'] ?? 12);

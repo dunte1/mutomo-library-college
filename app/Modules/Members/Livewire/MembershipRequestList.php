@@ -2,8 +2,11 @@
 
 namespace App\Modules\Members\Livewire;
 
+use App\Mail\WelcomeCredentials;
 use App\Models\User;
 use App\Modules\Members\Models\Member;
+use App\Modules\Members\Services\LibraryCardService;
+use Illuminate\Support\Facades\Mail;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -21,8 +24,29 @@ class MembershipRequestList extends Component
     {
         try {
             $user = User::findOrFail($userId);
+            $member = $user->member;
+
             $user->update(['email_verified_at' => now()]);
-            $this->dispatch('notify', type: 'success', message: 'Membership approved successfully.');
+
+            $role = match ($member?->membership_type) {
+                'teacher' => 'lecturer',
+                'staff' => 'staff',
+                default => 'student',
+            };
+            $user->assignRole($role);
+
+            if ($member) {
+                $member->update(['status' => Member::STATUS_ACTIVE]);
+                if (! $member->libraryCard) {
+                    app(LibraryCardService::class)->autoIssueCard($member);
+                }
+            }
+
+            $tempPassword = \Illuminate\Support\Str::random(12);
+            $user->update(['password' => $tempPassword]);
+            Mail::to($user->email)->queue(new WelcomeCredentials($user, $tempPassword));
+
+            $this->dispatch('notify', type: 'success', message: 'Membership approved. Role assigned, library card issued, and welcome email sent.');
         } catch (\Throwable $e) {
             $this->dispatch('notify', type: 'error', message: 'Failed to approve membership: '.$e->getMessage());
         }

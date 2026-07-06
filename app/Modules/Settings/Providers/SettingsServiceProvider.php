@@ -18,6 +18,7 @@ use App\Modules\Settings\Livewire\FeatureForm;
 use App\Modules\Settings\Livewire\FeatureList;
 use App\Modules\Settings\Livewire\GeneralSettings;
 use App\Modules\Settings\Livewire\GlobalSearch;
+use App\Modules\Settings\Livewire\LandingPageSettings;
 use App\Modules\Settings\Livewire\LocalizationSettings;
 use App\Modules\Settings\Livewire\MaintenanceSettings;
 use App\Modules\Settings\Livewire\NewsletterSubscribe;
@@ -118,6 +119,7 @@ class SettingsServiceProvider extends ServiceProvider
         Livewire::component('system-health', SystemHealth::class);
         Livewire::component('queue-monitor', QueueMonitor::class);
         Livewire::component('cache-manager', CacheManager::class);
+        Livewire::component('landing-page-settings', LandingPageSettings::class);
         Livewire::component('storage-manager', StorageManager::class);
         Livewire::component('auth-carousel-settings', AuthCarouselSettings::class);
         Livewire::component('subscription-settings', SubscriptionSettings::class);

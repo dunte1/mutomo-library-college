@@ -101,6 +101,33 @@ class MpesaService
         return ['success' => false, 'message' => $result['ResponseDescription'] ?? 'M-Pesa request failed'];
     }
 
+    public function handleValidation(array $data): array
+    {
+        $transactionType = $data['TransactionType'] ?? '';
+        $transId = $data['TransID'] ?? '';
+        $transAmount = $data['TransAmount'] ?? 0;
+        $businessShortCode = $data['BusinessShortCode'] ?? '';
+        $msisdn = $data['MSISDN'] ?? '';
+
+        if ($transAmount <= 0) {
+            return ['ResultCode' => 1, 'ResultDesc' => 'Invalid transaction amount'];
+        }
+
+        if ($businessShortCode !== $this->shortCode) {
+            return ['ResultCode' => 1, 'ResultDesc' => 'Invalid business short code'];
+        }
+
+        MpesaTransaction::create([
+            'phone_number' => $msisdn,
+            'amount' => $transAmount,
+            'status' => 'validated',
+            'result_desc' => "Validation passed for {$transId}",
+            'callback_data' => $data,
+        ]);
+
+        return ['ResultCode' => 0, 'ResultDesc' => 'Success'];
+    }
+
     public function processCallback(array $data): void
     {
         $body = $data['Body'] ?? [];

@@ -58,6 +58,11 @@
                                     Complete Payment
                                 </a>
                             @endif
+                            @if($subscription->isExpired() || $subscription->isCancelled())
+                                <a href="{{ route('subscriptions.checkout', ['plan' => $subscription->plan_id]) }}" class="text-sm text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 underline font-medium">
+                                    Renew Now
+                                </a>
+                            @endif
                         </div>
                     </div>
                 @endforeach

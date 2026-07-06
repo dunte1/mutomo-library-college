@@ -28,6 +28,7 @@ class EventList extends Component
 
     public function delete(int $id): void
     {
+        $this->authorize('manage-events');
         $event = Event::findOrFail($id);
         $event->delete();
         $this->dispatch('notify', message: 'Event deleted successfully.', type: 'success');

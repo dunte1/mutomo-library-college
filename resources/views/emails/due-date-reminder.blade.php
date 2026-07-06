@@ -11,7 +11,7 @@ This is a reminder that the following book is due for return in **{{ $daysUntilD
 **Due Date:** {{ $dueDate }}
 </x-mail::panel>
 
-Please return the book on or before the due date to avoid overdue fines. Overdue fines are calculated at KES 50 per day.
+Please return the book on or before the due date to avoid overdue fines. Overdue fines are calculated at KES {{ number_format($finePerDay, 2) }} per day.
 
 @if($daysUntilDue <= 1)
 You can renew the book online if you need more time (subject to renewal limits).

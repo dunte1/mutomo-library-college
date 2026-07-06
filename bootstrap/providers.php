@@ -12,6 +12,7 @@ use App\Modules\Members\Providers\MembersServiceProvider;
 use App\Modules\Notifications\Providers\NotificationsServiceProvider;
 use App\Modules\Reports\Providers\ReportsServiceProvider;
 use App\Modules\Settings\Providers\SettingsServiceProvider;
+use App\Modules\Subscriptions\Providers\SubscriptionsServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\ModuleServiceProvider;
 use App\Providers\VoltServiceProvider;
@@ -32,4 +33,5 @@ return [
     ReportsServiceProvider::class,
     ApiServiceProvider::class,
     AssignmentsServiceProvider::class,
+    SubscriptionsServiceProvider::class,
 ];

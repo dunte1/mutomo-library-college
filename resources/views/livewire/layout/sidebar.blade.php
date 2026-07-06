@@ -177,6 +177,13 @@ new class extends Component {
                 <span class="text-sm">Waitlists</span>
             </a>
             @endcan
+            @can('manage-fines')
+            <a href="{{ route('circulation.fines') }}" wire:navigate
+                class="sidebar-link {{ request()->routeIs('circulation.fines*') ? 'sidebar-link-active' : '' }} ml-4"
+                >
+                <span class="text-sm">Fines</span>
+            </a>
+            @endcan
             @can('view-borrows')
             <a href="{{ route('circulation.index', ['tab' => 'borrows']) }}" wire:navigate
                 class="sidebar-link {{ request()->routeIs('circulation.index') && request()->query('tab') === 'borrows' ? 'sidebar-link-active' : '' }} ml-4"
@@ -814,6 +821,11 @@ new class extends Component {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                 </svg>
                 <span>Personal Borrowings</span>
+            </a>
+            <a href="{{ route('circulation.my-reservations') }}" wire:navigate
+                class="sidebar-link {{ request()->routeIs('circulation.my-reservations') ? 'sidebar-link-active' : '' }} ml-4"
+               >
+                <span class="text-sm">Reservations</span>
             </a>
             @endcan
 

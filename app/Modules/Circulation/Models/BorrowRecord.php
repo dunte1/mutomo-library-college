@@ -5,12 +5,13 @@ namespace App\Modules\Circulation\Models;
 use App\Models\User;
 use App\Modules\Catalog\Models\BookCopy;
 use App\Modules\Shared\Traits\Auditable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BorrowRecord extends Model
 {
-    use Auditable, SoftDeletes;
+    use Auditable, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'user_id',

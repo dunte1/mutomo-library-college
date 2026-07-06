@@ -3,10 +3,12 @@
 namespace App\Modules\Circulation\Models;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Fine extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'borrow_record_id',
         'user_id',

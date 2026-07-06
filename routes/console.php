@@ -68,3 +68,9 @@ Schedule::command('backup:clean')->dailyAt('03:30')->name('clean-old-backups');
 Schedule::call(function () {
     app(MpesaService::class)->cleanStalePendingTransactions(60);
 })->everyThirtyMinutes()->name('clean-stale-mpesa-transactions');
+
+Schedule::command('schedule:scheduled-messages')->everyMinute()->name('send-scheduled-messages');
+
+Schedule::command('circulation:expire-reservations')->dailyAt('00:30')->name('expire-old-reservations');
+Schedule::command('circulation:assess-overdue-fines')->dailyAt('00:45')->name('assess-overdue-fines');
+Schedule::command('members:check-expiry')->dailyAt('06:00')->name('check-membership-expiry');

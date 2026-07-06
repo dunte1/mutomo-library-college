@@ -347,4 +347,176 @@ class SubscriptionModuleTest extends TestCase
 
         $response->assertOk();
     }
+
+    public function test_trial_subscription_created_on_registration(): void
+    {
+        Setting::updateOrCreate(
+            ['key' => 'trial_days'],
+            ['value' => '7', 'group' => 'subscriptions', 'type' => 'integer']
+        );
+
+        Plan::factory()->create([
+            'name' => 'Free Trial',
+            'slug' => 'free-trial',
+            'price' => 0,
+            'is_active' => true,
+        ]);
+
+        $service = app(SubscriptionService::class);
+        $trial = $service->createTrialSubscription($this->student);
+
+        $this->assertNotNull($trial);
+        $this->assertEquals('trial', $trial->status);
+        $this->assertNotNull($trial->trial_ends_at);
+    }
+
+    public function test_trial_not_created_when_disabled(): void
+    {
+        Setting::updateOrCreate(
+            ['key' => 'trial_days'],
+            ['value' => '0', 'group' => 'subscriptions', 'type' => 'integer']
+        );
+
+        $service = app(SubscriptionService::class);
+        $trial = $service->createTrialSubscription($this->student);
+
+        $this->assertNull($trial);
+    }
+
+    public function test_enforcement_service_allows_super_admin(): void
+    {
+        $service = app(\App\Modules\Subscriptions\Services\SubscriptionEnforcementService::class);
+        $this->assertTrue($service->canAccess($this->admin, 'borrow'));
+        $this->assertTrue($service->canAccess($this->admin, 'add_books'));
+    }
+
+    public function test_enforcement_service_blocks_unsubscribed(): void
+    {
+        $service = app(\App\Modules\Subscriptions\Services\SubscriptionEnforcementService::class);
+        $this->assertFalse($service->canAccess($this->student, 'borrow'));
+    }
+
+    public function test_enforcement_service_allows_active(): void
+    {
+        Subscription::factory()->create([
+            'user_id' => $this->student->id,
+            'plan_id' => $this->individualMonthly->id,
+            'status' => 'active',
+        ]);
+
+        $service = app(\App\Modules\Subscriptions\Services\SubscriptionEnforcementService::class);
+        $this->assertTrue($service->canAccess($this->student, 'borrow'));
+        $this->assertTrue($service->canAccess($this->student, 'add_books'));
+    }
+
+    public function test_enforcement_service_blocks_expired_from_writing(): void
+    {
+        Subscription::factory()->create([
+            'user_id' => $this->student->id,
+            'plan_id' => $this->individualMonthly->id,
+            'status' => 'expired',
+            'end_date' => now()->subDay(),
+        ]);
+
+        $service = app(\App\Modules\Subscriptions\Services\SubscriptionEnforcementService::class);
+        $this->assertFalse($service->canAccess($this->student, 'borrow'));
+        $this->assertFalse($service->canAccess($this->student, 'add_books'));
+    }
+
+    public function test_trial_expiration_processing(): void
+    {
+        Setting::updateOrCreate(
+            ['key' => 'trial_days'],
+            ['value' => '7', 'group' => 'subscriptions', 'type' => 'integer']
+        );
+
+        $subscription = Subscription::factory()->create([
+            'user_id' => $this->student->id,
+            'plan_id' => $this->individualMonthly->id,
+            'status' => 'trial',
+            'trial_ends_at' => now()->subDay(),
+            'end_date' => now()->subDay(),
+        ]);
+
+        $service = app(SubscriptionService::class);
+        $count = $service->processTrialExpirations();
+
+        $this->assertEquals(1, $count);
+        $this->assertEquals('expired', $subscription->fresh()->status);
+    }
+
+    public function test_grace_period_prevents_suspension(): void
+    {
+        $subscription = Subscription::factory()->create([
+            'user_id' => $this->student->id,
+            'plan_id' => $this->individualMonthly->id,
+            'status' => 'expired',
+            'grace_period_ends_at' => now()->addDays(2),
+        ]);
+
+        $this->assertTrue($subscription->isInGracePeriod());
+    }
+
+    public function test_subscription_model_applies_grace_period(): void
+    {
+        $subscription = Subscription::factory()->create([
+            'user_id' => $this->student->id,
+            'plan_id' => $this->individualMonthly->id,
+            'status' => 'expired',
+        ]);
+
+        $subscription->applyGracePeriod(5);
+
+        $this->assertNotNull($subscription->fresh()->grace_period_ends_at);
+    }
+
+    public function test_revenue_dashboard_loads(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.subscriptions.revenue'));
+
+        $response->assertOk();
+    }
+
+    public function test_trial_ending_soon_scope(): void
+    {
+        Subscription::factory()->create([
+            'user_id' => $this->student->id,
+            'plan_id' => $this->individualMonthly->id,
+            'status' => 'trial',
+            'trial_ends_at' => now()->addDays(3),
+        ]);
+
+        $ending = Subscription::trialEndingSoon(7)->get();
+        $this->assertCount(1, $ending);
+    }
+
+    public function test_trial_ending_soon_excludes_expired(): void
+    {
+        Subscription::factory()->create([
+            'user_id' => $this->student->id,
+            'plan_id' => $this->individualMonthly->id,
+            'status' => 'trial',
+            'trial_ends_at' => now()->subDay(),
+        ]);
+
+        $ending = Subscription::trialEndingSoon(7)->get();
+        $this->assertCount(0, $ending);
+    }
+
+    public function test_grace_period_expiration_leads_to_suspension(): void
+    {
+        $subscription = Subscription::factory()->create([
+            'user_id' => $this->student->id,
+            'plan_id' => $this->individualMonthly->id,
+            'status' => 'expired',
+            'grace_period_ends_at' => now()->subDay(),
+        ]);
+
+        $service = app(SubscriptionService::class);
+        $count = $service->processGracePeriodExpirations();
+
+        $this->assertEquals(1, $count);
+        $this->assertEquals('suspended', $subscription->fresh()->status);
+    }
 }

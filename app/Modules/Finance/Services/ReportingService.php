@@ -233,13 +233,15 @@ class ReportingService
         $start = $params['from'] ?? now()->startOfYear();
         $end = $params['to'] ?? now();
 
-        $txns = Transaction::completed()->whereBetween('paid_at', [$start, $end]);
+        $txns = Transaction::completed()
+            ->whereBetween('paid_at', [$start, $end])
+            ->get();
 
         return [
             'total_collected' => $txns->sum('amount'),
-            'by_payment_method' => $txns->get()->groupBy('payment_method')->map(fn ($g) => $g->sum('amount')),
-            'by_type' => $txns->get()->groupBy('type')->map(fn ($g) => ['count' => $g->count(), 'amount' => $g->sum('amount')]),
-            'monthly_breakdown' => $txns->get()
+            'by_payment_method' => $txns->groupBy('payment_method')->map(fn ($g) => $g->sum('amount')),
+            'by_type' => $txns->groupBy('type')->map(fn ($g) => ['count' => $g->count(), 'amount' => $g->sum('amount')]),
+            'monthly_breakdown' => $txns
                 ->groupBy(fn ($t) => $t->paid_at->format('Y-m'))
                 ->map(fn ($g) => $g->sum('amount')),
         ];

@@ -37,7 +37,7 @@ class MessageLogList extends Component
 
     public function render()
     {
-        $query = Message::with(['sender', 'recipients']);
+        $query = Message::with(['sender', 'recipients'])->withCount('replies');
 
         if ($this->search) {
             $query->where(function ($q) {

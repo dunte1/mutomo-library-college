@@ -134,7 +134,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       final formData = FormData.fromMap({
         'avatar': await MultipartFile.fromFile(event.imagePath),
       });
-      final response = await _api.post('/v1/profile/avatar', data: formData);
+      await _api.post('/v1/profile/avatar', data: formData);
+      // Reload full profile — avatar upload response only contains avatar URL
+      final response = await _api.get('/v1/profile');
       final data =
           response.data['data'] as Map<String, dynamic>? ??
           response.data as Map<String, dynamic>;

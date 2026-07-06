@@ -28,6 +28,7 @@ class AnnouncementList extends Component
 
     public function delete(int $id): void
     {
+        $this->authorize('manage-announcements');
         $announcement = Announcement::findOrFail($id);
         $announcement->delete();
         $this->dispatch('notify', message: 'Announcement deleted successfully.', type: 'success');

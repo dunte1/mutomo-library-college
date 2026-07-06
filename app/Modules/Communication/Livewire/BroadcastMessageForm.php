@@ -50,12 +50,14 @@ class BroadcastMessageForm extends Component
                     ->where('is_active', true)
                     ->pluck('id')
                     ->toArray();
-                $data['type'] = Message::TYPE_GROUP;
             } elseif ($this->targetType === 'students') {
                 $data['recipients'] = User::role(['student', 'lecturer'])
                     ->where('is_active', true)
                     ->pluck('id')
                     ->toArray();
+            }
+
+            if (! $this->sendEmail) {
                 $data['type'] = Message::TYPE_GROUP;
             }
 

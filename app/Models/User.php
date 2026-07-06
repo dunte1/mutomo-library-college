@@ -45,6 +45,7 @@ class User extends Authenticatable
         'two_factor_secret',
         'two_factor_recovery_codes',
         'passport_photo',
+        'notification_preferences',
     ];
 
     protected $hidden = [
@@ -63,6 +64,7 @@ class User extends Authenticatable
             'two_factor_enabled' => 'boolean',
             'last_login_at' => 'datetime',
             'deleted_at' => 'datetime',
+            'notification_preferences' => 'array',
         ];
     }
 
@@ -186,5 +188,10 @@ class User extends Authenticatable
     public function scopeByRole($query, $role)
     {
         return $query->role($role);
+    }
+
+    public function verifyTwoFactorCode(string $code): bool
+    {
+        return app('pragmarx.google2fa')->verifyKey($this->two_factor_secret, $code);
     }
 }

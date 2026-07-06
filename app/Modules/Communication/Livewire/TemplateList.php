@@ -23,6 +23,7 @@ class TemplateList extends Component
 
     public function delete(int $id): void
     {
+        $this->authorize('manage-templates');
         $template = MessageTemplate::findOrFail($id);
         $template->delete();
 
@@ -36,6 +37,7 @@ class TemplateList extends Component
 
     public function toggleActive(int $id): void
     {
+        $this->authorize('manage-templates');
         $template = MessageTemplate::findOrFail($id);
         $template->update(['is_active' => ! $template->is_active]);
 

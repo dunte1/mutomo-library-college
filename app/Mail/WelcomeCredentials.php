@@ -8,20 +8,25 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Password;
 
 class WelcomeCredentials extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public string $resetLink;
+
     public function __construct(
         public User $user,
-        public string $plainPassword,
-    ) {}
+    ) {
+        $token = Password::createToken($user);
+        $this->resetLink = route('password.reset', ['token' => $token, 'email' => $user->getEmailForPasswordReset()]);
+    }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome to '.config('app.name').' – Your Login Credentials',
+            subject: 'Welcome to '.config('app.name').' – Set Your Password',
         );
     }
 
@@ -32,7 +37,7 @@ class WelcomeCredentials extends Mailable
             with: [
                 'name' => $this->user->name,
                 'email' => $this->user->email,
-                'password' => $this->plainPassword,
+                'resetLink' => $this->resetLink,
                 'loginUrl' => route('login'),
                 'libraryName' => config('app.name'),
                 'libraryPhone' => config('app.library_phone', ''),

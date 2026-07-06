@@ -4,14 +4,14 @@ namespace App\Modules\DigitalLibrary\Models;
 
 use App\Models\User;
 use App\Modules\Catalog\Models\Book;
-use App\Traits\Auditable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DigitalAsset extends Model
 {
-    use Auditable, SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'title', 'slug', 'description', 'file_path', 'file_type', 'mime_type',

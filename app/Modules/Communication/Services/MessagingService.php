@@ -140,6 +140,19 @@ class MessagingService
         }
     }
 
+    protected function shouldNotifyViaChannel(User $user, string $channel): bool
+    {
+        $prefs = $user->notification_preferences ?? [];
+
+        return match ($channel) {
+            'in_app' => $prefs['in_app'] ?? true,
+            'email'  => $prefs['email'] ?? true,
+            'push'   => $prefs['push'] ?? true,
+            'sms'    => $prefs['sms'] ?? false,
+            default  => true,
+        };
+    }
+
     protected function deliverMessage(Message $message): void
     {
         $message->recipients()->chunk(50, function ($recipients) use ($message) {
@@ -148,14 +161,16 @@ class MessagingService
                     continue;
                 }
 
-                $this->notificationService->send(
-                    $recipient->recipient,
-                    'message',
-                    $message->subject,
-                    $message->body,
-                    'chat',
-                    route('communication.messages.show', $message->id),
-                );
+                if ($this->shouldNotifyViaChannel($recipient->recipient, 'in_app')) {
+                    $this->notificationService->send(
+                        $recipient->recipient,
+                        'message',
+                        $message->subject,
+                        $message->body,
+                        'chat',
+                        route('communication.messages.show', $message->id),
+                    );
+                }
 
                 CommunicationAnalytic::create([
                     'message_id' => $message->id,
@@ -177,6 +192,9 @@ class MessagingService
         $message->recipients()->chunk(50, function ($recipients) use ($message) {
             foreach ($recipients as $recipient) {
                 if (! $recipient->recipient || ! $recipient->recipient->email) {
+                    continue;
+                }
+                if (! $this->shouldNotifyViaChannel($recipient->recipient, 'email')) {
                     continue;
                 }
                 try {
@@ -219,8 +237,79 @@ class MessagingService
     {
         return Message::with(['recipients.recipient'])
             ->where('sender_id', $user->id)
+            ->where('status', '!=', Message::STATUS_DRAFT)
             ->orderByDesc('created_at')
             ->paginate($perPage);
+    }
+
+    public function getScheduledMessages(User $user, int $perPage = 15): LengthAwarePaginator
+    {
+        return Message::with(['recipients.recipient'])
+            ->where('sender_id', $user->id)
+            ->scheduled()
+            ->orderBy('scheduled_at')
+            ->paginate($perPage);
+    }
+
+    public function cancelScheduledMessage(Message $message, User $user): void
+    {
+        if ($message->sender_id !== $user->id || $message->status !== Message::STATUS_SCHEDULED) {
+            abort(403);
+        }
+
+        $message->update(['status' => Message::STATUS_DRAFT, 'scheduled_at' => null]);
+
+        activity()
+            ->performedOn($message)
+            ->causedBy($user)
+            ->log("Scheduled message cancelled: {$message->subject}");
+    }
+
+    public function getDrafts(User $user, int $perPage = 15): LengthAwarePaginator
+    {
+        return Message::with(['recipients.recipient'])
+            ->where('sender_id', $user->id)
+            ->byStatus(Message::STATUS_DRAFT)
+            ->orderByDesc('created_at')
+            ->paginate($perPage);
+    }
+
+    public function saveDraft(User $sender, array $data): Message
+    {
+        return DB::transaction(function () use ($sender, $data) {
+            if (! empty($data['message_id'])) {
+                $message = Message::where('sender_id', $sender->id)
+                    ->where('status', Message::STATUS_DRAFT)
+                    ->findOrFail($data['message_id']);
+                $message->update([
+                    'subject' => $data['subject'],
+                    'body' => $data['body'],
+                    'priority' => $data['priority'] ?? Message::PRIORITY_NORMAL,
+                    'type' => $data['type'] ?? Message::TYPE_DIRECT,
+                ]);
+                $message->recipients()->delete();
+                $message->attachments()->delete();
+            } else {
+                $message = Message::create([
+                    'sender_id' => $sender->id,
+                    'subject' => $data['subject'],
+                    'body' => $data['body'],
+                    'priority' => $data['priority'] ?? Message::PRIORITY_NORMAL,
+                    'type' => $data['type'] ?? Message::TYPE_DIRECT,
+                    'status' => Message::STATUS_DRAFT,
+                ]);
+            }
+
+            $this->addRecipients($message, $data);
+            $this->handleAttachments($message, $data['attachments'] ?? []);
+
+            activity()
+                ->performedOn($message)
+                ->causedBy($sender)
+                ->log("Message saved as draft: {$message->subject}");
+
+            return $message;
+        });
     }
 
     public function getUnreadCount(User $user): int
@@ -273,6 +362,10 @@ class MessagingService
 
     public function deleteMessage(Message $message, User $user): void
     {
+        if ($message->sender_id !== $user->id && ! $user->can('manage-broadcasts')) {
+            abort(403);
+        }
+
         activity()
             ->performedOn($message)
             ->causedBy($user)
@@ -308,5 +401,123 @@ class MessagingService
             'type' => Message::TYPE_DIRECT,
             'priority' => Message::PRIORITY_NORMAL,
         ]);
+    }
+
+    public function replyToMessage(User $sender, Message $parent, string $body): Message
+    {
+        return DB::transaction(function () use ($sender, $parent, $body) {
+            $message = Message::create([
+                'parent_id' => $parent->id,
+                'sender_id' => $sender->id,
+                'subject' => 'Re: '.$parent->subject,
+                'body' => $body,
+                'priority' => Message::PRIORITY_NORMAL,
+                'type' => Message::TYPE_DIRECT,
+                'status' => Message::STATUS_SENT,
+                'sent_at' => now(),
+            ]);
+
+            MessageRecipient::create([
+                'message_id' => $message->id,
+                'recipient_id' => $parent->sender_id,
+                'copy_type' => 'to',
+            ]);
+
+            $this->deliverMessage($message);
+
+            activity()
+                ->performedOn($parent)
+                ->causedBy($sender)
+                ->withProperties(['reply_id' => $message->id, 'subject' => $message->subject])
+                ->log("Reply sent: {$message->subject}");
+
+            return $message;
+        });
+    }
+
+    public function replyAllToMessage(User $sender, Message $parent, string $body): Message
+    {
+        return DB::transaction(function () use ($sender, $parent, $body) {
+            $message = Message::create([
+                'parent_id' => $parent->id,
+                'sender_id' => $sender->id,
+                'subject' => 'Re: '.$parent->subject,
+                'body' => $body,
+                'priority' => Message::PRIORITY_NORMAL,
+                'type' => Message::TYPE_DIRECT,
+                'status' => Message::STATUS_SENT,
+                'sent_at' => now(),
+            ]);
+
+            $recipientIds = $parent->recipients()
+                ->where('recipient_id', '!=', $sender->id)
+                ->pluck('recipient_id')
+                ->push($parent->sender_id)
+                ->unique()
+                ->filter()
+                ->values()
+                ->toArray();
+
+            foreach ($recipientIds as $recipientId) {
+                MessageRecipient::create([
+                    'message_id' => $message->id,
+                    'recipient_id' => $recipientId,
+                    'copy_type' => 'to',
+                ]);
+            }
+
+            $this->deliverMessage($message);
+
+            activity()
+                ->performedOn($parent)
+                ->causedBy($sender)
+                ->withProperties(['reply_all_id' => $message->id, 'subject' => $message->subject])
+                ->log("Reply all sent: {$message->subject}");
+
+            return $message;
+        });
+    }
+
+    public function forwardMessage(User $sender, Message $original, array $recipientIds): Message
+    {
+        return DB::transaction(function () use ($sender, $original, $recipientIds) {
+            $message = Message::create([
+                'sender_id' => $sender->id,
+                'subject' => 'Fwd: '.$original->subject,
+                'body' => $original->body,
+                'priority' => Message::PRIORITY_NORMAL,
+                'type' => Message::TYPE_DIRECT,
+                'status' => Message::STATUS_SENT,
+                'sent_at' => now(),
+            ]);
+
+            foreach ($recipientIds as $recipientId) {
+                MessageRecipient::create([
+                    'message_id' => $message->id,
+                    'recipient_id' => $recipientId,
+                    'copy_type' => 'to',
+                ]);
+            }
+
+            foreach ($original->attachments as $attachment) {
+                MessageAttachment::create([
+                    'message_id' => $message->id,
+                    'file_path' => $attachment->file_path,
+                    'file_name' => $attachment->file_name,
+                    'file_size' => $attachment->file_size,
+                    'mime_type' => $attachment->mime_type,
+                ]);
+            }
+
+            $this->deliverMessage($message);
+
+            activity()
+                ->performedOn($original)
+                ->causedBy($sender)
+                ->withProperties(['forward_id' => $message->id, 'subject' => $message->subject])
+                ->log("Message forwarded: {$message->subject}");
+
+            return $message;
+        });
     }
 }

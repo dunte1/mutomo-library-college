@@ -15,7 +15,23 @@ class NotificationService
         ?string $icon = null,
         ?string $actionUrl = null,
         ?array $data = null,
-    ): InAppNotification {
+    ): ?InAppNotification {
+        $prefs = $user->notification_preferences ?? [];
+
+        $channelMap = [
+            'overdue' => 'overdue_alerts',
+            'due_reminder' => 'due_date_reminders',
+            'hold_available' => 'hold_available',
+            'fine' => 'fine_notifications',
+            'borrow' => 'due_date_reminders',
+            'return' => 'due_date_reminders',
+        ];
+
+        $prefKey = $channelMap[$type] ?? 'in_app';
+        if (isset($prefs[$prefKey]) && $prefs[$prefKey] === false) {
+            return null;
+        }
+
         return InAppNotification::create([
             'user_id' => $user->id,
             'type' => $type,

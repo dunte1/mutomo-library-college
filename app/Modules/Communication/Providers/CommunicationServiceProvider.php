@@ -14,6 +14,7 @@ use App\Modules\Communication\Livewire\MessageForm;
 use App\Modules\Communication\Livewire\MessageList;
 use App\Modules\Communication\Livewire\MessageLogList;
 use App\Modules\Communication\Livewire\MessageShow;
+use App\Modules\Communication\Livewire\Preferences;
 use App\Modules\Communication\Livewire\TemplateForm;
 use App\Modules\Communication\Livewire\TemplateList;
 use App\Modules\Communication\Services\MessagingService;
@@ -53,5 +54,6 @@ class CommunicationServiceProvider extends ServiceProvider
         Livewire::component('communication-analytics', Analytics::class);
         Livewire::component('broadcast-message-form', BroadcastMessageForm::class);
         Livewire::component('message-log-list', MessageLogList::class);
+        Livewire::component('communication-preferences', Preferences::class);
     }
 }

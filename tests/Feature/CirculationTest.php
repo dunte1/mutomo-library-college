@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Modules\Catalog\Models\BookCopy;
+use App\Modules\Subscriptions\Models\Plan;
+use App\Modules\Subscriptions\Models\Subscription;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -21,6 +23,13 @@ class CirculationTest extends TestCase
         $this->seed();
         $this->user = User::where('email', 'librarian@ollmchs.ac.ke')->first() ?? User::factory()->create();
         $this->student = User::where('email', 'student@ollmchs.ac.ke')->first() ?? User::factory()->create();
+
+        $plan = Plan::factory()->create(['is_active' => true]);
+        Subscription::factory()->create([
+            'user_id' => $this->user->id,
+            'plan_id' => $plan->id,
+            'status' => 'active',
+        ]);
     }
 
     public function test_circulation_page_loads(): void

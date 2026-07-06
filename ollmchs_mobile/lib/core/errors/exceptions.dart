@@ -27,4 +27,16 @@ class ValidationException implements Exception {
   final String message;
   final Map<String, dynamic>? errors;
   ValidationException({required this.message, this.errors});
+
+  @override
+  String toString() {
+    if (errors != null && errors!.isNotEmpty) {
+      final firstError = errors!.values.first;
+      if (firstError is List && firstError.isNotEmpty) {
+        return firstError.first.toString();
+      }
+      return firstError.toString();
+    }
+    return message;
+  }
 }

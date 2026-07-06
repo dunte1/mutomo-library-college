@@ -41,32 +41,39 @@
             </div>
 
             <div class="overflow-x-auto table-mobile-cards">
-                <table class="table w-full">
-                    <thead>
-                        <tr>
-                            <th>Subject</th>
-                            <th>Type</th>
-                            <th>Sender</th>
-                            <th>Recipients</th>
-                            <th>Sent</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($messages as $message)
-                        <tr>
-                            <td class="font-medium max-w-xs truncate">{{ $message->subject ?? '(No subject)' }}</td>
-                            <td><span class="badge badge-{{ $message->type === 'broadcast' ? 'warning' : 'info' }}">{{ ucfirst($message->type) }}</span></td>
-                            <td class="text-sm text-surface-500">{{ $message->sender?->name ?? 'System' }}</td>
-                            <td class="text-sm text-surface-500">{{ $message->recipients->count() }}</td>
-                            <td class="text-sm text-surface-500">{{ $message->created_at->format('M d, Y H:i') }}</td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="text-center py-8 text-surface-400">No messages found.</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                    <table class="table w-full">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Type</th>
+                                <th>Sender</th>
+                                <th>Recipients</th>
+                                <th>Replies</th>
+                                <th>Sent</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($messages as $message)
+                            <tr>
+                                <td class="font-medium max-w-xs truncate">
+                                    @if($message->parent_id)
+                                    <span class="text-xs text-surface-400 mr-1">↳</span>
+                                    @endif
+                                    {{ $message->subject ?? '(No subject)' }}
+                                </td>
+                                <td><span class="badge badge-{{ $message->type === 'broadcast' ? 'warning' : 'info' }}">{{ ucfirst($message->type) }}</span></td>
+                                <td class="text-sm text-surface-500">{{ $message->sender?->name ?? 'System' }}</td>
+                                <td class="text-sm text-surface-500">{{ $message->recipients->count() }}</td>
+                                <td class="text-sm text-surface-500">{{ $message->replies_count }}</td>
+                                <td class="text-sm text-surface-500">{{ $message->created_at->format('M d, Y H:i') }}</td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="6" class="text-center py-8 text-surface-400">No messages found.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
             </div>
 
             <div class="mt-4">

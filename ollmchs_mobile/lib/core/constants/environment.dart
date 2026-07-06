@@ -48,8 +48,16 @@ class Environment {
     return 'http://localhost:8000';
   }
 
-  /// Whether Firebase should initialize (skip if not configured).
-  static bool get firebaseEnabled => !isWeb;
+  /// Whether Firebase should initialize.
+  /// Firebase desktop support is limited — only enable on mobile platforms.
+  static bool get firebaseEnabled {
+    if (isWeb) return false;
+    if (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS) {
+      return true;
+    }
+    return false;
+  }
 
   /// Whether to use secure storage or local storage fallback.
   static bool get useSecureStorage => !isWeb;

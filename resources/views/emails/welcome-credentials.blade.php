@@ -3,19 +3,24 @@
 
 Hello **{{ $name }}**,
 
-Your library account has been created. You can now log in to the library system using the credentials below.
+Your library account has been created. To get started, please set your password using the button below.
 
 @component('mail::panel')
 **Email:** {{ $email }}
-
-**Password:** {{ $password }}
 @endcomponent
 
-@component('mail::button', ['url' => $loginUrl, 'color' => 'primary'])
+@component('mail::button', ['url' => $resetLink, 'color' => 'primary'])
+Set Your Password
+@endcomponent
+
+If the button above doesn't work, copy and paste this link into your browser:
+{{ $resetLink }}
+
+After setting your password, you can log in at:
+
+@component('mail::button', ['url' => $loginUrl, 'color' => 'success'])
 Login to Your Account
 @endcomponent
-
-For security, please change your password after your first login.
 
 If you have any questions, feel free to contact the library.
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Modules\Subscriptions\Services\SubscriptionService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -33,6 +34,12 @@ new #[Layout('layouts.guest')] class extends Component
         $user = User::create($validated);
 
         $user->assignRole('guest');
+
+        try {
+            app(SubscriptionService::class)->createTrialSubscription($user);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Failed to create trial subscription: {$e->getMessage()}");
+        }
 
         event(new Registered($user));
 

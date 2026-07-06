@@ -2,6 +2,7 @@
 
 use App\Modules\Subscriptions\Livewire\Admin\PlanForm;
 use App\Modules\Subscriptions\Livewire\Admin\PlanList;
+use App\Modules\Subscriptions\Livewire\Admin\RevenueDashboard;
 use App\Modules\Subscriptions\Livewire\Admin\SubscriptionList;
 use App\Modules\Subscriptions\Livewire\MySubscription;
 use App\Modules\Subscriptions\Livewire\SubscriptionCheckout;
@@ -19,4 +20,5 @@ Route::middleware(['auth', 'verified', 'permission:manage-subscriptions'])->pref
     Route::get('/plans/create', PlanForm::class)->name('plans.create');
     Route::get('/plans/{plan}/edit', PlanForm::class)->name('plans.edit');
     Route::get('/', SubscriptionList::class)->name('index');
+    Route::get('/revenue', RevenueDashboard::class)->name('revenue');
 });

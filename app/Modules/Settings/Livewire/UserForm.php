@@ -7,6 +7,7 @@ use App\Models\Program;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -134,16 +135,30 @@ class UserForm extends Component
         $this->redirect(route('settings.users'), navigate: true);
     }
 
+    #[Computed]
+    public function departments()
+    {
+        return Department::orderBy('name')->get();
+    }
+
+    #[Computed]
+    public function programs()
+    {
+        return Program::orderBy('name')->get();
+    }
+
+    #[Computed]
+    public function roles()
+    {
+        return Role::orderBy('name')->get();
+    }
+
     public function render()
     {
-        $departments = Department::orderBy('name')->get();
-        $programs = Program::orderBy('name')->get();
-        $roles = Role::orderBy('name')->get();
-
         return view('settings::livewire.user-form', [
-            'departments' => $departments,
-            'programs' => $programs,
-            'roles' => $roles,
+            'departments' => $this->departments,
+            'programs' => $this->programs,
+            'roles' => $this->roles,
         ]);
     }
 }

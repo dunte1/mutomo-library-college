@@ -1,8 +1,7 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../auth/repositories/auth_repository.dart';
 
 class TwoFactorSetupScreen extends StatefulWidget {
@@ -196,19 +195,19 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: theme.colorScheme.outline),
                         ),
-                        child: _qrCodeUrl!.startsWith('http')
-                            ? CachedNetworkImage(
-                                imageUrl: _qrCodeUrl!,
-                                height: 200,
-                                width: 200,
-                                placeholder: (_, __) => Container(color: Colors.grey[200]),
-                                errorWidget: (_, __, ___) => Icon(Icons.broken_image, color: Colors.grey),
-                              )
-                            : SvgPicture.string(
-                                _qrCodeUrl!,
-                                height: 200,
-                                width: 200,
-                              ),
+                        child: QrImageView(
+                          data: _qrCodeUrl!,
+                          version: QrVersions.auto,
+                          size: 200,
+                          eyeStyle: QrEyeStyle(
+                            eyeShape: QrEyeShape.square,
+                            color: theme.colorScheme.primary,
+                          ),
+                          dataModuleStyle: QrDataModuleStyle(
+                            dataModuleShape: QrDataModuleShape.square,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
                       ),
                     ),
 
@@ -301,7 +300,7 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
                     maxLength: 6,
-                    enabled: _codesSaved && !_verifying,
+                    enabled: !_verifying,
                     style: theme.textTheme.headlineSmall?.copyWith(
                       letterSpacing: 8,
                       fontWeight: FontWeight.bold,
@@ -321,9 +320,7 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
 
                   // Activate button
                   FilledButton(
-                    onPressed: _codesSaved && !_verifying
-                        ? _verifyAndActivate
-                        : null,
+                    onPressed: !_verifying ? _verifyAndActivate : null,
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),

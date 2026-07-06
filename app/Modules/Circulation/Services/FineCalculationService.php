@@ -5,6 +5,7 @@ namespace App\Modules\Circulation\Services;
 use App\Modules\Circulation\Models\BorrowRecord;
 use App\Modules\Circulation\Models\Fine;
 use App\Modules\Notifications\Services\NotificationService;
+use App\Modules\Settings\Services\SettingsService;
 use App\Modules\Shared\Helpers\AuditHelper;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -12,10 +13,30 @@ class FineCalculationService
 {
     public function __construct(
         protected NotificationService $notificationService,
-        protected float $dailyRate = 50.00,
-        protected float $lostBookRate = 1500.00,
-        protected float $damageRate = 500.00,
+        protected ?SettingsService $settings = null,
     ) {}
+
+    protected function dailyRate(): float
+    {
+        if ($this->settings) {
+            $rules = $this->settings->getCirculationRules();
+            if (isset($rules['fine_per_day']) && $rules['fine_per_day'] > 0) {
+                return (float) $rules['fine_per_day'];
+            }
+        }
+
+        return (float) config('fines.daily_rate', 50);
+    }
+
+    protected function lostBookRate(): float
+    {
+        return (float) config('fines.lost_book_rate', 1500);
+    }
+
+    protected function damageRate(): float
+    {
+        return (float) config('fines.damage_rate', 500);
+    }
 
     public function assessOverdueFine(BorrowRecord $record): Fine
     {
@@ -27,15 +48,16 @@ class FineCalculationService
             return $existing;
         }
 
+        $rate = $this->dailyRate();
         $daysOverdue = $record->daysOverdue();
-        $amount = $daysOverdue * $this->dailyRate;
+        $amount = $daysOverdue * $rate;
 
         $fine = Fine::create([
             'borrow_record_id' => $record->id,
             'user_id' => $record->user_id,
             'amount' => $amount,
             'status' => Fine::STATUS_PENDING,
-            'reason' => "Overdue fine ({$daysOverdue} days at KES {$this->dailyRate}/day)",
+            'reason' => "Overdue fine ({$daysOverdue} days at KES {$rate}/day)",
             'assessed_at' => now(),
             'assessed_by' => auth()->id(),
         ]);
@@ -49,7 +71,7 @@ class FineCalculationService
 
         $this->notificationService->sendFineAssessed(
             $record->user,
-            "Overdue fine ({$daysOverdue} days at KES {$this->dailyRate}/day)",
+            "Overdue fine ({$daysOverdue} days at KES {$rate}/day)",
             $amount,
         );
 
@@ -66,7 +88,7 @@ class FineCalculationService
             return $existing;
         }
 
-        $amount = $this->lostBookRate + ($record->daysOverdue() * $this->dailyRate);
+        $amount = $this->lostBookRate() + ($record->daysOverdue() * $this->dailyRate());
 
         $fine = Fine::create([
             'borrow_record_id' => $record->id,
@@ -103,10 +125,12 @@ class FineCalculationService
             return $existing;
         }
 
+        $rate = $this->damageRate();
+
         $fine = Fine::create([
             'borrow_record_id' => $record->id,
             'user_id' => $record->user_id,
-            'amount' => $this->damageRate,
+            'amount' => $rate,
             'status' => Fine::STATUS_PENDING,
             'reason' => 'Damaged book fine',
             'assessed_at' => now(),
@@ -115,14 +139,14 @@ class FineCalculationService
 
         AuditHelper::log('fine-assessed-damage', 'circulation', [
             'fine_id' => $fine->id,
-            'amount' => $this->damageRate,
+            'amount' => $rate,
             'reason' => 'damaged',
         ]);
 
         $this->notificationService->sendFineAssessed(
             $record->user,
             "Damaged book fine for borrow #{$record->id}",
-            $this->damageRate,
+            $rate,
         );
 
         return $fine;

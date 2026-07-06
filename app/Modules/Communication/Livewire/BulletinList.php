@@ -28,6 +28,7 @@ class BulletinList extends Component
 
     public function delete(int $id): void
     {
+        $this->authorize('manage-bulletins');
         $bulletin = Bulletin::findOrFail($id);
         $bulletin->delete();
         $this->dispatch('notify', message: 'Bulletin deleted successfully.', type: 'success');

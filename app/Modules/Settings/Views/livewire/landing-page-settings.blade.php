@@ -346,40 +346,25 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label class="label">Badge Text</label>
-                        <input type="text" wire:model="featuredDigitalAssets.featured_da_badge" class="input-field" placeholder="e.g. Digital Assets">
-                        @error("featuredDigitalAssets.featured_da_badge") <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
-                    </div>
-                    <div>
-                        <label class="label">Visibility</label>
-                        <div class="flex items-center gap-3 mt-2">
-                            <input type="checkbox" wire:model="featuredDigitalAssets.featured_da_visible" id="featured_da_visible" class="rounded border-surface-300 text-primary-600 focus:ring-primary-500">
-                            <label for="featured_da_visible" class="text-sm text-surface-600 dark:text-surface-300">Show featured digital assets section</label>
-                        </div>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="label">Heading</label>
-                        <input type="text" wire:model="featuredDigitalAssets.featured_da_heading" class="input-field">
-                        @error("featuredDigitalAssets.featured_da_heading") <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="label">Description</label>
-                        <textarea wire:model="featuredDigitalAssets.featured_da_description" class="input-field" rows="2"></textarea>
-                        @error("featuredDigitalAssets.featured_da_description") <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
+                        <input type="text" wire:model="featuredDigitalAssets.featured_digital_assets_badge" class="input-field" placeholder="e.g. Digital Assets">
+                        @error("featuredDigitalAssets.featured_digital_assets_badge") <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="label">Visibility</label>
                         <div class="flex items-center gap-3 mt-2">
                             <input type="checkbox" wire:model="featuredDigitalAssets.featured_digital_assets_visible" id="featured_digital_assets_visible" class="rounded border-surface-300 text-primary-600 focus:ring-primary-500">
-                            <label for="featured_digital_assets_visible" class="text-sm text-surface-600 dark:text-surface-300">Show digital assets section</label>
+                            <label for="featured_digital_assets_visible" class="text-sm text-surface-600 dark:text-surface-300">Show featured digital assets section</label>
                         </div>
                     </div>
                     <div class="md:col-span-2">
                         <label class="label">Heading</label>
                         <input type="text" wire:model="featuredDigitalAssets.featured_digital_assets_heading" class="input-field">
+                        @error("featuredDigitalAssets.featured_digital_assets_heading") <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div class="md:col-span-2">
                         <label class="label">Description</label>
                         <textarea wire:model="featuredDigitalAssets.featured_digital_assets_description" class="input-field" rows="2"></textarea>
+                        @error("featuredDigitalAssets.featured_digital_assets_description") <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
 

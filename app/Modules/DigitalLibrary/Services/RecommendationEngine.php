@@ -57,11 +57,13 @@ class RecommendationEngine
     public function fromBorrowHistory(User $user, int $limit = 5): array
     {
         $categoryIds = BorrowRecord::where('user_id', $user->id)
-            ->whereHas('bookCopy.book.categories')
-            ->with('bookCopy.book.categories')
+            ->whereHas('bookCopy.book')
+            ->with('bookCopy.book')
             ->get()
-            ->flatMap(fn ($r) => $r->bookCopy?->book?->categories?->pluck('id'))
+            ->flatMap(fn ($r) => $r->bookCopy?->book?->category_id)
+            ->filter()
             ->unique()
+            ->values()
             ->toArray();
 
         if (empty($categoryIds)) {
@@ -77,7 +79,7 @@ class RecommendationEngine
             ->unique()
             ->toArray();
 
-        $books = Book::whereHas('categories', fn ($q) => $q->whereIn('id', $categoryIds))
+        $books = Book::whereIn('category_id', $categoryIds)
             ->when(! empty($excludedBookIds), fn ($q) => $q->whereNotIn('id', $excludedBookIds))
             ->withCount('copies')
             ->orderByDesc('copies_count')
@@ -171,10 +173,14 @@ class RecommendationEngine
 
     public function similarBooks(Book $book, int $limit = 6): array
     {
-        $categoryIds = $book->categories->pluck('id')->toArray();
+        $categoryId = $book->category_id;
+
+        if (! $categoryId) {
+            return [];
+        }
 
         $similar = Book::where('id', '!=', $book->id)
-            ->whereHas('categories', fn ($q) => $q->whereIn('categories.id', $categoryIds))
+            ->where('category_id', $categoryId)
             ->limit($limit)
             ->get();
 
@@ -182,7 +188,7 @@ class RecommendationEngine
             'book_id' => $b->id,
             'type' => 'similar_book',
             'score' => 0.8,
-            'reason' => 'Shares categories with '.$book->title,
+            'reason' => 'Shares category with '.$book->title,
         ])->toArray();
     }
 

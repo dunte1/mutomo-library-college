@@ -8,6 +8,7 @@ use App\Modules\Members\Models\Member;
 use App\Modules\Members\Services\MemberService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -184,11 +185,23 @@ class MemberForm extends Component
         return Arr::where($data, fn ($value) => $value !== null);
     }
 
+    #[Computed]
+    public function departments()
+    {
+        return Department::active()->orderBy('name')->get();
+    }
+
+    #[Computed]
+    public function programs()
+    {
+        return Program::active()->orderBy('name')->get();
+    }
+
     public function render()
     {
         return view('members::livewire.member-form', [
-            'departments' => Department::active()->orderBy('name')->get(),
-            'programs' => Program::active()->orderBy('name')->get(),
+            'departments' => $this->departments,
+            'programs' => $this->programs,
         ]);
     }
 }

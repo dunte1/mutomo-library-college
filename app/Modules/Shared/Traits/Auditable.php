@@ -2,6 +2,7 @@
 
 namespace App\Modules\Shared\Traits;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
 
 trait Auditable
@@ -21,7 +22,7 @@ trait Auditable
         });
 
         static::deleting(function ($model) {
-            if (Auth::check() && method_exists($model, 'getSoftDeletes')) {
+            if (Auth::check() && in_array(SoftDeletes::class, class_uses_recursive($model))) {
                 $model->deleted_by = Auth::id();
                 $model->save();
             }

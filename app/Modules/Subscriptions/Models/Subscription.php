@@ -23,8 +23,8 @@ class Subscription extends Model
         'user_id', 'plan_id', 'status', 'start_date', 'end_date',
         'renewal_date', 'billing_cycle', 'payment_method',
         'payment_gateway_subscription_id', 'auto_renew',
-        'trial_ends_at', 'cancelled_at', 'suspended_at',
-        'cancellation_reason', 'metadata',
+        'trial_ends_at', 'grace_period_ends_at', 'cancelled_at', 'suspended_at',
+        'expired_at', 'cancellation_reason', 'metadata',
     ];
 
     protected $casts = [
@@ -32,8 +32,10 @@ class Subscription extends Model
         'end_date' => 'datetime',
         'renewal_date' => 'datetime',
         'trial_ends_at' => 'datetime',
+        'grace_period_ends_at' => 'datetime',
         'cancelled_at' => 'datetime',
         'suspended_at' => 'datetime',
+        'expired_at' => 'datetime',
         'auto_renew' => 'boolean',
         'metadata' => 'array',
     ];
@@ -51,6 +53,25 @@ class Subscription extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function scopeTrialExpiring($query)
+    {
+        return $query->where('status', 'trial')
+            ->whereDate('trial_ends_at', '<=', now());
+    }
+
+    public function scopeTrialEndingSoon($query, int $days = 7)
+    {
+        return $query->where('status', 'trial')
+            ->whereDate('trial_ends_at', '<=', now()->addDays($days))
+            ->whereDate('trial_ends_at', '>', now());
+    }
+
+    public function scopeInGracePeriod($query)
+    {
+        return $query->where('status', 'expired')
+            ->whereDate('grace_period_ends_at', '>', now());
     }
 
     public function scopeActive($query)
@@ -145,9 +166,26 @@ class Subscription extends Model
         ]);
     }
 
+    public function isInGracePeriod(): bool
+    {
+        return $this->status === 'expired'
+            && $this->grace_period_ends_at
+            && $this->grace_period_ends_at->isFuture();
+    }
+
     public function markAsExpired(): void
     {
-        $this->update(['status' => 'expired']);
+        $this->update([
+            'status' => 'expired',
+            'expired_at' => now(),
+        ]);
+    }
+
+    public function applyGracePeriod(int $days = 3): void
+    {
+        $this->update([
+            'grace_period_ends_at' => now()->addDays($days),
+        ]);
     }
 
     public function cancel(?string $reason = null): void

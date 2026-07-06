@@ -45,7 +45,7 @@ Route::middleware(['auth', 'verified'])
 
         Route::get('/create', MemberForm::class)
             ->name('create')
-            ->middleware('permission:create-members');
+            ->middleware(['permission:create-members', 'subscription:register_members']);
 
         Route::get('/requests', MembershipRequestList::class)
             ->name('requests')

@@ -3,10 +3,12 @@
 namespace App\Modules\Notifications\Models;
 
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class InAppNotification extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'user_id',
         'type',

@@ -56,7 +56,7 @@ class SendOverdueNotificationJob implements ShouldQueue
                 $message = "🚨 *Library Overdue Notice*\n\n"
                     ."Hi {$user->name},\n\n"
                     ."The book \"{$bookTitle}\" (Barcode: {$this->borrowRecord->bookCopy?->barcode}) is **{$daysOverdue} day(s) overdue**.\n\n"
-                    ."Please return it immediately to avoid accumulating fines (KES 50/day).\n\n"
+                    ."Please return it immediately to avoid accumulating fines (KES " . config('fines.daily_rate', 50) . "/day).\n\n"
                     ."Thank you,\n"
                     .config('app.name');
                 $whatsapp->send($user->phone, $message);

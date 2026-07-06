@@ -9,6 +9,7 @@ use App\Modules\Catalog\Models\Subject;
 use App\Modules\Catalog\Services\BookService;
 use App\Services\ExportService;
 use Illuminate\Http\Response;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -57,6 +58,30 @@ class BookList extends Component
         return app(ExportService::class)->exportBooksCsv();
     }
 
+    #[Computed]
+    public function categories()
+    {
+        return Category::active()->parents()->with('children')->get();
+    }
+
+    #[Computed]
+    public function authors()
+    {
+        return Author::active()->orderBy('name')->get();
+    }
+
+    #[Computed]
+    public function publishers()
+    {
+        return Publisher::active()->orderBy('name')->get();
+    }
+
+    #[Computed]
+    public function subjects()
+    {
+        return Subject::active()->orderBy('name')->get();
+    }
+
     public function render()
     {
         $service = app(BookService::class);
@@ -76,10 +101,10 @@ class BookList extends Component
 
         return view('catalog::livewire.book-list', [
             'books' => $books,
-            'categories' => Category::active()->parents()->with('children')->get(),
-            'authors' => Author::active()->orderBy('name')->get(),
-            'publishers' => Publisher::active()->orderBy('name')->get(),
-            'subjects' => Subject::active()->orderBy('name')->get(),
+            'categories' => $this->categories,
+            'authors' => $this->authors,
+            'publishers' => $this->publishers,
+            'subjects' => $this->subjects,
         ]);
     }
 }

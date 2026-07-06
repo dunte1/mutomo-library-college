@@ -182,5 +182,5 @@ return [
     |
     */
 
-    'release_token' => 'a',
+    'release_token' => 'lDICIsZYpqEBrVI2LkQrO0CKVB4c4Y9a3zdh45X4yDw=',
 ];

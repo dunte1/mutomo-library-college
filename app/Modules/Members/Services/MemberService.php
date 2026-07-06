@@ -122,12 +122,12 @@ class MemberService
                 report($e);
             }
 
-            // Send welcome email with credentials
-            if ($createUser && ! empty($member->email) && $member->user_id && $plainPassword) {
+            // Send welcome email with password reset link
+            if ($createUser && ! empty($member->email) && $member->user_id) {
                 try {
                     $member->load('user');
                     if ($member->user) {
-                        Mail::to($member->email)->send(new WelcomeCredentials($member->user, $plainPassword));
+                        Mail::to($member->email)->send(new WelcomeCredentials($member->user));
                     }
                 } catch (\Throwable $e) {
                     report($e);

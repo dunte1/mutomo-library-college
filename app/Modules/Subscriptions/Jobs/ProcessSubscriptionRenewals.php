@@ -17,12 +17,18 @@ class ProcessSubscriptionRenewals implements ShouldQueue
         // Process expired subscriptions and send expiration notices
         $expired = $subscriptionService->processExpiredSubscriptions();
 
+        // Process trial expirations
+        $trialsExpired = $subscriptionService->processTrialExpirations();
+
+        // Process grace period expirations
+        $graceExpired = $subscriptionService->processGracePeriodExpirations();
+
         // Process auto-renewals
         $renewed = $subscriptionService->processDueRenewals();
 
         // Send expiring soon notifications (7 days before expiry)
         $expiringSoonNotified = $subscriptionService->sendExpiringSoonNotifications(7);
 
-        Log::info("Subscription processing: {$expired} expired, {$renewed} renewed, {$expiringSoonNotified} expiring-soon notified");
+        Log::info("Subscription processing: {$expired} expired, {$trialsExpired} trials expired, {$graceExpired} grace expired, {$renewed} renewed, {$expiringSoonNotified} expiring-soon notified");
     }
 }

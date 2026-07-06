@@ -68,8 +68,10 @@ class AppRouter {
     '/register',
     '/forgot-password',
     '/two-factor',
-    '/two-factor-setup',
   };
+
+  // '/two-factor-setup' is deliberately NOT in _authRoutes — authenticated
+  // users need to access it from Settings to enable 2FA.
 
   static final Map<String, bool Function(UserModel)> _permissionGates = {
     '/dashboard': (user) => PermissionHelper.canAccessDashboard(user),

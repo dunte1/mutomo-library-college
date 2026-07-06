@@ -4,6 +4,7 @@ namespace App\Modules\Subscriptions\Livewire;
 
 use App\Modules\Finance\Services\MpesaService;
 use App\Modules\Subscriptions\Models\Plan;
+use App\Modules\Subscriptions\Models\Subscription;
 use App\Modules\Subscriptions\Services\StripeService;
 use App\Modules\Subscriptions\Services\SubscriptionService;
 use Livewire\Component;
@@ -24,6 +25,8 @@ class SubscriptionCheckout extends Component
 
     public ?string $stripeUrl = null;
 
+    public bool $isRenewal = false;
+
     protected function rules(): array
     {
         return [
@@ -40,9 +43,50 @@ class SubscriptionCheckout extends Component
 
         $this->plan = $plan->loadMissing('subscriptions');
 
-        if (auth()->user()->activeSubscription) {
+        $user = auth()->user();
+
+        if ($user->activeSubscription) {
             session()->flash('error', 'You already have an active subscription.');
+
+            return;
         }
+
+        $expiredSubscription = Subscription::where('user_id', $user->id)
+            ->where('plan_id', $plan->id)
+            ->whereIn('status', ['expired', 'cancelled'])
+            ->latest('id')
+            ->first();
+
+        if ($expiredSubscription) {
+            $this->isRenewal = true;
+        }
+    }
+
+    protected function getOrCreateSubscription(): Subscription
+    {
+        $subscriptionService = app(SubscriptionService::class);
+
+        if ($this->isRenewal) {
+            $existing = Subscription::where('user_id', auth()->id())
+                ->where('plan_id', $this->plan->id)
+                ->whereIn('status', ['expired', 'cancelled'])
+                ->latest('id')
+                ->first();
+
+            if ($existing) {
+                $existing->update([
+                    'status' => 'pending',
+                    'payment_method' => $this->paymentMethod,
+                ]);
+
+                return $existing;
+            }
+        }
+
+        return $subscriptionService->createSubscription(auth()->user(), $this->plan, [
+            'status' => 'pending',
+            'payment_method' => $this->paymentMethod,
+        ]);
     }
 
     public function payWithMpesa(): void
@@ -58,11 +102,7 @@ class SubscriptionCheckout extends Component
         $this->processing = true;
 
         try {
-            $subscriptionService = app(SubscriptionService::class);
-            $subscription = $subscriptionService->createSubscription(auth()->user(), $this->plan, [
-                'status' => 'pending',
-                'payment_method' => 'mpesa',
-            ]);
+            $subscription = $this->getOrCreateSubscription();
 
             $mpesaService = app(MpesaService::class);
             $result = $mpesaService->stkPush(
@@ -99,11 +139,7 @@ class SubscriptionCheckout extends Component
         $this->processing = true;
 
         try {
-            $subscriptionService = app(SubscriptionService::class);
-            $subscription = $subscriptionService->createSubscription(auth()->user(), $this->plan, [
-                'status' => 'pending',
-                'payment_method' => 'stripe',
-            ]);
+            $subscription = $this->getOrCreateSubscription();
 
             $stripeService = app(StripeService::class);
             $successUrl = route('subscriptions.my', [], true);

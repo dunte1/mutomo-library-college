@@ -16,9 +16,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->prefix('catalog')->name('catalog.')->group(function () {
     Route::get('/books', BookList::class)->name('books.index')->middleware('permission:view-books');
-    Route::get('/books/create', BookForm::class)->name('books.create')->middleware('permission:create-books');
-    Route::get('/books/bulk-upload', BookBulkUpload::class)->name('books.bulk-upload')->middleware('permission:create-books');
-    Route::get('/books/{id}/edit', BookForm::class)->name('books.edit')->middleware('permission:edit-books');
+    Route::get('/books/create', BookForm::class)->name('books.create')->middleware(['permission:create-books', 'subscription:add_books']);
+    Route::get('/books/bulk-upload', BookBulkUpload::class)->name('books.bulk-upload')->middleware(['permission:create-books', 'subscription:add_books']);
+    Route::get('/books/{id}/edit', BookForm::class)->name('books.edit')->middleware(['permission:edit-books', 'subscription:add_books']);
     Route::get('/books/{id}', BookShow::class)->name('books.show')->middleware('permission:view-books');
 
     Route::get('/categories', CategoryList::class)->name('categories')->middleware('permission:view-books');

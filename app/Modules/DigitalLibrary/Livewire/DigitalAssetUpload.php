@@ -5,6 +5,7 @@ namespace App\Modules\DigitalLibrary\Livewire;
 use App\Modules\Catalog\Models\Book;
 use App\Modules\DigitalLibrary\Models\DigitalAssetCategory;
 use App\Modules\DigitalLibrary\Services\DigitalLibraryService;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -95,11 +96,23 @@ class DigitalAssetUpload extends Component
         return $this->redirect(route('digital-library.show', $asset), navigate: true);
     }
 
+    #[Computed]
+    public function categories()
+    {
+        return DigitalAssetCategory::active()->get();
+    }
+
+    #[Computed]
+    public function books()
+    {
+        return Book::active()->orderBy('title')->get();
+    }
+
     public function render()
     {
         return view('digital-library::livewire.digital-asset-upload', [
-            'categories' => DigitalAssetCategory::active()->get(),
-            'books' => Book::active()->orderBy('title')->get(),
+            'categories' => $this->categories,
+            'books' => $this->books,
         ])->layout('layouts.app');
     }
 }

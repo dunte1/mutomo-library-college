@@ -12,7 +12,7 @@ This is a reminder that the following book is **overdue** and needs to be return
 **Days Overdue:** {{ $daysOverdue }}
 </x-mail::panel>
 
-Please return the book as soon as possible to avoid further fines. Overdue fines are calculated at KES 50 per day.
+Please return the book as soon as possible to avoid further fines. Overdue fines are calculated at KES {{ number_format($finePerDay, 2) }} per day.
 
 <x-mail::button :url="url('/circulation')">
 View My Borrows

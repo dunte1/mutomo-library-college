@@ -4,6 +4,7 @@ namespace App\Modules\Subscriptions\Providers;
 
 use App\Modules\Subscriptions\Livewire\Admin\PlanForm;
 use App\Modules\Subscriptions\Livewire\Admin\PlanList;
+use App\Modules\Subscriptions\Livewire\Admin\RevenueDashboard;
 use App\Modules\Subscriptions\Livewire\Admin\SubscriptionList;
 use App\Modules\Subscriptions\Livewire\MySubscription;
 use App\Modules\Subscriptions\Livewire\SubscriptionCheckout;
@@ -29,5 +30,6 @@ class SubscriptionsServiceProvider extends ServiceProvider
         Livewire::component('admin.plan-list', PlanList::class);
         Livewire::component('admin.plan-form', PlanForm::class);
         Livewire::component('admin.subscription-list', SubscriptionList::class);
+        Livewire::component('admin.revenue-dashboard', RevenueDashboard::class);
     }
 }
