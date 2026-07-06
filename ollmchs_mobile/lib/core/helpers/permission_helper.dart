@@ -33,7 +33,8 @@ class PermissionHelper {
   static const String permissionSuspendMembers = 'suspend-members';
   static const String permissionViewDigitalAssets = 'view-digital-assets';
   static const String permissionUploadDigitalAssets = 'upload-digital-assets';
-  static const String permissionDownloadDigitalAssets = 'download-digital-assets';
+  static const String permissionDownloadDigitalAssets =
+      'download-digital-assets';
   static const String permissionViewRecommendations = 'view-recommendations';
   static const String permissionViewLibraryCards = 'view-library-cards';
   static const String permissionManageLibraryCards = 'manage-library-cards';
@@ -85,8 +86,14 @@ class PermissionHelper {
 
   static bool isStudent(UserModel user) => hasRole(user, roleStudent);
   static bool isLecturer(UserModel user) => hasRole(user, roleLecturer);
-  static bool isStaff(UserModel user) =>
-      hasAnyRole(user, [roleStaff, roleLibrarian, roleAssistantLibrarian, roleFinanceOfficer, roleIctAdmin, roleDepartmentHead]);
+  static bool isStaff(UserModel user) => hasAnyRole(user, [
+    roleStaff,
+    roleLibrarian,
+    roleAssistantLibrarian,
+    roleFinanceOfficer,
+    roleIctAdmin,
+    roleDepartmentHead,
+  ]);
   static bool isAdmin(UserModel user) =>
       hasAnyRole(user, [roleAdmin, roleSuperAdmin]);
   static bool isStudentOrLecturer(UserModel user) =>
@@ -97,15 +104,18 @@ class PermissionHelper {
 
   static bool canAccessDashboard(UserModel user) =>
       _permissionsUnrestricted(user) ||
-      hasPermission(user, permissionViewDashboard) || isAdmin(user);
+      hasPermission(user, permissionViewDashboard) ||
+      isAdmin(user);
   static bool canViewBooks(UserModel user) =>
       _permissionsUnrestricted(user) ||
-      hasPermission(user, permissionViewBooks) || isAdmin(user);
+      hasPermission(user, permissionViewBooks) ||
+      isAdmin(user);
   static bool canCreateBooks(UserModel user) =>
       hasPermission(user, permissionCreateBooks) || isAdmin(user);
   static bool canBorrowBooks(UserModel user) =>
       _permissionsUnrestricted(user) ||
-      hasPermission(user, permissionBorrowBooks) || isAdmin(user);
+      hasPermission(user, permissionBorrowBooks) ||
+      isAdmin(user);
   static bool canReturnBooks(UserModel user) =>
       hasPermission(user, permissionReturnBooks) || isAdmin(user);
   static bool canViewCirculation(UserModel user) =>
@@ -116,7 +126,8 @@ class PermissionHelper {
       hasPermission(user, permissionCreateMembers) || isAdmin(user);
   static bool canAccessDigitalLibrary(UserModel user) =>
       _permissionsUnrestricted(user) ||
-      hasPermission(user, permissionViewDigitalAssets) || isAdmin(user);
+      hasPermission(user, permissionViewDigitalAssets) ||
+      isAdmin(user);
   static bool canDownloadDigitalAssets(UserModel user) =>
       hasPermission(user, permissionDownloadDigitalAssets) || isAdmin(user);
   static bool canViewLibraryCards(UserModel user) =>
@@ -137,6 +148,13 @@ class PermissionHelper {
       hasPermission(user, permissionSendMessages) || isAdmin(user);
   static bool canViewMessages(UserModel user) =>
       hasPermission(user, permissionViewMessages) || isAdmin(user);
+  static bool canAccessNotifications(UserModel user) =>
+      _permissionsUnrestricted(user) ||
+      hasAnyPermission(user, [
+        permissionViewNotificationLogs,
+        permissionSendNotifications,
+      ]) ||
+      isAdmin(user);
   static bool canViewRecommendations(UserModel user) =>
       hasPermission(user, permissionViewRecommendations) || isAdmin(user);
   static bool canViewAssignments(UserModel user) =>
