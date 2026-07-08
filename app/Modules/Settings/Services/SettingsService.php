@@ -180,7 +180,7 @@ class SettingsService
 
     public function getAllGrouped(): array
     {
-        return Setting::all()->groupBy('group')->map(function ($settings) {
+        return Setting::lazy()->collect()->groupBy('group')->map(function ($settings) {
             return $settings->keyBy('key')->map(function ($setting) {
                 return $this->castValueForDisplay($setting->value, $setting->type);
             });

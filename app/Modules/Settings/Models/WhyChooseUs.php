@@ -3,12 +3,13 @@
 namespace App\Modules\Settings\Models;
 
 use App\Modules\Shared\Traits\Auditable;
+use App\Modules\Shared\Traits\Searchable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WhyChooseUs extends Model
 {
-    use Auditable, SoftDeletes;
+    use Auditable, Searchable, SoftDeletes;
 
     protected $fillable = [
         'title',
@@ -41,8 +42,8 @@ class WhyChooseUs extends Model
     public function scopeSearch($query, $term)
     {
         return $query->where(function ($q) use ($term) {
-            $q->where('title', 'like', "%{$term}%")
-                ->orWhere('description', 'like', "%{$term}%");
+            $q->whereLike('title', $term)
+                ->orWhereLike('description', $term);
         });
     }
 }

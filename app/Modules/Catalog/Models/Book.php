@@ -4,6 +4,7 @@ namespace App\Modules\Catalog\Models;
 
 use App\Modules\DigitalLibrary\Models\DigitalAsset;
 use App\Modules\Shared\Traits\Auditable;
+use App\Modules\Shared\Traits\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Book extends Model
 {
-    use Auditable, HasFactory, SoftDeletes;
+    use Auditable, HasFactory, Searchable, SoftDeletes;
 
     protected $fillable = [
         'isbn',
@@ -100,6 +101,11 @@ class Book extends Model
         return $this->availableCopies()->count();
     }
 
+    public function getAvailableCopiesAttribute(): int
+    {
+        return $this->availableCopies()->count();
+    }
+
     public function getTotalCopiesAttribute(): int
     {
         return $this->copies()->count();
@@ -113,17 +119,16 @@ class Book extends Model
     public function scopeSearch($query, $term)
     {
         return $query->where(function ($q) use ($term) {
-            $q->where('title', 'like', "%{$term}%")
-                ->orWhere('isbn', 'like', "%{$term}%")
-                ->orWhere('description', 'like', "%{$term}%")
+            $q->whereFullText('title,description', $term)
+                ->orWhereLike('isbn', $term)
                 ->orWhereHas('authors', function ($q) use ($term) {
-                    $q->where('name', 'like', "%{$term}%");
+                    $q->whereLike('name', $term);
                 })
                 ->orWhereHas('publisher', function ($q) use ($term) {
-                    $q->where('name', 'like', "%{$term}%");
+                    $q->whereLike('name', $term);
                 })
                 ->orWhereHas('subjects', function ($q) use ($term) {
-                    $q->where('name', 'like', "%{$term}%");
+                    $q->whereLike('name', $term);
                 });
         });
     }

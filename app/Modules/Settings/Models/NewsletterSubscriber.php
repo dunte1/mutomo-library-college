@@ -2,10 +2,12 @@
 
 namespace App\Modules\Settings\Models;
 
+use App\Modules\Shared\Traits\Searchable;
 use Illuminate\Database\Eloquent\Model;
 
 class NewsletterSubscriber extends Model
 {
+    use Searchable;
     protected $fillable = [
         'email',
         'name',
@@ -31,8 +33,8 @@ class NewsletterSubscriber extends Model
     public function scopeSearch($query, $term)
     {
         return $query->where(function ($q) use ($term) {
-            $q->where('email', 'like', "%{$term}%")
-                ->orWhere('name', 'like', "%{$term}%");
+            $q->whereLike('email', $term)
+                ->orWhereLike('name', $term);
         });
     }
 }

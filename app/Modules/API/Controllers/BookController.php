@@ -22,7 +22,7 @@ class BookController extends Controller
 
         $books = Book::with(['authors', 'category', 'publisher'])
             ->when($data['search'] ?? null, fn ($q) => $q->where(function ($q) use ($data) {
-                $q->where('title', 'like', '%'.$data['search'].'%')
+                $q->whereFullText('title,description', $data['search'])
                     ->orWhere('isbn', 'like', '%'.$data['search'].'%');
             }))
             ->when($data['category'] ?? null, fn ($q) => $q->whereHas('category', fn ($q) => $q->where('slug', $data['category'])))
@@ -49,7 +49,7 @@ class BookController extends Controller
             'q' => 'required|string|min:2|max:255',
         ]);
 
-        $books = Book::where('title', 'like', "%{$data['q']}%")
+        $books = Book::whereFullText('title,description', $data['q'])
             ->orWhere('isbn', 'like', "%{$data['q']}%")
             ->orWhereHas('authors', fn ($q) => $q->where('name', 'like', "%{$data['q']}%"))
             ->limit(20)

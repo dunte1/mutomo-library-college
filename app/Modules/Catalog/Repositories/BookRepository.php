@@ -14,7 +14,9 @@ class BookRepository implements BaseRepositoryInterface
 
     public function all(array $columns = ['*']): Collection
     {
-        return $this->model->with(['authors', 'publisher', 'category', 'copies'])->get($columns);
+        return $this->model->with(['authors', 'publisher', 'category'])
+            ->lazy($columns)
+            ->collect();
     }
 
     public function paginate(int $perPage = 15, array $columns = ['*']): LengthAwarePaginator

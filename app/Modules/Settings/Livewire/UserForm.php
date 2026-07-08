@@ -129,6 +129,7 @@ class UserForm extends Component
             $data['email_verified_at'] = now();
             $user = User::create($data);
             $user->assignRole($this->selectedRoles);
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
             session()->flash('success', 'User created successfully.');
         }
 

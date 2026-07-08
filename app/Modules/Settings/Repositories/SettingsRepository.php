@@ -34,6 +34,6 @@ class SettingsRepository
 
     public function getAll(): Collection
     {
-        return Setting::all();
+        return Setting::lazy()->collect();
     }
 }

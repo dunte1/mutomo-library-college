@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Modules\Circulation\Models\BorrowRecord;
 use App\Modules\Circulation\Models\Fine;
 use App\Modules\Shared\Traits\Auditable;
+use App\Modules\Shared\Traits\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Member extends Model
 {
-    use Auditable, HasFactory, SoftDeletes;
+    use Auditable, HasFactory, Searchable, SoftDeletes;
 
     const STATUS_ACTIVE = 'active';
 
@@ -148,13 +149,12 @@ class Member extends Model
     public function scopeSearch($query, string $term)
     {
         return $query->where(function ($q) use ($term) {
-            $q->where('member_id', 'like', "%{$term}%")
-                ->orWhere('first_name', 'like', "%{$term}%")
-                ->orWhere('last_name', 'like', "%{$term}%")
-                ->orWhere('email', 'like', "%{$term}%")
-                ->orWhere('phone', 'like', "%{$term}%")
-                ->orWhere('id_number', 'like', "%{$term}%")
-                ->orWhere('admission_number', 'like', "%{$term}%");
+            $q->whereFullText('first_name,last_name', $term)
+                ->orWhereLike('member_id', $term)
+                ->orWhereLike('email', $term)
+                ->orWhereLike('phone', $term)
+                ->orWhereLike('id_number', $term)
+                ->orWhereLike('admission_number', $term);
         });
     }
 

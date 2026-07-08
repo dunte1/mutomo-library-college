@@ -15,8 +15,7 @@ class DigitalAssetController extends Controller
             ->when(request('type'), fn ($q) => $q->where('file_type', request('type')))
             ->when(request('category'), fn ($q) => $q->where('category_id', request('category')))
             ->when(request('search'), fn ($q) => $q->where(function ($q) {
-                $q->where('title', 'like', '%'.request('search').'%')
-                    ->orWhere('author', 'like', '%'.request('search').'%');
+                $q->whereFullText('title,author', request('search'));
             }))
             ->paginate(request('per_page', 15));
 

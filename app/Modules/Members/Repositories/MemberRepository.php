@@ -14,7 +14,9 @@ class MemberRepository implements BaseRepositoryInterface
 
     public function all(array $columns = ['*']): Collection
     {
-        return $this->model->with(['registeredBy'])->get($columns);
+        return $this->model->with(['registeredBy'])
+            ->lazy($columns)
+            ->collect();
     }
 
     public function paginate(int $perPage = 15, array $columns = ['*']): LengthAwarePaginator
@@ -100,13 +102,12 @@ class MemberRepository implements BaseRepositoryInterface
     public function search(string $query, int $perPage = 15): LengthAwarePaginator
     {
         return $this->model->where(function ($q) use ($query) {
-            $q->where('member_id', 'like', "%{$query}%")
-                ->orWhere('first_name', 'like', "%{$query}%")
-                ->orWhere('last_name', 'like', "%{$query}%")
-                ->orWhere('email', 'like', "%{$query}%")
-                ->orWhere('phone', 'like', "%{$query}%")
-                ->orWhere('id_number', 'like', "%{$query}%")
-                ->orWhere('admission_number', 'like', "%{$query}%");
+            $q->whereFullText('first_name,last_name', $query)
+                ->orWhereLike('member_id', $query)
+                ->orWhereLike('email', $query)
+                ->orWhereLike('phone', $query)
+                ->orWhereLike('id_number', $query)
+                ->orWhereLike('admission_number', $query);
         })->with(['registeredBy'])->paginate($perPage);
     }
 

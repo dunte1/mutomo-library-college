@@ -3,12 +3,13 @@
 namespace App\Modules\Catalog\Models;
 
 use App\Modules\Shared\Traits\Auditable;
+use App\Modules\Shared\Traits\Searchable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Category extends Model
 {
-    use Auditable, SoftDeletes;
+    use Auditable, Searchable, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -56,6 +57,6 @@ class Category extends Model
 
     public function scopeSearch($query, $term)
     {
-        return $query->where('name', 'like', "%{$term}%");
+        return $query->whereLike('name', $term);
     }
 }

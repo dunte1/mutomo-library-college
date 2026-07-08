@@ -3,12 +3,13 @@
 namespace App\Modules\Settings\Models;
 
 use App\Modules\Shared\Traits\Auditable;
+use App\Modules\Shared\Traits\Searchable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Testimonial extends Model
 {
-    use Auditable, SoftDeletes;
+    use Auditable, Searchable, SoftDeletes;
 
     protected $fillable = [
         'author_name',
@@ -54,9 +55,9 @@ class Testimonial extends Model
     public function scopeSearch($query, $term)
     {
         return $query->where(function ($q) use ($term) {
-            $q->where('author_name', 'like', "%{$term}%")
-                ->orWhere('author_role', 'like', "%{$term}%")
-                ->orWhere('content', 'like', "%{$term}%");
+            $q->whereLike('author_name', $term)
+                ->orWhereLike('author_role', $term)
+                ->orWhereLike('content', $term);
         });
     }
 

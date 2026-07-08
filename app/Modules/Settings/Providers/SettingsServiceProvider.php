@@ -43,6 +43,7 @@ use App\Modules\Settings\Livewire\UserList;
 use App\Modules\Settings\Livewire\WhyChooseUsForm;
 use App\Modules\Settings\Livewire\WhyChooseUsList;
 use App\Modules\Settings\Models\Setting;
+use App\Modules\Settings\Observers\SettingObserver;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -131,5 +132,7 @@ class SettingsServiceProvider extends ServiceProvider
         Livewire::component('testimonial-form', TestimonialForm::class);
         Livewire::component('newsletter-subscribe', NewsletterSubscribe::class);
         Livewire::component('newsletter-subscriber-list', NewsletterSubscriberList::class);
+
+        Setting::observe(SettingObserver::class);
     }
 }
