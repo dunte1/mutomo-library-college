@@ -10,25 +10,45 @@ class LoansRepository {
   LoansRepository(this._api, {HiveCacheService? cache})
       : _cache = cache ?? HiveCacheService();
 
-  Future<List<LoanModel>> getActiveLoans() async {
+  Future<PaginatedResult<LoanModel>> getActiveLoans({
+    int page = 1,
+  }) async {
     try {
-      final response = await _api.get('/v1/loans/active');
+      final response = await _api.get(
+        '/v1/loans/active',
+        queryParameters: {'page': page, 'per_page': 20},
+      );
       final rawList = (response.data['data'] as List<dynamic>?)
               ?.cast<Map<String, dynamic>>() ??
           [];
       await _cache.cacheLoans(rawList);
-      return rawList
-          .map((e) => LoanModel.fromJson(e))
-          .toList();
+      return _parseActiveLoans(response.data, rawList);
     } catch (e) {
       final cached = _cache.getCachedLoans();
       if (cached != null) {
-        return cached
-            .map((e) => LoanModel.fromJson(e))
-            .toList();
+        final items = cached.map((e) => LoanModel.fromJson(e)).toList();
+        return PaginatedResult(
+          items: items,
+          hasMore: false,
+          total: items.length,
+        );
       }
       rethrow;
     }
+  }
+
+  PaginatedResult<LoanModel> _parseActiveLoans(
+    dynamic data,
+    List<Map<String, dynamic>> rawList,
+  ) {
+    final meta = data['meta'] as Map<String, dynamic>? ?? data;
+    return PaginatedResult(
+      items: rawList.map((e) => LoanModel.fromJson(e)).toList(),
+      hasMore:
+          (meta['current_page'] as int? ?? 1) <
+          (meta['last_page'] as int? ?? 1),
+      total: meta['total'] as int? ?? rawList.length,
+    );
   }
 
   Future<PaginatedResult<LoanHistoryModel>> getLoanHistory({

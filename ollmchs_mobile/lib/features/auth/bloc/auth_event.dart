@@ -87,3 +87,28 @@ class VerifyTwoFactorEvent extends AuthEvent {
   @override
   List<Object?> get props => [userId, code, tempToken];
 }
+
+class EnableTwoFactorSetupEvent extends AuthEvent {
+  final String password;
+  const EnableTwoFactorSetupEvent({required this.password});
+  @override
+  List<Object?> get props => [password];
+}
+
+class VerifyTwoFactorSetupEvent extends AuthEvent {
+  final String code;
+  const VerifyTwoFactorSetupEvent({required this.code});
+  @override
+  List<Object?> get props => [code];
+}
+
+class VerifyTwoFactorRecoveryEvent extends AuthEvent {
+  final int userId;
+  final String recoveryCode;
+  const VerifyTwoFactorRecoveryEvent({
+    required this.userId,
+    required this.recoveryCode,
+  });
+  @override
+  List<Object?> get props => [userId, recoveryCode];
+}

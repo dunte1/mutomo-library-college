@@ -191,7 +191,7 @@ class NotificationsBloc extends Bloc<NotificationEvent, NotificationsState> {
   ) async {
     try {
       final response = await _api.get('/v1/notifications/unread-count');
-      final count = response.data['count'] as int? ?? 0;
+      final count = response.data['unread_count'] as int? ?? 0;
       final current = state;
       if (current is NotificationsLoaded) {
         emit(

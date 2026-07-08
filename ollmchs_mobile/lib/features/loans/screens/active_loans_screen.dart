@@ -18,6 +18,8 @@ class ActiveLoansScreen extends StatefulWidget {
 class _ActiveLoansScreenState extends State<ActiveLoansScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final ScrollController _activeScrollController = ScrollController();
+  final ScrollController _historyScrollController = ScrollController();
 
   @override
   void initState() {
@@ -25,11 +27,40 @@ class _ActiveLoansScreenState extends State<ActiveLoansScreen>
     _tabController = TabController(length: 2, vsync: this);
     context.read<LoansBloc>().add(const LoadActiveLoans());
     context.read<LoansBloc>().add(const LoadLoanHistory());
+
+    _activeScrollController.addListener(_onActiveScroll);
+    _historyScrollController.addListener(_onHistoryScroll);
+  }
+
+  void _onActiveScroll() {
+    if (_activeScrollController.position.pixels >=
+        _activeScrollController.position.maxScrollExtent - 200) {
+      final state = context.read<LoansBloc>().state;
+      if (state is LoansLoaded && state.hasMoreActiveLoans) {
+        context
+            .read<LoansBloc>()
+            .add(LoadActiveLoans(page: state.activeLoansPage + 1));
+      }
+    }
+  }
+
+  void _onHistoryScroll() {
+    if (_historyScrollController.position.pixels >=
+        _historyScrollController.position.maxScrollExtent - 200) {
+      final state = context.read<LoansBloc>().state;
+      if (state is LoansLoaded && state.hasMoreHistory) {
+        context
+            .read<LoansBloc>()
+            .add(LoadLoanHistory(page: state.historyPage + 1));
+      }
+    }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _activeScrollController.dispose();
+    _historyScrollController.dispose();
     super.dispose();
   }
 
@@ -86,16 +117,24 @@ class _ActiveLoansScreenState extends State<ActiveLoansScreen>
 
   Widget _buildActiveTab(LoansState state, ThemeData theme) {
     final loans = state is LoansLoaded ? state.activeLoans : <LoanModel>[];
-    if (loans.isEmpty) {
+    final hasMore = state is LoansLoaded && state.hasMoreActiveLoans;
+    if (loans.isEmpty && state is! LoansLoading) {
       return const Center(child: Text('No active loans'));
     }
     return RefreshIndicator(
       onRefresh: () async =>
           context.read<LoansBloc>().add(const LoadActiveLoans()),
       child: ListView.builder(
+        controller: _activeScrollController,
         padding: const EdgeInsets.all(12),
-        itemCount: loans.length,
+        itemCount: loans.length + (hasMore ? 1 : 0),
         itemBuilder: (_, i) {
+          if (i == loans.length) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
           final loan = loans[i];
           final isOverdue = loan.isOverdue;
           return Card(
@@ -263,16 +302,24 @@ class _ActiveLoansScreenState extends State<ActiveLoansScreen>
 
   Widget _buildHistoryTab(LoansState state, ThemeData theme) {
     final history = state is LoansLoaded ? state.history : <LoanHistoryModel>[];
-    if (history.isEmpty) {
+    final hasMore = state is LoansLoaded && state.hasMoreHistory;
+    if (history.isEmpty && state is! LoansLoading) {
       return const Center(child: Text('No borrowing history'));
     }
     return RefreshIndicator(
       onRefresh: () async =>
           context.read<LoansBloc>().add(const LoadLoanHistory()),
       child: ListView.builder(
+        controller: _historyScrollController,
         padding: const EdgeInsets.all(12),
-        itemCount: history.length,
+        itemCount: history.length + (hasMore ? 1 : 0),
         itemBuilder: (_, i) {
+          if (i == history.length) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
           final loan = history[i];
           return Card(
             child: ListTile(

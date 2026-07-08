@@ -32,7 +32,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       context.read<AuthBloc>().add(
         ForgotPasswordEvent(email: _emailController.text.trim()),
       );
-      setState(() => _codeSent = true);
     }
   }
 
@@ -184,6 +183,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   listener: (context, state) {
                     if (state is Authenticated) {
                       context.goNamed('dashboard');
+                    }
+                    if (state is PasswordResetLinkSent) {
+                      setState(() => _codeSent = true);
                     }
                   },
                   builder: (context, state) {

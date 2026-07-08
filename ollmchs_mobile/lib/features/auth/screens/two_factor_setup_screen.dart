@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../../auth/repositories/auth_repository.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
 
 class TwoFactorSetupScreen extends StatefulWidget {
   const TwoFactorSetupScreen({super.key});
@@ -12,88 +14,23 @@ class TwoFactorSetupScreen extends StatefulWidget {
 }
 
 class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
-  bool _loading = true;
-  String? _error;
-  String? _secret;
-  String? _qrCodeUrl;
-  List<String> _recoveryCodes = [];
-  bool _codesSaved = false;
-  bool _verifying = false;
   final _otpController = TextEditingController();
+  bool _codesSaved = false;
 
   @override
   void initState() {
     super.initState();
-    _enableTwoFactor();
+    _requestPassword();
   }
 
-  Future<void> _enableTwoFactor() async {
-    if (!mounted) return;
+  void _requestPassword() async {
     final password = await _showPasswordDialog();
     if (password == null || password.isEmpty) {
       if (mounted) Navigator.of(context).pop();
       return;
     }
-
-    try {
-      final repo = context.read<AuthRepository>();
-      final result = await repo.enableTwoFactor(password: password);
-
-      if (mounted) {
-        setState(() {
-          _secret = result['secret'];
-          _qrCodeUrl = result['qr_code_url'];
-          _recoveryCodes = result['recovery_codes'];
-          _loading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = 'Failed to start 2FA setup: $e';
-          _loading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _verifyAndActivate() async {
-    final code = _otpController.text.trim();
-    if (code.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Enter a 6-digit code from your authenticator app'),
-        ),
-      );
-      return;
-    }
-
-    setState(() => _verifying = true);
-    try {
-      final repo = context.read<AuthRepository>();
-      await repo.verifyTwoFactorSetup(code: code);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Two-factor authentication is now active'),
-          ),
-        );
-        Navigator.of(context).pop(true);
-      }
-    } catch (e) {
-      setState(() => _verifying = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Invalid code. Make sure your authenticator app is synced and try again.',
-            ),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-        _otpController.clear();
-      }
+    if (mounted) {
+      context.read<AuthBloc>().add(EnableTwoFactorSetupEvent(password: password));
     }
   }
 
@@ -127,9 +64,20 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
     );
   }
 
-  void _copyRecoveryCodes() {
-    final text = _recoveryCodes.join('\n');
-    Clipboard.setData(ClipboardData(text: text));
+  void _verifyAndActivate(String code) {
+    if (code.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter a 6-digit code from your authenticator app'),
+        ),
+      );
+      return;
+    }
+    context.read<AuthBloc>().add(VerifyTwoFactorSetupEvent(code: code));
+  }
+
+  void _copyRecoveryCodes(List<String> codes) {
+    Clipboard.setData(ClipboardData(text: codes.join('\n')));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Recovery codes copied to clipboard')),
     );
@@ -147,22 +95,37 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Enable Two-Factor Authentication')),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? Center(
+      body: BlocConsumer<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is TwoFactorSetupVerified) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+            Navigator.of(context).pop(true);
+          } else if (state is AuthError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: theme.colorScheme.error,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          if (state is AuthLoading && state is! TwoFactorSetupReady) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state is AuthError && state is! TwoFactorSetupReady) {
+            return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: theme.colorScheme.error,
-                    ),
+                    Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
                     const SizedBox(height: 16),
-                    Text(_error!, textAlign: TextAlign.center),
+                    Text(state.message, textAlign: TextAlign.center),
                     const SizedBox(height: 16),
                     FilledButton.tonal(
                       onPressed: () => Navigator.of(context).pop(),
@@ -171,180 +134,171 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
                   ],
                 ),
               ),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Step 1: Scan QR code
-                  _stepHeader(theme, 1, 'Scan QR Code'),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Open your authenticator app (Google Authenticator, Authy, etc.) and scan this QR code.',
-                    style: theme.textTheme.bodyMedium,
+            );
+          }
+
+          if (state is TwoFactorSetupReady) {
+            return _buildSetupContent(theme, state);
+          }
+
+          return const Center(child: CircularProgressIndicator());
+        },
+      ),
+    );
+  }
+
+  Widget _buildSetupContent(ThemeData theme, TwoFactorSetupReady state) {
+    final isVerifying = context.watch<AuthBloc>().state is AuthLoading;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _stepHeader(theme, 1, 'Scan QR Code'),
+          const SizedBox(height: 8),
+          Text(
+            'Open your authenticator app (Google Authenticator, Authy, etc.) and scan this QR code.',
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 16),
+          if (state.qrCodeUrl.isNotEmpty)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.colorScheme.outline),
+                ),
+                child: QrImageView(
+                  data: state.qrCodeUrl,
+                  version: QrVersions.auto,
+                  size: 200,
+                  eyeStyle: QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: theme.colorScheme.primary,
                   ),
-                  const SizedBox(height: 16),
-
-                  if (_qrCodeUrl != null && _qrCodeUrl!.isNotEmpty)
-                    Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: theme.colorScheme.outline),
-                        ),
-                        child: QrImageView(
-                          data: _qrCodeUrl!,
-                          version: QrVersions.auto,
-                          size: 200,
-                          eyeStyle: QrEyeStyle(
-                            eyeShape: QrEyeShape.square,
-                            color: theme.colorScheme.primary,
-                          ),
-                          dataModuleStyle: QrDataModuleStyle(
-                            dataModuleShape: QrDataModuleShape.square,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  if (_secret != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      'Or enter this code manually:',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 4),
-                    SelectableText(
-                      _secret!,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontFamily: 'monospace',
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 24),
-
-                  // Step 2: Save recovery codes
-                  _stepHeader(theme, 2, 'Save Recovery Codes'),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Save these codes somewhere safe. You can use each code once if you lose access to your authenticator app.',
-                    style: theme.textTheme.bodyMedium,
+                  dataModuleStyle: QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: theme.colorScheme.primary,
                   ),
-                  const SizedBox(height: 12),
-
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (final code in _recoveryCodes)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 2),
-                            child: Text(
-                              code,
-                              style: const TextStyle(
-                                fontFamily: 'monospace',
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Row(
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: _copyRecoveryCodes,
-                        icon: const Icon(Icons.copy, size: 16),
-                        label: const Text('Copy Codes'),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: CheckboxListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('I have saved these codes'),
-                          value: _codesSaved,
-                          onChanged: (v) =>
-                              setState(() => _codesSaved = v ?? false),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Step 3: Verify with authenticator code
-                  _stepHeader(theme, 3, 'Verify & Activate'),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Enter the 6-digit code from your authenticator app to confirm setup is working. 2FA will only be activated after successful verification.',
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 12),
-
-                  TextFormField(
-                    controller: _otpController,
-                    keyboardType: TextInputType.number,
-                    textAlign: TextAlign.center,
-                    maxLength: 6,
-                    enabled: !_verifying,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      letterSpacing: 8,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(6),
-                    ],
-                    decoration: const InputDecoration(
-                      hintText: '000000',
-                      counterText: '',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Activate button
-                  FilledButton(
-                    onPressed: !_verifying ? _verifyAndActivate : null,
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: _verifying
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text(
-                            'Activate Two-Factor Authentication',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
-                  ),
-                ],
+                ),
               ),
             ),
+          const SizedBox(height: 12),
+          Text('Or enter this code manually:', style: theme.textTheme.bodySmall),
+          const SizedBox(height: 4),
+          SelectableText(
+            state.secret,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontFamily: 'monospace',
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          _stepHeader(theme, 2, 'Save Recovery Codes'),
+          const SizedBox(height: 8),
+          Text(
+            'Save these codes somewhere safe. You can use each code once if you lose access to your authenticator app.',
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final code in state.recoveryCodes)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Text(
+                      code,
+                      style: const TextStyle(fontFamily: 'monospace', fontSize: 14),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _copyRecoveryCodes(state.recoveryCodes),
+                icon: const Icon(Icons.copy, size: 16),
+                label: const Text('Copy Codes'),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('I have saved these codes'),
+                  value: _codesSaved,
+                  onChanged: (v) => setState(() => _codesSaved = v ?? false),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          _stepHeader(theme, 3, 'Verify & Activate'),
+          const SizedBox(height: 8),
+          Text(
+            'Enter the 6-digit code from your authenticator app to confirm setup is working.',
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _otpController,
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            maxLength: 6,
+            enabled: !isVerifying,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              letterSpacing: 8,
+              fontWeight: FontWeight.bold,
+            ),
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(6),
+            ],
+            decoration: const InputDecoration(
+              hintText: '000000',
+              counterText: '',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: isVerifying
+                ? null
+                : () => _verifyAndActivate(_otpController.text.trim()),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+            child: isVerifying
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text(
+                    'Activate Two-Factor Authentication',
+                    style: TextStyle(fontSize: 16),
+                  ),
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -366,9 +320,7 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
         const SizedBox(width: 8),
         Text(
           title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
       ],
     );

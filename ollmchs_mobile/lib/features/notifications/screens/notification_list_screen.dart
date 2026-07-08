@@ -12,10 +12,33 @@ class NotificationListScreen extends StatefulWidget {
 }
 
 class _NotificationListScreenState extends State<NotificationListScreen> {
+  final ScrollController _scrollController = ScrollController();
+  int _currentPage = 1;
+
   @override
   void initState() {
     super.initState();
     context.read<NotificationsBloc>().add(const LoadNotifications());
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      final state = context.read<NotificationsBloc>().state;
+      if (state is NotificationsLoaded && state.hasMore) {
+        _currentPage++;
+        context
+            .read<NotificationsBloc>()
+            .add(LoadNotifications(page: _currentPage));
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -79,13 +102,23 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
               );
             }
             return RefreshIndicator(
-              onRefresh: () async => context.read<NotificationsBloc>().add(
-                const LoadNotifications(),
-              ),
+              onRefresh: () async {
+                _currentPage = 1;
+                context.read<NotificationsBloc>().add(
+                  const LoadNotifications(),
+                );
+              },
               child: ListView.builder(
+                controller: _scrollController,
                 padding: const EdgeInsets.all(8),
-                itemCount: state.notifications.length,
+                itemCount: state.notifications.length + (state.hasMore ? 1 : 0),
                 itemBuilder: (_, i) {
+                  if (i == state.notifications.length) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
                   final notification = state.notifications[i];
                   return Card(
                     color: notification.isRead

@@ -63,3 +63,23 @@ class TwoFactorRequired extends AuthState {
   @override
   List<Object?> get props => [userId, tempToken];
 }
+
+class TwoFactorSetupReady extends AuthState {
+  final String secret;
+  final String qrCodeUrl;
+  final List<String> recoveryCodes;
+  const TwoFactorSetupReady({
+    required this.secret,
+    required this.qrCodeUrl,
+    required this.recoveryCodes,
+  });
+  @override
+  List<Object?> get props => [secret, qrCodeUrl, recoveryCodes];
+}
+
+class TwoFactorSetupVerified extends AuthState {
+  final String message;
+  const TwoFactorSetupVerified({this.message = 'Two-factor authentication is now active'});
+  @override
+  List<Object?> get props => [message];
+}

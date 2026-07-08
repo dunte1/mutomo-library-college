@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/network/api_client.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -17,20 +18,64 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _admissionController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   String _selectedRole = 'student';
 
+  List<Map<String, dynamic>> _departments = [];
+  List<Map<String, dynamic>> _programs = [];
+  int? _selectedDepartmentId;
+  int? _selectedProgramId;
+  bool _isLoadingDepartments = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDepartments();
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _admissionController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchDepartments() async {
+    setState(() => _isLoadingDepartments = true);
+    try {
+      final api = context.read<ApiClient>();
+      final response = await api.get('/v1/departments');
+      final data = response.data['data'] as List<dynamic>? ?? [];
+      setState(() {
+        _departments = data.cast<Map<String, dynamic>>();
+        _isLoadingDepartments = false;
+      });
+    } catch (_) {
+      setState(() => _isLoadingDepartments = false);
+    }
+  }
+
+  Future<void> _fetchPrograms(int departmentId) async {
+    try {
+      final api = context.read<ApiClient>();
+      final response = await api.get(
+        '/v1/programs',
+        queryParameters: {'department_id': departmentId},
+      );
+      final data = response.data['data'] as List<dynamic>? ?? [];
+      setState(() {
+        _programs = data.cast<Map<String, dynamic>>();
+        _selectedProgramId = null;
+      });
+    } catch (_) {}
   }
 
   void _register() {
@@ -43,6 +88,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
           password: _passwordController.text,
           passwordConfirmation: _confirmPasswordController.text,
           role: _selectedRole,
+          admissionNumber: _selectedRole == 'student'
+              ? _admissionController.text.trim()
+              : null,
+          departmentId: _selectedRole == 'student'
+              ? _selectedDepartmentId
+              : null,
+          programId: _selectedRole == 'student' ? _selectedProgramId : null,
         ),
       );
     }
@@ -50,6 +102,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final showStudentFields = _selectedRole == 'student';
+
     return Scaffold(
       appBar: AppBar(title: const Text('Create Account')),
       body: SafeArea(
@@ -96,7 +150,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   keyboardType: TextInputType.phone,
                   textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
-                    labelText: 'Phone Number',
+                    labelText: 'Phone Number (optional)',
                     prefixIcon: Icon(Icons.phone_outlined),
                     border: OutlineInputBorder(),
                   ),
@@ -104,7 +158,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 16),
 
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedRole,
+                  value: _selectedRole,
                   decoration: const InputDecoration(
                     labelText: 'Role',
                     prefixIcon: Icon(Icons.badge_outlined),
@@ -112,13 +166,89 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   items: const [
                     DropdownMenuItem(value: 'student', child: Text('Student')),
-                    DropdownMenuItem(value: 'teacher', child: Text('Teacher')),
+                    DropdownMenuItem(value: 'lecturer', child: Text('Lecturer')),
                     DropdownMenuItem(value: 'staff', child: Text('Staff')),
                   ],
                   onChanged: (v) =>
                       setState(() => _selectedRole = v ?? 'student'),
                 ),
                 const SizedBox(height: 16),
+
+                if (showStudentFields) ...[
+                  TextFormField(
+                    controller: _admissionController,
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'Admission Number',
+                      prefixIcon: Icon(Icons.badge_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                  validator: (v) {
+                    if (_selectedRole == 'student' &&
+                        (v == null || v.trim().isEmpty)) {
+                      return 'Enter your admission number';
+                    }
+                    return null;
+                  },
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (_isLoadingDepartments)
+                    const LinearProgressIndicator()
+                  else
+                    DropdownButtonFormField<int>(
+                      value: _selectedDepartmentId,
+                      decoration: const InputDecoration(
+                        labelText: 'Department',
+                        prefixIcon: Icon(Icons.business_outlined),
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _departments
+                          .map(
+                            (d) => DropdownMenuItem(
+                              value: d['id'] as int,
+                              child: Text(d['name'] as String),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) {
+                        setState(() => _selectedDepartmentId = v);
+                        if (v != null) _fetchPrograms(v);
+                      },
+                      validator: (v) {
+                        if (_selectedRole == 'student' && v == null) {
+                          return 'Select your department';
+                        }
+                        return null;
+                      },
+                    ),
+                  const SizedBox(height: 16),
+
+                  DropdownButtonFormField<int>(
+                    value: _selectedProgramId,
+                    decoration: const InputDecoration(
+                      labelText: 'Program',
+                      prefixIcon: Icon(Icons.school_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                    items: _programs
+                        .map(
+                          (p) => DropdownMenuItem(
+                            value: p['id'] as int,
+                            child: Text(p['name'] as String),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (v) => setState(() => _selectedProgramId = v),
+                    validator: (v) {
+                      if (_selectedRole == 'student' && v == null) {
+                        return 'Select your program';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
 
                 TextFormField(
                   controller: _passwordController,
@@ -177,6 +307,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   listener: (context, state) {
                     if (state is Authenticated) {
                       context.goNamed('dashboard');
+                    } else if (state is AuthEmailUnverified) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(state.message),
+                          duration: const Duration(seconds: 4),
+                        ),
+                      );
                     }
                   },
                   builder: (context, state) {

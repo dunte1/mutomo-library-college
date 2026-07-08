@@ -80,6 +80,37 @@ class AuthRepository {
     return {'token': token};
   }
 
+  Future<Map<String, dynamic>> verifyTwoFactorRecovery({
+    required int userId,
+    required String recoveryCode,
+  }) async {
+    final response = await _api.post(
+      '/v1/auth/2fa/verify-recovery',
+      data: {
+        'user_id': userId,
+        'recovery_code': recoveryCode,
+        'device_name': 'Mobile App',
+      },
+    );
+
+    final data =
+        response.data['data'] as Map<String, dynamic>? ??
+        response.data as Map<String, dynamic>;
+    final token =
+        data['token'] as String? ?? data['access_token'] as String? ?? '';
+    final expiresIn = data['expires_in'] as int?;
+    final remaining = data['recovery_codes_remaining'] as int?;
+
+    if (token.isNotEmpty) {
+      await _storage.saveToken(token);
+    }
+    if (expiresIn != null) {
+      await _storage.saveTokenExpiry(expiresIn);
+    }
+
+    return {'token': token, 'recovery_codes_remaining': remaining};
+  }
+
   Future<Map<String, dynamic>> register({
     required String name,
     required String email,

@@ -219,6 +219,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             'tempToken': state.tempToken,
                           },
                         );
+                      } else if (state is AuthEmailUnverified) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(state.message),
+                            duration: const Duration(seconds: 4),
+                          ),
+                        );
                       }
                     },
                     builder: (context, state) {

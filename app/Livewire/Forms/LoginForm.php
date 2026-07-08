@@ -38,6 +38,16 @@ class LoginForm extends Form
             ]);
         }
 
+        $user = Auth::user();
+
+        if (! $user->is_active) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'form.email' => 'Your account has been deactivated. Please contact the library administrator.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

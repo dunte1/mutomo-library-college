@@ -14,6 +14,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<ForgotPasswordEvent>(_onForgotPassword);
     on<ResetPasswordEvent>(_onResetPassword);
     on<VerifyTwoFactorEvent>(_onVerifyTwoFactor);
+    on<EnableTwoFactorSetupEvent>(_onEnableTwoFactorSetup);
+    on<VerifyTwoFactorSetupEvent>(_onVerifyTwoFactorSetup);
+    on<VerifyTwoFactorRecoveryEvent>(_onVerifyTwoFactorRecovery);
   }
 
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
@@ -145,6 +148,54 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         passwordConfirmation: event.passwordConfirmation,
       );
       emit(PasswordResetSuccess());
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onEnableTwoFactorSetup(
+    EnableTwoFactorSetupEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final result = await _authRepository.enableTwoFactor(password: event.password);
+      emit(TwoFactorSetupReady(
+        secret: result['secret'] as String,
+        qrCodeUrl: result['qr_code_url'] as String,
+        recoveryCodes: (result['recovery_codes'] as List<dynamic>).cast<String>(),
+      ));
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onVerifyTwoFactorSetup(
+    VerifyTwoFactorSetupEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      await _authRepository.verifyTwoFactorSetup(code: event.code);
+      emit(const TwoFactorSetupVerified());
+    } catch (e) {
+      emit(AuthError(message: e.toString()));
+    }
+  }
+
+  Future<void> _onVerifyTwoFactorRecovery(
+    VerifyTwoFactorRecoveryEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      final result = await _authRepository.verifyTwoFactorRecovery(
+        userId: event.userId,
+        recoveryCode: event.recoveryCode,
+      );
+      final token = result['token'] as String;
+      final user = await _authRepository.getUser();
+      emit(Authenticated(user: user, token: token));
     } catch (e) {
       emit(AuthError(message: e.toString()));
     }

@@ -4,6 +4,7 @@ use App\Http\Controllers\HealthCheckController;
 use App\Http\Middleware\CheckSubscriptionStatus;
 use App\Http\Middleware\LogUserActivity;
 use App\Http\Middleware\SecurityHeadersMiddleware;
+use App\Http\Middleware\EnsureSessionIdleTimeout;
 use App\Http\Middleware\TwoFactorMiddleware;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
@@ -41,6 +42,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             LogUserActivity::class,
             SecurityHeadersMiddleware::class,
+            TwoFactorMiddleware::class,
+            EnsureSessionIdleTimeout::class,
         ]);
         $middleware->api(append: [
             'throttle:api',

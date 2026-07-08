@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -23,27 +22,14 @@ class TwoFactorScreen extends StatefulWidget {
 
 class _TwoFactorScreenState extends State<TwoFactorScreen> {
   final _codeController = TextEditingController();
+  final _recoveryController = TextEditingController();
   final _focusNode = FocusNode();
-  int _resendCooldown = 0;
-  Timer? _timer;
+  bool _useRecoveryCode = false;
 
   @override
   void initState() {
     super.initState();
     _focusNode.requestFocus();
-    _startCooldown();
-  }
-
-  void _startCooldown() {
-    _resendCooldown = 30;
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_resendCooldown > 0 && mounted) {
-        setState(() => _resendCooldown--);
-      } else {
-        timer.cancel();
-      }
-    });
   }
 
   void _verify() {
@@ -64,10 +50,38 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
     );
   }
 
+  void _verifyRecovery() {
+    final code = _recoveryController.text.trim();
+    if (code.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a recovery code')),
+      );
+      return;
+    }
+
+    context.read<AuthBloc>().add(
+      VerifyTwoFactorRecoveryEvent(
+        userId: widget.userId,
+        recoveryCode: code,
+      ),
+    );
+  }
+
+  void _toggleMode() {
+    setState(() {
+      _useRecoveryCode = !_useRecoveryCode;
+      _codeController.clear();
+      _recoveryController.clear();
+    });
+    if (!_useRecoveryCode) {
+      _focusNode.requestFocus();
+    }
+  }
+
   @override
   void dispose() {
-    _timer?.cancel();
     _codeController.dispose();
+    _recoveryController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -89,8 +103,12 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
                 backgroundColor: theme.colorScheme.error,
               ),
             );
-            _codeController.clear();
-            _focusNode.requestFocus();
+            if (_useRecoveryCode) {
+              _recoveryController.clear();
+            } else {
+              _codeController.clear();
+              _focusNode.requestFocus();
+            }
           }
         },
         child: Center(
@@ -107,7 +125,7 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Enter Verification Code',
+                  _useRecoveryCode ? 'Recovery Code' : 'Enter Verification Code',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
@@ -115,7 +133,9 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Enter the 6-digit code from your authenticator app',
+                  _useRecoveryCode
+                      ? 'Enter one of your recovery codes'
+                      : 'Enter the 6-digit code from your authenticator app',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
@@ -123,32 +143,47 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // OTP Input
-                TextFormField(
-                  controller: _codeController,
-                  focusNode: _focusNode,
-                  keyboardType: TextInputType.number,
-                  textAlign: TextAlign.center,
-                  maxLength: 6,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    letterSpacing: 8,
-                    fontWeight: FontWeight.bold,
+                // Input field
+                if (_useRecoveryCode)
+                  TextFormField(
+                    controller: _recoveryController,
+                    textCapitalization: TextCapitalization.characters,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      letterSpacing: 4,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'monospace',
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: 'XXXX-XXXX-XXXX',
+                      border: OutlineInputBorder(),
+                    ),
+                    onFieldSubmitted: (_) => _verifyRecovery(),
+                  )
+                else
+                  TextFormField(
+                    controller: _codeController,
+                    focusNode: _focusNode,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    maxLength: 6,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      letterSpacing: 8,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(6),
+                    ],
+                    decoration: const InputDecoration(
+                      hintText: '000000',
+                      counterText: '',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      if (value.length == 6) _verify();
+                    },
                   ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(6),
-                  ],
-                  decoration: const InputDecoration(
-                    hintText: '000000',
-                    counterText: '',
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (value) {
-                    if (value.length == 6) {
-                      _verify();
-                    }
-                  },
-                ),
                 const SizedBox(height: 24),
 
                 // Verify Button
@@ -156,7 +191,9 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
                   builder: (context, state) {
                     final isLoading = state is AuthLoading;
                     return FilledButton(
-                      onPressed: isLoading ? null : _verify,
+                      onPressed: isLoading
+                          ? null
+                          : (_useRecoveryCode ? _verifyRecovery : _verify),
                       style: FilledButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
@@ -175,22 +212,13 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Resend / Fallback
+                // Toggle between TOTP and recovery code
                 TextButton(
-                  onPressed: _resendCooldown > 0
-                      ? null
-                      : () {
-                          _startCooldown();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Check your authenticator app'),
-                            ),
-                          );
-                        },
+                  onPressed: _toggleMode,
                   child: Text(
-                    _resendCooldown > 0
-                        ? 'Resend in ${_resendCooldown}s'
-                        : 'Need help? Check your authenticator app',
+                    _useRecoveryCode
+                        ? 'Use authenticator app instead'
+                        : 'Use a recovery code',
                   ),
                 ),
 

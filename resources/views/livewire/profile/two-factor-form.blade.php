@@ -24,10 +24,10 @@ new class extends Component
             return;
         }
         $user = auth()->user();
-        $google2fa = app('pragmarx.google2fa');
+        $google2fa = new \PragmaRX\Google2FA\Google2FA();
         $secret = $google2fa->generateSecretKey();
         $user->update([
-            'two_factor_secret' => encrypt($secret),
+            'two_factor_secret' => $secret,
             'two_factor_enabled' => false,
         ]);
         $this->secret = $secret;
@@ -42,9 +42,9 @@ new class extends Component
     {
         $this->validate(['code' => 'required|string|size:6']);
         $user = auth()->user();
-        $google2fa = app('pragmarx.google2fa');
+        $google2fa = new \PragmaRX\Google2FA\Google2FA();
         $valid = $google2fa->verifyKey(
-            decrypt($user->two_factor_secret),
+            $user->two_factor_secret,
             $this->code
         );
         if (!$valid) {

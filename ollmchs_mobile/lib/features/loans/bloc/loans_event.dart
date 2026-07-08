@@ -7,7 +7,10 @@ abstract class LoansEvent extends Equatable {
 }
 
 class LoadActiveLoans extends LoansEvent {
-  const LoadActiveLoans();
+  final int page;
+  const LoadActiveLoans({this.page = 1});
+  @override
+  List<Object?> get props => [page];
 }
 
 class LoadLoanHistory extends LoansEvent {

@@ -81,9 +81,22 @@ class AuthenticationService
 
     /**
      * Create an access token for the user.
+     * Enforces a concurrent session limit by revoking the oldest tokens.
      */
     public function createToken(User $user, ?string $deviceName = null): NewAccessToken
     {
+        $maxSessions = (int) config('auth.max_concurrent_sessions', 5);
+
+        // Revoke oldest tokens if user is at or over the limit
+        $tokenCount = $user->tokens()->count();
+        if ($tokenCount >= $maxSessions) {
+            $tokensToRevoke = $tokenCount - $maxSessions + 1;
+            $user->tokens()
+                ->orderBy('created_at', 'asc')
+                ->limit($tokensToRevoke)
+                ->delete();
+        }
+
         return $user->createToken($deviceName ?? 'mobile-api');
     }
 

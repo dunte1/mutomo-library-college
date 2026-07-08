@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Modules\Members\Models\Member;
 use App\Modules\Subscriptions\Services\SubscriptionService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
@@ -34,6 +35,18 @@ new #[Layout('layouts.guest')] class extends Component
         $user = User::create($validated);
 
         $user->assignRole('guest');
+
+        $nameParts = explode(' ', $validated['name'], 2);
+        Member::create([
+            'user_id' => $user->id,
+            'first_name' => $nameParts[0],
+            'last_name' => $nameParts[1] ?? '',
+            'email' => $validated['email'],
+            'membership_type' => 'external',
+            'status' => 'active',
+            'joined_at' => now(),
+            'registered_by' => $user->id,
+        ]);
 
         try {
             app(SubscriptionService::class)->createTrialSubscription($user);

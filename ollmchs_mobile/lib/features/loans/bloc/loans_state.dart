@@ -15,6 +15,8 @@ class LoansLoaded extends LoansState {
   final List<LoanModel> activeLoans;
   final List<LoanHistoryModel> history;
   final LoanModel? selectedLoan;
+  final bool hasMoreActiveLoans;
+  final int activeLoansPage;
   final bool hasMoreHistory;
   final int historyPage;
   final String? message;
@@ -23,6 +25,8 @@ class LoansLoaded extends LoansState {
     this.activeLoans = const [],
     this.history = const [],
     this.selectedLoan,
+    this.hasMoreActiveLoans = true,
+    this.activeLoansPage = 1,
     this.hasMoreHistory = true,
     this.historyPage = 1,
     this.message,
@@ -32,6 +36,8 @@ class LoansLoaded extends LoansState {
     List<LoanModel>? activeLoans,
     List<LoanHistoryModel>? history,
     LoanModel? selectedLoan,
+    bool? hasMoreActiveLoans,
+    int? activeLoansPage,
     bool? hasMoreHistory,
     int? historyPage,
     String? message,
@@ -41,6 +47,8 @@ class LoansLoaded extends LoansState {
       activeLoans: activeLoans ?? this.activeLoans,
       history: history ?? this.history,
       selectedLoan: selectedLoan ?? this.selectedLoan,
+      hasMoreActiveLoans: hasMoreActiveLoans ?? this.hasMoreActiveLoans,
+      activeLoansPage: activeLoansPage ?? this.activeLoansPage,
       hasMoreHistory: hasMoreHistory ?? this.hasMoreHistory,
       historyPage: historyPage ?? this.historyPage,
       message: clearMessage ? null : (message ?? this.message),
@@ -52,6 +60,8 @@ class LoansLoaded extends LoansState {
     activeLoans,
     history,
     selectedLoan,
+    hasMoreActiveLoans,
+    activeLoansPage,
     hasMoreHistory,
     historyPage,
     message,

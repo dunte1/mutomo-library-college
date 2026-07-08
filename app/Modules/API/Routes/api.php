@@ -68,6 +68,10 @@ Route::name('api.v1.')->prefix('v1')->group(function () {
         ->name('auth.2fa.verify')
         ->middleware('throttle:10,1');
 
+    Route::post('/auth/2fa/verify-recovery', [TwoFactorController::class, 'verifyRecovery'])
+        ->name('auth.2fa.verify-recovery')
+        ->middleware('throttle:5,1');
+
     // Webhooks
     Route::post('/mpesa/validation', MpesaValidationController::class)
         ->name('mpesa.validation')

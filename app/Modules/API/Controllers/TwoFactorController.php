@@ -162,6 +162,52 @@ class TwoFactorController extends Controller
     }
 
     /**
+     * Verify a recovery code to bypass 2FA.
+     * Recovery codes are single-use — a successfully used code is removed from the list.
+     */
+    public function verifyRecovery(Request $request): JsonResponse
+    {
+        $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'recovery_code' => ['required', 'string'],
+            'device_name' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+
+        if (! $user->two_factor_enabled) {
+            return $this->response->error('Two-factor authentication is not enabled for this account.', 400);
+        }
+
+        $codes = $user->two_factor_recovery_codes;
+
+        if (! is_array($codes) || empty($codes)) {
+            return $this->response->error('No recovery codes available. Please use your authenticator app.', 400);
+        }
+
+        $submittedCode = strtoupper(trim($request->recovery_code));
+        $matchedIndex = array_search($submittedCode, array_map('strtoupper', $codes));
+
+        if ($matchedIndex === false) {
+            return $this->response->error('Invalid recovery code. Please try again.', 422);
+        }
+
+        // Remove the used code (single-use)
+        unset($codes[$matchedIndex]);
+        $user->update([
+            'two_factor_recovery_codes' => array_values($codes),
+        ]);
+
+        $token = $user->createToken($request->device_name ?? 'mobile-api')->plainTextToken;
+
+        return $this->response->success([
+            'token' => $token,
+            'token_type' => 'Bearer',
+            'recovery_codes_remaining' => count($codes),
+        ], 'Recovery code verified successfully.');
+    }
+
+    /**
      * Generate recovery codes for 2FA.
      */
     protected function generateRecoveryCodes(): array

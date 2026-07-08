@@ -18,14 +18,31 @@ class LoansBloc extends Bloc<LoansEvent, LoansState> {
     LoadActiveLoans event,
     Emitter<LoansState> emit,
   ) async {
-    emit(LoansLoading());
+    if (state is! LoansLoaded || event.page == 1) {
+      emit(LoansLoading());
+    }
+
     try {
-      final loans = await _repository.getActiveLoans();
+      final result = await _repository.getActiveLoans(page: event.page);
       final currentState = state;
+      final existingLoans = currentState is LoansLoaded && event.page > 1
+          ? currentState.activeLoans
+          : <LoanModel>[];
+
       emit(
         LoansLoaded(
-          activeLoans: loans,
-          history: currentState is LoansLoaded ? currentState.history : [],
+          activeLoans: [...existingLoans, ...result.items],
+          history: currentState is LoansLoaded
+              ? currentState.history
+              : [],
+          hasMoreActiveLoans: result.hasMore,
+          activeLoansPage: event.page,
+          hasMoreHistory: currentState is LoansLoaded
+              ? currentState.hasMoreHistory
+              : true,
+          historyPage: currentState is LoansLoaded
+              ? currentState.historyPage
+              : 1,
         ),
       );
     } catch (e) {
@@ -54,6 +71,12 @@ class LoansBloc extends Bloc<LoansEvent, LoansState> {
               ? currentState.activeLoans
               : [],
           history: [...existingHistory, ...result.items],
+          hasMoreActiveLoans: currentState is LoansLoaded
+              ? currentState.hasMoreActiveLoans
+              : true,
+          activeLoansPage: currentState is LoansLoaded
+              ? currentState.activeLoansPage
+              : 1,
           hasMoreHistory: result.hasMore,
           historyPage: event.page,
         ),

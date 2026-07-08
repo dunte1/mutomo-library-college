@@ -13,7 +13,10 @@ class TwoFactorMiddleware
         $user = auth()->user();
 
         if ($user && $user->two_factor_enabled && ! session('two_factor_verified')) {
-            return redirect()->route('two-factor.verify');
+            // Don't redirect if already on the 2FA verify page or logging out
+            if (! $request->routeIs('two-factor.verify') && ! $request->routeIs('logout')) {
+                return redirect()->route('two-factor.verify');
+            }
         }
 
         return $next($request);

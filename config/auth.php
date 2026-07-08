@@ -114,4 +114,28 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Idle Timeout (minutes)
+    |--------------------------------------------------------------------------
+    |
+    | Session idle timeout in minutes. If a user has no activity for this
+    | duration, they will be logged out. Set to null to disable.
+    |
+    */
+
+    'idle_timeout_minutes' => (int) env('AUTH_IDLE_TIMEOUT_MINUTES', 30),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Max Concurrent Sessions
+    |--------------------------------------------------------------------------
+    |
+    | Maximum number of active API tokens (mobile sessions) per user.
+    | When exceeded, the oldest tokens are revoked on new login.
+    |
+    */
+
+    'max_concurrent_sessions' => (int) env('AUTH_MAX_CONCURRENT_SESSIONS', 5),
+
 ];

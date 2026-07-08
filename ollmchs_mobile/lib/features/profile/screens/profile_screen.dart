@@ -209,41 +209,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final currentController = TextEditingController();
     final newController = TextEditingController();
     final confirmController = TextEditingController();
+    final dialogFormKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Change Password'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: currentController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Current Password',
-                border: OutlineInputBorder(),
+        content: Form(
+          key: dialogFormKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: currentController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Current Password',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => v == null || v.isEmpty
+                    ? 'Enter current password'
+                    : null,
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: newController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'New Password',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: newController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'New Password',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Enter new password';
+                  if (v.length < 8) return 'Password must be at least 8 characters';
+                  return null;
+                },
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: confirmController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Confirm New Password',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: confirmController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Confirm New Password',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Confirm your password';
+                  if (v != newController.text) return 'Passwords do not match';
+                  return null;
+                },
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -252,6 +269,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           FilledButton(
             onPressed: () {
+              if (!dialogFormKey.currentState!.validate()) return;
               context.read<ProfileBloc>().add(
                 ChangePassword(
                   currentPassword: currentController.text,

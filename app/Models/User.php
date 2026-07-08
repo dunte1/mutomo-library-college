@@ -65,6 +65,7 @@ class User extends Authenticatable
             'last_login_at' => 'datetime',
             'deleted_at' => 'datetime',
             'notification_preferences' => 'array',
+            'two_factor_recovery_codes' => 'array',
         ];
     }
 
@@ -192,6 +193,6 @@ class User extends Authenticatable
 
     public function verifyTwoFactorCode(string $code): bool
     {
-        return app('pragmarx.google2fa')->verifyKey($this->two_factor_secret, $code);
+        return (new \PragmaRX\Google2FA\Google2FA())->verifyKey($this->two_factor_secret, $code);
     }
 }

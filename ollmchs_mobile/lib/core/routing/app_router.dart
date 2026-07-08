@@ -76,6 +76,12 @@ class AppRouter {
   static final Map<String, bool Function(UserModel)> _permissionGates = {
     '/dashboard': (user) => PermissionHelper.canAccessDashboard(user),
     '/notifications': (user) => PermissionHelper.canAccessNotifications(user),
+    '/messages': (user) => PermissionHelper.canViewMessages(user),
+    '/teacher-assignments': (user) => PermissionHelper.canCreateAssignments(user),
+    '/settings': (user) => PermissionHelper.canManageSettings(user),
+    '/library-card': (user) => PermissionHelper.canViewLibraryCards(user),
+    '/payments': (user) => PermissionHelper.canCollectPayments(user),
+    '/digital-library': (user) => PermissionHelper.canAccessDigitalLibrary(user),
   };
 
   static final GoRouter router = GoRouter(

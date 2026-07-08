@@ -42,6 +42,7 @@ new #[Layout('layouts.guest')] class extends Component
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => $validated['password'],
+            'is_active' => false,
         ]);
 
         $user->assignRole('student');
@@ -63,7 +64,7 @@ new #[Layout('layouts.guest')] class extends Component
         event(new Registered($user));
         Auth::login($user);
 
-        $this->redirect(route('dashboard', absolute: false), navigate: true);
+        $this->redirect(route('verification.notice', absolute: false), navigate: true);
     }
 }; ?>
 

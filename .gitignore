@@ -40,3 +40,13 @@ pint_output.txt
 test_output.txt
 test_detail.txt
 test_verbose.txt
+.mimocode/
+bootstrap/cache/
+storage/framework/cache/
+*.exe
+*AUDIT_REPORT*.md
+PHASE0_SYSTEM_ANALYSIS.md
+added_files.txt
+all_changes.txt
+/ollmchs_mobile/installer/
+ollmchs_mobile/installer.iss

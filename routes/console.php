@@ -74,3 +74,6 @@ Schedule::command('schedule:scheduled-messages')->everyMinute()->name('send-sche
 Schedule::command('circulation:expire-reservations')->dailyAt('00:30')->name('expire-old-reservations');
 Schedule::command('circulation:assess-overdue-fines')->dailyAt('00:45')->name('assess-overdue-fines');
 Schedule::command('members:check-expiry')->dailyAt('06:00')->name('check-membership-expiry');
+
+// Prune expired Sanctum API tokens daily
+Schedule::command('sanctum:prune-expired --hours=48')->dailyAt('04:00')->name('prune-expired-tokens');

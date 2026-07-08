@@ -6,7 +6,6 @@ use App\Modules\Circulation\Livewire\CirculationList;
 use App\Modules\Circulation\Livewire\FineManagement;
 use App\Modules\Circulation\Livewire\IssueBook;
 use App\Modules\Circulation\Livewire\OverrideDueDates;
-use App\Modules\Circulation\Livewire\PatronActions;
 use App\Modules\Circulation\Livewire\PatronReservation;
 use App\Modules\Circulation\Livewire\ReservationList;
 use App\Modules\Circulation\Livewire\ReturnBook;
@@ -30,7 +29,6 @@ class CirculationServiceProvider extends ServiceProvider
         Livewire::component('fine-management', FineManagement::class);
         Livewire::component('issue-book', IssueBook::class);
         Livewire::component('override-due-dates', OverrideDueDates::class);
-        Livewire::component('patron-actions', PatronActions::class);
         Livewire::component('patron-reservation', PatronReservation::class);
         Livewire::component('return-book', ReturnBook::class);
         Livewire::component('reservation-list', ReservationList::class);

@@ -174,6 +174,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 Route::post('/logout', function () {
+    $user = auth()->user();
+    if ($user) {
+        $user->setRememberToken(null);
+        $user->save();
+    }
     auth()->logout();
     session()->invalidate();
     session()->regenerateToken();
