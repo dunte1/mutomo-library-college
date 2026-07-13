@@ -6,7 +6,10 @@ import '../bloc/loans_bloc.dart';
 import '../bloc/loans_event.dart';
 import '../bloc/loans_state.dart';
 import '../models/loan_model.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/skeleton.dart';
+import '../../../core/utils/responsive.dart';
+import '../../../core/widgets/bottom_nav_shell.dart';
 
 class ActiveLoansScreen extends StatefulWidget {
   const ActiveLoansScreen({super.key});
@@ -69,6 +72,12 @@ class _ActiveLoansScreenState extends State<ActiveLoansScreen>
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
+        leading: context.isCompact
+            ? IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => shellScaffoldKey.currentState?.openDrawer(),
+              )
+            : null,
         title: const Text('My Loans'),
         bottom: TabBar(
           controller: _tabController,
@@ -119,7 +128,11 @@ class _ActiveLoansScreenState extends State<ActiveLoansScreen>
     final loans = state is LoansLoaded ? state.activeLoans : <LoanModel>[];
     final hasMore = state is LoansLoaded && state.hasMoreActiveLoans;
     if (loans.isEmpty && state is! LoansLoading) {
-      return const Center(child: Text('No active loans'));
+      return const EmptyState(
+        icon: Icons.assignment_outlined,
+        title: 'No active loans',
+        subtitle: "You don't have any books checked out",
+      );
     }
     return RefreshIndicator(
       onRefresh: () async =>
@@ -304,7 +317,11 @@ class _ActiveLoansScreenState extends State<ActiveLoansScreen>
     final history = state is LoansLoaded ? state.history : <LoanHistoryModel>[];
     final hasMore = state is LoansLoaded && state.hasMoreHistory;
     if (history.isEmpty && state is! LoansLoading) {
-      return const Center(child: Text('No borrowing history'));
+      return const EmptyState(
+        icon: Icons.history,
+        title: 'No loan history',
+        subtitle: "You haven't borrowed any books yet",
+      );
     }
     return RefreshIndicator(
       onRefresh: () async =>

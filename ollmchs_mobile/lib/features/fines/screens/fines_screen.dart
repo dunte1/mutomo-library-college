@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import '../bloc/fines_bloc.dart';
 import '../models/fine_model.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/skeleton.dart';
 
 class FinesScreen extends StatefulWidget {
@@ -137,6 +138,13 @@ class _FinesScreenState extends State<FinesScreen> {
             return Center(child: Text(state.error));
           }
           if (state is FinesLoaded) {
+            if (state.fines.isEmpty) {
+              return const EmptyState(
+                icon: Icons.payments_outlined,
+                title: 'No fines',
+                subtitle: "You don't have any outstanding fines",
+              );
+            }
             return RefreshIndicator(
               onRefresh: () async =>
                   context.read<FinesBloc>().add(const LoadFines()),
@@ -169,37 +177,14 @@ class _FinesScreenState extends State<FinesScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  if (state.fines.isEmpty)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 48),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.check_circle,
-                              size: 64,
-                              color: Colors.green,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No fines',
-                              style: theme.textTheme.titleMedium,
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else ...[
-                    Text(
-                      'Fine History',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  Text(
+                    'Fine History',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(height: 8),
-                    ...state.fines.map((fine) => _buildFineCard(fine, theme)),
-                  ],
+                  ),
+                  const SizedBox(height: 8),
+                  ...state.fines.map((fine) => _buildFineCard(fine, theme)),
                 ],
               ),
             );

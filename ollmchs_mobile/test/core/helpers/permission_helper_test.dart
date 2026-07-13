@@ -305,6 +305,78 @@ void main() {
       expect(PermissionHelper.canViewReports(user), isFalse);
     });
 
+    test('canViewMessages returns true for unrestricted users', () {
+      final user = UserModel(id: 1, name: 'Test', email: 't@test.com');
+      expect(PermissionHelper.canViewMessages(user), isTrue);
+    });
+
+    test('canViewMessages returns true for users with empty permissions list',
+        () {
+      final user = UserModel(
+        id: 1,
+        name: 'Test',
+        email: 't@test.com',
+        permissions: [],
+      );
+      expect(PermissionHelper.canViewMessages(user), isTrue);
+    });
+
+    test('canViewMessages respects view-messages permission', () {
+      final user = UserModel(
+        id: 1,
+        name: 'Test',
+        email: 't@test.com',
+        permissions: ['view-books'],
+      );
+      expect(PermissionHelper.canViewMessages(user), isFalse);
+
+      final user2 = UserModel(
+        id: 2,
+        name: 'Test2',
+        email: 't2@test.com',
+        permissions: ['view-messages'],
+      );
+      expect(PermissionHelper.canViewMessages(user2), isTrue);
+    });
+
+    test('canViewMessages returns true for admin regardless of permissions',
+        () {
+      final admin = UserModel(
+        id: 1,
+        name: 'Admin',
+        email: 'a@test.com',
+        roles: ['admin'],
+        permissions: [],
+      );
+      expect(PermissionHelper.canViewMessages(admin), isTrue);
+    });
+
+    test('canSendMessages requires specific permission or admin', () {
+      final user = UserModel(
+        id: 1,
+        name: 'Test',
+        email: 't@test.com',
+        permissions: ['view-books'],
+      );
+      expect(PermissionHelper.canSendMessages(user), isFalse);
+
+      final admin = UserModel(
+        id: 2,
+        name: 'Admin',
+        email: 'a@test.com',
+        roles: ['admin'],
+      );
+      expect(PermissionHelper.canSendMessages(admin), isTrue);
+
+      final sender = UserModel(
+        id: 3,
+        name: 'Sender',
+        email: 's@test.com',
+        permissions: ['send-messages'],
+      );
+      expect(PermissionHelper.canSendMessages(sender), isTrue);
+    });
+
     test('canManageFines requires specific permission', () {
       final user = UserModel(
         id: 1,

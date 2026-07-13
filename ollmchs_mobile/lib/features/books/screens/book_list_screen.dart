@@ -5,7 +5,10 @@ import '../bloc/books_bloc.dart';
 import '../bloc/books_event.dart';
 import '../bloc/books_state.dart';
 import '../widgets/book_card.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/skeleton.dart';
+import '../../../core/utils/responsive.dart';
+import '../../../core/widgets/bottom_nav_shell.dart';
 
 class BookListScreen extends StatefulWidget {
   const BookListScreen({super.key});
@@ -44,6 +47,12 @@ class _BookListScreenState extends State<BookListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: context.isCompact
+            ? IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => shellScaffoldKey.currentState?.openDrawer(),
+              )
+            : null,
         title: const Text('Books'),
         actions: [
           IconButton(
@@ -62,7 +71,11 @@ class _BookListScreenState extends State<BookListScreen> {
           }
           if (state is BooksLoaded) {
             if (state.books.isEmpty) {
-              return const Center(child: Text('No books found'));
+              return const EmptyState(
+                icon: Icons.menu_book_outlined,
+                title: 'No books found',
+                subtitle: 'There are no books available right now',
+              );
             }
             return RefreshIndicator(
               onRefresh: () async =>

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../models/category_model.dart';
 
 class CategoryListScreen extends StatefulWidget {
@@ -66,7 +67,11 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
               ),
             )
           : _categories.isEmpty
-          ? const Center(child: Text('No categories found'))
+          ? const EmptyState(
+              icon: Icons.category_outlined,
+              title: 'No categories',
+              subtitle: 'No categories available yet',
+            )
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView.builder(

@@ -1,10 +1,16 @@
+import 'dart:convert';
 import '../../../core/network/api_client.dart';
 import '../../../core/storage/local_storage_service.dart';
+import '../../../core/storage/hive_cache_service.dart';
+import '../../../core/utils/type_parsers.dart';
 import '../models/user_model.dart';
 
 class AuthRepository {
   final ApiClient _api;
   final LocalStorageService _storage;
+
+  /// Expose the API client for services that need an authenticated instance.
+  ApiClient get apiClient => _api;
 
   AuthRepository(this._api, this._storage);
 
@@ -31,23 +37,27 @@ class AuthRepository {
       return {
         'requires_two_factor': true,
         'temp_token': data['temp_token'] as String? ?? '',
-        'user_id': data['user_id'] as int?,
+        'user_id': parseIntOrNull(data['user_id']),
       };
     }
 
     final token =
         data['token'] as String? ?? data['access_token'] as String? ?? '';
+    final refreshToken = data['refresh_token'] as String?;
     final userData = data['user'] as Map<String, dynamic>? ?? data;
-    final expiresIn = data['expires_in'] as int?;
+    final expiresIn = parseIntOrNull(data['expires_in']);
 
     if (token.isNotEmpty) {
       await _storage.saveToken(token);
+    }
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _storage.saveRefreshToken(refreshToken);
     }
     if (expiresIn != null) {
       await _storage.saveTokenExpiry(expiresIn);
     }
     if (userData.isNotEmpty) {
-      await _storage.cacheUser(userData.toString());
+      await _storage.cacheUser(jsonEncode(userData));
     }
 
     return {'user': UserModel.fromJson(userData), 'token': token};
@@ -68,10 +78,14 @@ class AuthRepository {
         response.data as Map<String, dynamic>;
     final token =
         data['token'] as String? ?? data['access_token'] as String? ?? '';
-    final expiresIn = data['expires_in'] as int?;
+    final refreshToken = data['refresh_token'] as String?;
+    final expiresIn = parseIntOrNull(data['expires_in']);
 
     if (token.isNotEmpty) {
       await _storage.saveToken(token);
+    }
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _storage.saveRefreshToken(refreshToken);
     }
     if (expiresIn != null) {
       await _storage.saveTokenExpiry(expiresIn);
@@ -98,11 +112,15 @@ class AuthRepository {
         response.data as Map<String, dynamic>;
     final token =
         data['token'] as String? ?? data['access_token'] as String? ?? '';
-    final expiresIn = data['expires_in'] as int?;
-    final remaining = data['recovery_codes_remaining'] as int?;
+    final refreshToken = data['refresh_token'] as String?;
+    final expiresIn = parseIntOrNull(data['expires_in']);
+    final remaining = parseIntOrNull(data['recovery_codes_remaining']);
 
     if (token.isNotEmpty) {
       await _storage.saveToken(token);
+    }
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _storage.saveRefreshToken(refreshToken);
     }
     if (expiresIn != null) {
       await _storage.saveTokenExpiry(expiresIn);
@@ -142,11 +160,15 @@ class AuthRepository {
         response.data as Map<String, dynamic>;
     final token =
         data['token'] as String? ?? data['access_token'] as String? ?? '';
+    final refreshToken = data['refresh_token'] as String?;
     final userData = data['user'] as Map<String, dynamic>? ?? data;
-    final expiresIn = data['expires_in'] as int?;
+    final expiresIn = parseIntOrNull(data['expires_in']);
 
     if (token.isNotEmpty) {
       await _storage.saveToken(token);
+    }
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _storage.saveRefreshToken(refreshToken);
     }
     if (expiresIn != null) {
       await _storage.saveTokenExpiry(expiresIn);
@@ -188,29 +210,55 @@ class AuthRepository {
   }
 
   Future<void> logout() async {
+    // Attempt server-side token revocation (best effort)
     try {
       await _api.post('/v1/auth/logout');
     } catch (_) {}
+
+    // Clear all local storage (tokens, user data, preferences)
     await _storage.clearAll();
+    await _storage.setBiometricEnabled(false);
+
+    // Clear Hive cache
+    try {
+      final cache = HiveCacheService();
+      await cache.clear();
+    } catch (_) {}
   }
 
   Future<String?> refresh() async {
-    final response = await _api.post('/v1/auth/refresh');
-    final data =
-        response.data['data'] as Map<String, dynamic>? ??
-        response.data as Map<String, dynamic>;
-    final newToken =
-        data['token'] as String? ?? data['access_token'] as String? ?? '';
-    final expiresIn = data['expires_in'] as int?;
+    final refreshToken = await _storage.getRefreshToken();
+    if (refreshToken == null) return null;
 
-    if (newToken.isEmpty) return null;
+    try {
+      final dio = _api.createRefreshDio();
+      final response = await dio.post(
+        '/v1/auth/refresh',
+        data: {'refresh_token': refreshToken},
+      );
 
-    await _storage.saveToken(newToken);
-    if (expiresIn != null) {
-      await _storage.saveTokenExpiry(expiresIn);
+      final data =
+          response.data['data'] as Map<String, dynamic>? ??
+          response.data as Map<String, dynamic>;
+      final newToken =
+          data['token'] as String? ?? data['access_token'] as String? ?? '';
+      final newRefreshToken = data['refresh_token'] as String?;
+      final expiresIn = parseIntOrNull(data['expires_in']);
+
+      if (newToken.isEmpty) return null;
+
+      await _storage.saveToken(newToken);
+      if (newRefreshToken != null && newRefreshToken.isNotEmpty) {
+        await _storage.saveRefreshToken(newRefreshToken);
+      }
+      if (expiresIn != null) {
+        await _storage.saveTokenExpiry(expiresIn);
+      }
+
+      return newToken;
+    } catch (_) {
+      return null;
     }
-
-    return newToken;
   }
 
   Future<String?> getStoredToken() async {

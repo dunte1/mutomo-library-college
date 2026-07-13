@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/reviews_bloc.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/skeleton.dart';
 
 class ReviewListScreen extends StatefulWidget {
@@ -133,26 +134,13 @@ class _ReviewListScreenState extends State<ReviewListScreen> {
                   ),
                 Expanded(
                   child: state.reviews.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.rate_review_outlined,
-                                size: 64,
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No reviews yet',
-                                style: theme.textTheme.titleMedium,
-                              ),
-                              const SizedBox(height: 8),
-                              FilledButton.tonal(
-                                onPressed: () => _showReviewDialog(context),
-                                child: const Text('Be the first to review'),
-                              ),
-                            ],
+                      ? EmptyState(
+                          icon: Icons.rate_review_outlined,
+                          title: 'No reviews yet',
+                          subtitle: 'Be the first to review this book',
+                          action: FilledButton.tonal(
+                            onPressed: () => _showReviewDialog(context),
+                            child: const Text('Write a review'),
                           ),
                         )
                       : RefreshIndicator(

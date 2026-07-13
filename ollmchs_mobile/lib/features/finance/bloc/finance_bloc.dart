@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_client.dart';
 import '../models/payment_model.dart';
 import '../../fines/models/fine_model.dart';
@@ -103,7 +104,7 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
 
       emit(FinanceLoaded(payments: payments, unpaidFines: unpaidFines));
     } catch (e) {
-      emit(FinanceError('Failed to load payments: ${e.toString()}'));
+      emit(FinanceError(ErrorMapper.map(e)));
     }
   }
 
@@ -128,7 +129,7 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
         );
       }
     } catch (e) {
-      emit(FinanceError('Failed to load receipt: ${e.toString()}'));
+      emit(FinanceError(ErrorMapper.map(e)));
     }
   }
 
@@ -138,7 +139,7 @@ class FinanceBloc extends Bloc<FinanceEvent, FinanceState> {
       add(const LoadPaymentHistory());
       emit(FinanceLoaded(message: 'Fine paid successfully'));
     } catch (e) {
-      emit(FinanceError('Payment failed: ${e.toString()}'));
+      emit(FinanceError(ErrorMapper.map(e)));
     }
   }
 }

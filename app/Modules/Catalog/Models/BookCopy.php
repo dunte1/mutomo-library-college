@@ -30,6 +30,10 @@ class BookCopy extends Model
     protected function casts(): array
     {
         return [
+            'id' => 'integer',
+            'book_id' => 'integer',
+            'created_by' => 'integer',
+            'updated_by' => 'integer',
             'acquired_at' => 'date',
             'price' => 'decimal:2',
             'is_active' => 'boolean',
@@ -37,23 +41,15 @@ class BookCopy extends Model
     }
 
     const STATUS_AVAILABLE = 'available';
-
     const STATUS_BORROWED = 'borrowed';
-
     const STATUS_RESERVED = 'reserved';
-
     const STATUS_DAMAGED = 'damaged';
-
     const STATUS_LOST = 'lost';
-
     const STATUS_WITHDRAWN = 'withdrawn';
 
     const CONDITION_NEW = 'new';
-
     const CONDITION_GOOD = 'good';
-
     const CONDITION_FAIR = 'fair';
-
     const CONDITION_POOR = 'poor';
 
     public function book()

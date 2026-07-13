@@ -159,6 +159,26 @@ void main() {
       expect((json['copies'] as List).first['barcode'], equals('BC001'));
     });
 
+    test('fromJson handles string-typed integer fields', () {
+      final json = {
+        'id': '1',
+        'title': 'String Int Book',
+        'publication_year': '2024',
+        'page_count': '300',
+        'category_id': '3',
+        'total_copies': '10',
+        'available_copies': '7',
+        'authors': ['Author'],
+      };
+      final book = BookModel.fromJson(json);
+      expect(book.id, equals(1));
+      expect(book.publicationYear, equals(2024));
+      expect(book.pageCount, equals(300));
+      expect(book.categoryId, equals(3));
+      expect(book.totalCopies, equals(10));
+      expect(book.availableCopies, equals(7));
+    });
+
     test('full JSON roundtrip', () {
       final json = {
         'id': 10,

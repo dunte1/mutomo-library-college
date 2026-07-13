@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/utils/type_parsers.dart';
 import '../models/digital_asset_model.dart';
 
 // Events
@@ -145,8 +147,8 @@ class DigitalLibraryBloc
         DigitalLibraryLoaded(
           assets: allAssets,
           hasMoreAssets:
-              (meta['current_page'] as int? ?? 1) <
-              (meta['last_page'] as int? ?? 1),
+               (parseIntOrNull(meta['current_page']) ?? 1) <
+              (parseIntOrNull(meta['last_page']) ?? 1),
           currentPage: event.page,
           selectedCategory: event.category,
           readingHistory: current is DigitalLibraryLoaded
@@ -159,7 +161,7 @@ class DigitalLibraryBloc
         ),
       );
     } catch (e) {
-      emit(DigitalLibraryError('Failed to load assets: ${e.toString()}'));
+      emit(DigitalLibraryError(ErrorMapper.map(e)));
     }
   }
 

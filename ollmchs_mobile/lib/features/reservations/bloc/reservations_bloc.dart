@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/error_mapper.dart';
 import 'reservations_event.dart';
 import 'reservations_state.dart';
 import '../repositories/reservations_repository.dart';
@@ -21,7 +22,7 @@ class ReservationsBloc extends Bloc<ReservationsEvent, ReservationsState> {
       final reservations = await _repository.getReservations();
       emit(ReservationsLoaded(reservations: reservations));
     } catch (e) {
-      emit(ReservationsError('Failed to load reservations: ${e.toString()}'));
+      emit(ReservationsError(ErrorMapper.map(e)));
     }
   }
 
@@ -39,7 +40,7 @@ class ReservationsBloc extends Bloc<ReservationsEvent, ReservationsState> {
         ),
       );
     } catch (e) {
-      emit(ReservationsError('Reservation failed: ${e.toString()}'));
+      emit(ReservationsError(ErrorMapper.map(e)));
     }
   }
 
@@ -62,7 +63,7 @@ class ReservationsBloc extends Bloc<ReservationsEvent, ReservationsState> {
         );
       }
     } catch (e) {
-      emit(ReservationsError('Cancellation failed: ${e.toString()}'));
+      emit(ReservationsError(ErrorMapper.map(e)));
     }
   }
 }

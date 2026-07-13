@@ -5,9 +5,12 @@ namespace App\Modules\Communication\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MessageRecipient extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'message_id',
         'recipient_id',

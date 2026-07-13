@@ -3,10 +3,13 @@ import 'package:dio/dio.dart';
 import '../constants/environment.dart';
 import '../errors/exceptions.dart';
 import '../storage/local_storage_service.dart';
+import '../utils/type_parsers.dart';
 
 class ApiClient {
   late final Dio _dio;
   final LocalStorageService _storageService;
+
+  String get baseUrl => _dio.options.baseUrl;
 
   Completer<String?>? _refreshCompleter;
   bool _isRefreshing = false;
@@ -49,9 +52,25 @@ class ApiClient {
                 return;
               }
             }
+            // Refresh failed — clear everything
             await _storageService.clearAll();
           }
           handler.next(error);
+        },
+      ),
+    );
+  }
+
+  /// Create a fresh Dio instance for token refresh (avoids interceptor loops).
+  Dio createRefreshDio() {
+    return Dio(
+      BaseOptions(
+        baseUrl: Environment.apiBaseUrl,
+        connectTimeout: Environment.requestTimeout,
+        receiveTimeout: Environment.requestTimeout,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
         },
       ),
     );
@@ -80,24 +99,13 @@ class ApiClient {
 
   Future<String?> _refreshToken() async {
     try {
-      final dio = Dio(
-        BaseOptions(
-          baseUrl: Environment.apiBaseUrl,
-          connectTimeout: Environment.requestTimeout,
-          receiveTimeout: Environment.requestTimeout,
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-        ),
-      );
+      final refreshToken = await _storageService.getRefreshToken();
+      if (refreshToken == null) return null;
 
-      final token = await _storageService.getToken();
-      if (token == null) return null;
-
+      final dio = createRefreshDio();
       final response = await dio.post(
         '/v1/auth/refresh',
-        options: Options(headers: {'Authorization': 'Bearer $token'}),
+        data: {'refresh_token': refreshToken},
       );
 
       final data =
@@ -105,11 +113,15 @@ class ApiClient {
           response.data as Map<String, dynamic>;
       final newToken =
           data['token'] as String? ?? data['access_token'] as String? ?? '';
-      final expiresIn = data['expires_in'] as int?;
+      final newRefreshToken = data['refresh_token'] as String?;
+      final expiresIn = parseIntOrNull(data['expires_in']);
 
       if (newToken.isEmpty) return null;
 
       await _storageService.saveToken(newToken);
+      if (newRefreshToken != null && newRefreshToken.isNotEmpty) {
+        await _storageService.saveRefreshToken(newRefreshToken);
+      }
       if (expiresIn != null) {
         await _storageService.saveTokenExpiry(expiresIn);
       }
@@ -155,6 +167,14 @@ class ApiClient {
     }
   }
 
+  Future<void> download(String urlPath, String savePath) async {
+    try {
+      await _dio.download(urlPath, savePath);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   Exception _handleError(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
@@ -169,13 +189,14 @@ class ApiClient {
             ? (data['message'] as String? ?? 'Unknown error')
             : 'Unknown error';
         if (sc == 401) return UnauthorizedException(msg);
-        if (sc == 422)
+        if (sc == 422) {
           return ValidationException(
             message: msg,
             errors: data is Map
                 ? data['errors'] as Map<String, dynamic>?
                 : null,
           );
+        }
         return ServerException(message: msg, statusCode: sc);
       default:
         return NetworkException('Unexpected error occurred');

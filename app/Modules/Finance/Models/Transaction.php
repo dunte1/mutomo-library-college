@@ -19,6 +19,11 @@ class Transaction extends Model
     ];
 
     protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'integer',
+        'fine_id' => 'integer',
+        'subscription_id' => 'integer',
+        'recorded_by' => 'integer',
         'amount' => 'decimal:2',
         'paid_at' => 'datetime',
     ];

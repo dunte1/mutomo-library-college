@@ -22,6 +22,7 @@ use App\Modules\API\Controllers\PaymentController;
 use App\Modules\API\Controllers\PushNotificationController;
 use App\Modules\API\Controllers\ReadingHistoryController;
 use App\Modules\API\Controllers\RecommendationController;
+use App\Modules\API\Controllers\ReportController;
 use App\Modules\API\Controllers\ReservationController;
 use App\Modules\API\Controllers\ReviewController;
 use App\Modules\API\Controllers\AssignmentController;
@@ -255,6 +256,17 @@ Route::name('api.v1.')->prefix('v1')->group(function () {
             ->name('recommendations.index')
             ->middleware('permission:view-recommendations');
 
+        // ---- Reports ----
+
+        Route::get('/reports/reading-summary', [ReportController::class, 'readingSummary'])
+            ->name('reports.reading-summary');
+
+        Route::get('/reports/loan-history', [ReportController::class, 'loanHistory'])
+            ->name('reports.loan-history');
+
+        Route::get('/reports/fine-history', [ReportController::class, 'fineHistory'])
+            ->name('reports.fine-history');
+
         // ---- Messaging ----
 
         Route::get('/messages/inbox', [MessageController::class, 'inbox'])
@@ -267,6 +279,19 @@ Route::name('api.v1.')->prefix('v1')->group(function () {
 
         Route::get('/messages/sent', [MessageController::class, 'sent'])
             ->name('messages.sent')
+            ->middleware('permission:view-messages');
+
+        // Specific GET routes must be before the wildcard {id} route
+        Route::get('/messages/search', [MessageController::class, 'search'])
+            ->name('messages.search')
+            ->middleware('permission:view-messages');
+
+        Route::get('/messages/unread-count', [MessageController::class, 'unreadCount'])
+            ->name('messages.unread-count')
+            ->middleware('permission:view-messages');
+
+        Route::get('/messages/archived', [MessageController::class, 'archived'])
+            ->name('messages.archived')
             ->middleware('permission:view-messages');
 
         Route::get('/messages/{id}', [MessageController::class, 'show'])
@@ -287,6 +312,48 @@ Route::name('api.v1.')->prefix('v1')->group(function () {
 
         Route::delete('/messages/{id}', [MessageController::class, 'destroy'])
             ->name('messages.destroy');
+
+        Route::post('/messages/{id}/forward', [MessageController::class, 'forward'])
+            ->name('messages.forward')
+            ->middleware('permission:send-messages');
+
+        Route::post('/messages/{id}/mark-unread', [MessageController::class, 'markUnread'])
+            ->name('messages.mark-unread')
+            ->middleware('permission:view-messages');
+
+        Route::post('/messages/{id}/archive', [MessageController::class, 'archive'])
+            ->name('messages.archive')
+            ->middleware('permission:view-messages');
+
+        Route::post('/messages/{id}/unarchive', [MessageController::class, 'unarchive'])
+            ->name('messages.unarchive')
+            ->middleware('permission:view-messages');
+
+        // ---- Message Templates ----
+
+        Route::get('/templates', [MessageController::class, 'templatesIndex'])
+            ->name('templates.index')
+            ->middleware('permission:manage-templates');
+
+        Route::post('/templates', [MessageController::class, 'templatesStore'])
+            ->name('templates.store')
+            ->middleware('permission:manage-templates');
+
+        Route::get('/templates/{id}', [MessageController::class, 'templatesShow'])
+            ->name('templates.show')
+            ->middleware('permission:manage-templates');
+
+        Route::put('/templates/{id}', [MessageController::class, 'templatesUpdate'])
+            ->name('templates.update')
+            ->middleware('permission:manage-templates');
+
+        Route::delete('/templates/{id}', [MessageController::class, 'templatesDestroy'])
+            ->name('templates.destroy')
+            ->middleware('permission:manage-templates');
+
+        Route::post('/templates/{id}/apply', [MessageController::class, 'templatesApply'])
+            ->name('templates.apply')
+            ->middleware('permission:send-messages');
 
         // ---- Notifications ----
 

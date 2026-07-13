@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../models/publisher_model.dart';
 
 class PublisherListScreen extends StatefulWidget {
@@ -70,7 +72,11 @@ class _PublisherListScreenState extends State<PublisherListScreen> {
               ),
             )
           : _publishers.isEmpty
-          ? const Center(child: Text('No publishers found'))
+          ? const EmptyState(
+              icon: Icons.business_outlined,
+              title: 'No publishers found',
+              subtitle: 'Publishers will appear here once added',
+            )
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView.separated(
@@ -96,6 +102,12 @@ class _PublisherListScreenState extends State<PublisherListScreen> {
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     subtitle: Text('${publisher.booksCount} books'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.pushNamed(
+                      'publisher-detail',
+                      pathParameters: {'id': '${publisher.id}'},
+                      extra: publisher.name,
+                    ),
                   );
                 },
               ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/utils/type_parsers.dart';
 
 class BulletinModel {
   final int id;
@@ -23,7 +24,7 @@ class BulletinModel {
   factory BulletinModel.fromJson(Map<String, dynamic> json) {
     final author = json['author'] as Map<String, dynamic>?;
     return BulletinModel(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       title: json['title'] as String? ?? '',
       content: json['content'] as String?,
       authorName: author?['name'] as String?,

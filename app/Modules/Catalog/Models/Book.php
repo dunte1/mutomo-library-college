@@ -46,6 +46,11 @@ class Book extends Model
     protected function casts(): array
     {
         return [
+            'id' => 'integer',
+            'publisher_id' => 'integer',
+            'category_id' => 'integer',
+            'created_by' => 'integer',
+            'updated_by' => 'integer',
             'pages' => 'integer',
             'publication_year' => 'integer',
             'price' => 'decimal:2',
@@ -119,17 +124,22 @@ class Book extends Model
     public function scopeSearch($query, $term)
     {
         return $query->where(function ($q) use ($term) {
-            $q->whereFullText('title,description', $term)
-                ->orWhereLike('isbn', $term)
-                ->orWhereHas('authors', function ($q) use ($term) {
-                    $q->whereLike('name', $term);
-                })
-                ->orWhereHas('publisher', function ($q) use ($term) {
-                    $q->whereLike('name', $term);
-                })
-                ->orWhereHas('subjects', function ($q) use ($term) {
-                    $q->whereLike('name', $term);
-                });
+            if (config('database.default') === 'sqlite') {
+                $q->where('title', 'like', "%{$term}%")
+                  ->orWhere('description', 'like', "%{$term}%");
+            } else {
+                $q->whereFullText('title,description', $term);
+            }
+            $q->orWhere('isbn', 'like', "%{$term}%")
+              ->orWhereHas('authors', function ($q) use ($term) {
+                  $q->where('name', 'like', "%{$term}%");
+              })
+              ->orWhereHas('publisher', function ($q) use ($term) {
+                  $q->where('name', 'like', "%{$term}%");
+              })
+              ->orWhereHas('subjects', function ($q) use ($term) {
+                  $q->where('name', 'like', "%{$term}%");
+              });
         });
     }
 

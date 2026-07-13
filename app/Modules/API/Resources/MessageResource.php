@@ -30,7 +30,7 @@ class MessageResource extends JsonResource
                 'mime_type' => $a->mime_type,
                 'url' => url('storage/'.$a->file_path),
             ])),
-            'replies_count' => $this->whenCounted('replies', fn () => $this->replies_count),
+            'replies_count' => $this->whenCounted('replies', fn () => (int) $this->replies_count),
             'replies' => $this->whenLoaded('replies', fn () => self::collection($this->replies)),
             'sent_at' => $this->sent_at?->toIso8601String(),
             'scheduled_at' => $this->scheduled_at?->toIso8601String(),

@@ -264,13 +264,15 @@ class _TeacherAssignmentListScreenState
                 const Spacer(),
                 PopupMenuButton<String>(
                   onSelected: (v) {
-                    if (v == 'edit')
+                    if (v == 'edit') {
                       context.pushNamed('teacher-assignment-form', extra: a);
-                    if (v == 'progress')
+                    }
+                    if (v == 'progress') {
                       context.pushNamed(
                         'teacher-assignment-progress',
                         pathParameters: {'id': '${a.id}'},
                       );
+                    }
                     if (v == 'delete') _confirmDelete(a);
                   },
                   itemBuilder: (_) => [
@@ -393,6 +395,7 @@ class _TeacherAssignmentListScreenState
       ),
     );
     if (confirmed == true) {
+      if (!context.mounted) return;
       context.read<TeacherAssignmentsBloc>().add(DeleteTeacherAssignment(a.id));
     }
   }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../models/author_model.dart';
 
 class AuthorListScreen extends StatefulWidget {
@@ -70,7 +72,11 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
               ),
             )
           : _authors.isEmpty
-          ? const Center(child: Text('No authors found'))
+          ? const EmptyState(
+              icon: Icons.people_outline,
+              title: 'No authors found',
+              subtitle: 'Authors will appear here once added',
+            )
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView.separated(
@@ -96,6 +102,11 @@ class _AuthorListScreenState extends State<AuthorListScreen> {
                       '${author.booksCount} books${author.nationality != null ? ' • ${author.nationality}' : ''}',
                     ),
                     trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.pushNamed(
+                      'author-detail',
+                      pathParameters: {'id': '${author.id}'},
+                      extra: author.name,
+                    ),
                   );
                 },
               ),

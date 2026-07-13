@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/reservations_bloc.dart';
 import '../bloc/reservations_event.dart';
 import '../bloc/reservations_state.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/skeleton.dart';
 
 class ReservationListScreen extends StatefulWidget {
@@ -51,26 +52,10 @@ class _ReservationListScreenState extends State<ReservationListScreen> {
           }
           if (state is ReservationsLoaded) {
             if (state.reservations.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.bookmark_border,
-                      size: 64,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(height: 16),
-                    Text('No reservations', style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Browse books and reserve available copies',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
+              return const EmptyState(
+                icon: Icons.bookmark_border,
+                title: 'No reservations',
+                subtitle: "You don't have any pending reservations",
               );
             }
             return RefreshIndicator(

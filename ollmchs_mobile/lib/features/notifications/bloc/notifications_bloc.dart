@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/utils/type_parsers.dart';
 import '../models/notification_model.dart';
 
 // Events
@@ -12,9 +14,10 @@ abstract class NotificationEvent extends Equatable {
 
 class LoadNotifications extends NotificationEvent {
   final int page;
-  const LoadNotifications({this.page = 1});
+  final String? type;
+  const LoadNotifications({this.page = 1, this.type});
   @override
-  List<Object?> get props => [page];
+  List<Object?> get props => [page, type ?? ''];
 }
 
 class MarkNotificationRead extends NotificationEvent {
@@ -86,9 +89,13 @@ class NotificationsBloc extends Bloc<NotificationEvent, NotificationsState> {
     }
 
     try {
+      final params = <String, dynamic>{'page': event.page};
+      if (event.type != null && event.type != 'unread') {
+        params['type'] = event.type;
+      }
       final response = await _api.get(
         '/v1/notifications',
-        queryParameters: {'page': event.page},
+        queryParameters: params,
       );
       final data = response.data;
       final list = data['data'] as List<dynamic>? ?? [];
@@ -106,15 +113,15 @@ class NotificationsBloc extends Bloc<NotificationEvent, NotificationsState> {
         NotificationsLoaded(
           notifications: all,
           hasMore:
-              (meta['current_page'] as int? ?? 1) <
-              (meta['last_page'] as int? ?? 1),
+              (parseIntOrNull(meta['current_page']) ?? 1) <
+              (parseIntOrNull(meta['last_page']) ?? 1),
           unreadCount: current is NotificationsLoaded
               ? current.unreadCount
-              : (data['unread_count'] as int? ?? 0),
+              : (parseIntOrNull(data['unread_count']) ?? 0),
         ),
       );
     } catch (e) {
-      emit(NotificationsError('Failed to load notifications: ${e.toString()}'));
+      emit(NotificationsError(ErrorMapper.map(e)));
     }
   }
 
@@ -191,7 +198,7 @@ class NotificationsBloc extends Bloc<NotificationEvent, NotificationsState> {
   ) async {
     try {
       final response = await _api.get('/v1/notifications/unread-count');
-      final count = response.data['unread_count'] as int? ?? 0;
+      final count = parseIntOrNull(response.data['unread_count']) ?? 0;
       final current = state;
       if (current is NotificationsLoaded) {
         emit(

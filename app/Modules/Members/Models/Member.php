@@ -69,6 +69,11 @@ class Member extends Model
     protected function casts(): array
     {
         return [
+            'id' => 'integer',
+            'user_id' => 'integer',
+            'department_id' => 'integer',
+            'program_id' => 'integer',
+            'registered_by' => 'integer',
             'date_of_birth' => 'date',
             'joined_at' => 'date',
             'expires_at' => 'date',

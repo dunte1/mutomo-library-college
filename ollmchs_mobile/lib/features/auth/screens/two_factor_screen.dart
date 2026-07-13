@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import '../../../core/services/flag_secure_service.dart';
 
 class TwoFactorScreen extends StatefulWidget {
   final int userId;
@@ -29,6 +30,7 @@ class _TwoFactorScreenState extends State<TwoFactorScreen> {
   @override
   void initState() {
     super.initState();
+    FlagSecureService.enable();
     _focusNode.requestFocus();
   }
 

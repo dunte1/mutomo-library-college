@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class BookCopyModel {
   final int id;
   final String? barcode;
@@ -42,7 +44,7 @@ class BookCopyModel {
     }
 
     return BookCopyModel(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       barcode: json['barcode'] as String?,
       rfidTag: json['rfid_tag'] as String?,
       shelfLocation: json['shelf_location'] as String?,

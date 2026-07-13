@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class DashboardModel {
   final int totalBooks;
   final int activeLoans;
@@ -33,29 +35,29 @@ class DashboardModel {
     final stats = json['stats'] as Map<String, dynamic>? ?? json;
 
     return DashboardModel(
-      totalBooks: stats['total_books'] as int? ?? 0,
+      totalBooks: parseIntOrNull(stats['total_books']) ?? 0,
       activeLoans:
-          stats['active_loans'] as int? ?? stats['active_borrows'] as int? ?? 0,
+          parseIntOrNull(stats['active_loans']) ?? parseIntOrNull(stats['active_borrows']) ?? 0,
       overdueLoans:
-          stats['overdue_loans'] as int? ??
-          stats['overdue_borrows'] as int? ??
+          parseIntOrNull(stats['overdue_loans']) ??
+          parseIntOrNull(stats['overdue_borrows']) ??
           0,
       totalFines:
-          (stats['total_fines'] as num?)?.toDouble() ??
-          (stats['pending_fines_total'] as num?)?.toDouble() ??
+          parseDoubleOrNull(stats['total_fines']) ??
+          parseDoubleOrNull(stats['pending_fines_total']) ??
           0,
-      pendingFines: stats['pending_fines'] as int? ?? 0,
-      availableBooks: stats['available_books'] as int? ?? 0,
-      digitalAssets: stats['digital_assets'] as int? ?? 0,
+      pendingFines: parseIntOrNull(stats['pending_fines']) ?? 0,
+      availableBooks: parseIntOrNull(stats['available_books']) ?? 0,
+      digitalAssets: parseIntOrNull(stats['digital_assets']) ?? 0,
       activeReservations:
-          stats['active_reservations'] as int? ??
-          stats['pending_reservations'] as int? ??
+          parseIntOrNull(stats['active_reservations']) ??
+          parseIntOrNull(stats['pending_reservations']) ??
           0,
       unreadNotifications:
-          json['unread_notifications'] as int? ??
-          stats['unread_notifications'] as int? ??
+          parseIntOrNull(json['unread_notifications']) ??
+          parseIntOrNull(stats['unread_notifications']) ??
           0,
-      unreadMessages: json['unread_messages'] as int? ?? 0,
+      unreadMessages: parseIntOrNull(json['unread_messages']) ?? 0,
       recentLoans:
           (json['recent_loans'] as List<dynamic>?)
               ?.map((e) => DashboardLoan.fromJson(e as Map<String, dynamic>))
@@ -96,7 +98,7 @@ class DashboardLoan {
     final bookData = book ?? bookCopy?['book'];
 
     return DashboardLoan(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       bookTitle: bookData?['title'] as String? ?? '',
       bookCover: bookData?['cover_image'] as String?,
       dueAt: DateTime.parse(json['due_at'] as String),
@@ -120,7 +122,7 @@ class DashboardItem {
 
   factory DashboardItem.fromJson(Map<String, dynamic> json) {
     return DashboardItem(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       title: json['title'] as String? ?? '',
       description: json['description'] as String?,
       imageUrl:

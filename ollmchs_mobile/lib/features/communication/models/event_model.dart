@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class EventModel {
   final int id;
   final String title;
@@ -30,7 +32,7 @@ class EventModel {
   factory EventModel.fromJson(Map<String, dynamic> json) {
     final organizer = json['organizer'] as Map<String, dynamic>?;
     return EventModel(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       title: json['title'] as String? ?? '',
       description: json['description'] as String?,
       location: json['location'] as String?,

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../bloc/loans_bloc.dart';
 import '../bloc/loans_event.dart';
 import '../bloc/loans_state.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/skeleton.dart';
 
 class LoanHistoryScreen extends StatefulWidget {
@@ -88,26 +89,10 @@ class _LoanHistoryScreenState extends State<LoanHistoryScreen> {
           if (state is LoansLoaded) {
             final history = state.history;
             if (history.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.history,
-                      size: 64,
-                      color: theme.colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No loan history yet',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
+              return const EmptyState(
+                icon: Icons.history,
+                title: 'No loan history',
+                subtitle: "You haven't borrowed any books yet",
               );
             }
             return RefreshIndicator(

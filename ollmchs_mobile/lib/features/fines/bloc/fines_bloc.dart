@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_client.dart';
 import '../models/fine_model.dart';
 
@@ -80,7 +81,7 @@ class FinesBloc extends Bloc<FinesEvent, FinesState> {
 
       emit(FinesLoaded(fines: fines, totalPending: total));
     } catch (e) {
-      emit(FinesError('Failed to load fines: ${e.toString()}'));
+      emit(FinesError(ErrorMapper.map(e)));
     }
   }
 
@@ -99,7 +100,7 @@ class FinesBloc extends Bloc<FinesEvent, FinesState> {
         );
       }
     } catch (e) {
-      emit(FinesError('Payment failed: ${e.toString()}'));
+      emit(FinesError(ErrorMapper.map(e)));
     }
   }
 }

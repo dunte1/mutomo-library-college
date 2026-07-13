@@ -28,9 +28,18 @@ class Environment {
   }
 
   /// API base URL.
+  ///
+  /// Can be overridden at build time via:
+  ///   --dart-define=API_BASE_URL=http://YOUR_LAN_IP:8000/api
   static String get apiBaseUrl {
+    const definedUrl = String.fromEnvironment('API_BASE_URL');
+    if (definedUrl.isNotEmpty) return definedUrl;
+
     if (kReleaseMode) {
-      return 'http://192.168.2.58:8000/api';
+      // Local dev server — use your machine's LAN IP.
+      // For emulator, use 'http://10.0.2.2:8000/api'.
+      if (isAndroid) return 'http://192.168.2.10:8000/api';
+      return 'http://localhost:8000/api';
     }
 
     // Development: use localhost
@@ -44,7 +53,7 @@ class Environment {
 
   /// WebSocket / Pusher URL (for real-time features).
   static String get wsUrl {
-    if (kReleaseMode) return 'https://library.ollmchs.ac.ke';
+    if (kReleaseMode) return 'http://localhost:8000';
     return 'http://localhost:8000';
   }
 

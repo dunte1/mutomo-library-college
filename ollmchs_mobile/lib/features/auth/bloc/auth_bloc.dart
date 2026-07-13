@@ -1,4 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/error_mapper.dart';
+import '../../../core/services/push_notification_service.dart';
+import '../../../core/utils/type_parsers.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 import '../repositories/auth_repository.dart';
@@ -32,7 +35,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (result['requires_two_factor'] == true) {
         emit(
           TwoFactorRequired(
-            userId: result['user_id'] as int,
+            userId: parseInt(result['user_id'], fieldName: 'user_id'),
             tempToken: result['temp_token'] as String,
           ),
         );
@@ -45,8 +48,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           token: result['token'] as String,
         ),
       );
+
+      // Register FCM token with server (non-blocking, best-effort)
+      try {
+        PushNotificationService().registerWithServer(_authRepository.apiClient);
+      } catch (_) {}
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      emit(AuthError(message: ErrorMapper.map(e)));
     }
   }
 
@@ -65,8 +73,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // Get user profile with the new token
       final user = await _authRepository.getUser();
       emit(Authenticated(user: user, token: token));
+
+      // Register FCM token with server after 2FA (non-blocking, best-effort)
+      try {
+        PushNotificationService().registerWithServer(_authRepository.apiClient);
+      } catch (_) {}
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      emit(AuthError(message: ErrorMapper.map(e)));
     }
   }
 
@@ -90,8 +103,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           token: result['token'] as String,
         ),
       );
+
+      // Register FCM token with server after registration (non-blocking, best-effort)
+      try {
+        PushNotificationService().registerWithServer(_authRepository.apiClient);
+      } catch (_) {}
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      emit(AuthError(message: ErrorMapper.map(e)));
     }
   }
 
@@ -99,10 +117,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       await _authRepository.logout();
-      emit(AuthUnauthenticated());
-    } catch (_) {
-      emit(AuthUnauthenticated());
-    }
+    } catch (_) {}
+    emit(AuthUnauthenticated());
   }
 
   Future<void> _onCheckAuth(
@@ -114,6 +130,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       try {
         final user = await _authRepository.getUser();
         emit(Authenticated(user: user, token: token));
+
+        // Register FCM token on auto-login from stored token (non-blocking, best-effort)
+        try {
+          PushNotificationService().registerWithServer(_authRepository.apiClient);
+        } catch (_) {}
       } catch (_) {
         emit(AuthUnauthenticated());
       }
@@ -131,7 +152,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _authRepository.forgotPassword(event.email);
       emit(PasswordResetLinkSent());
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      emit(AuthError(message: ErrorMapper.map(e)));
     }
   }
 
@@ -149,7 +170,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
       emit(PasswordResetSuccess());
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      emit(AuthError(message: ErrorMapper.map(e)));
     }
   }
 
@@ -166,7 +187,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         recoveryCodes: (result['recovery_codes'] as List<dynamic>).cast<String>(),
       ));
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      emit(AuthError(message: ErrorMapper.map(e)));
     }
   }
 
@@ -179,7 +200,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _authRepository.verifyTwoFactorSetup(code: event.code);
       emit(const TwoFactorSetupVerified());
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      emit(AuthError(message: ErrorMapper.map(e)));
     }
   }
 
@@ -196,8 +217,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final token = result['token'] as String;
       final user = await _authRepository.getUser();
       emit(Authenticated(user: user, token: token));
+
+      // Register FCM token with server after 2FA recovery (non-blocking, best-effort)
+      try {
+        PushNotificationService().registerWithServer(_authRepository.apiClient);
+      } catch (_) {}
     } catch (e) {
-      emit(AuthError(message: e.toString()));
+      emit(AuthError(message: ErrorMapper.map(e)));
     }
   }
 }

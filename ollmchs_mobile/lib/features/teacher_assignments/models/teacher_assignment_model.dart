@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class TeacherAssignmentModel {
   final int id;
   final String title;
@@ -38,7 +40,7 @@ class TeacherAssignmentModel {
 
   factory TeacherAssignmentModel.fromJson(Map<String, dynamic> json) {
     return TeacherAssignmentModel(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       title: json['title'] as String? ?? '',
       description: json['description'] as String?,
       type: json['type'] as String? ?? 'assignment',
@@ -72,7 +74,7 @@ class StudentInfo {
   final String? email;
   StudentInfo({required this.id, required this.name, this.email});
   factory StudentInfo.fromJson(Map<String, dynamic> json) => StudentInfo(
-    id: json['id'] as int,
+    id: parseInt(json['id'], fieldName: 'id'),
     name: json['name'] as String? ?? '',
     email: json['email'] as String?,
   );
@@ -83,7 +85,7 @@ class BookInfo {
   final String title;
   BookInfo({required this.id, required this.title});
   factory BookInfo.fromJson(Map<String, dynamic> json) =>
-      BookInfo(id: json['id'] as int, title: json['title'] as String? ?? '');
+      BookInfo(id: parseInt(json['id'], fieldName: 'id'), title: json['title'] as String? ?? '');
 }
 
 class AssetInfo {
@@ -91,7 +93,7 @@ class AssetInfo {
   final String title;
   AssetInfo({required this.id, required this.title});
   factory AssetInfo.fromJson(Map<String, dynamic> json) =>
-      AssetInfo(id: json['id'] as int, title: json['title'] as String? ?? '');
+      AssetInfo(id: parseInt(json['id'], fieldName: 'id'), title: json['title'] as String? ?? '');
 }
 
 class ProgramInfo {
@@ -99,7 +101,7 @@ class ProgramInfo {
   final String name;
   ProgramInfo({required this.id, required this.name});
   factory ProgramInfo.fromJson(Map<String, dynamic> json) =>
-      ProgramInfo(id: json['id'] as int, name: json['name'] as String? ?? '');
+      ProgramInfo(id: parseInt(json['id'], fieldName: 'id'), name: json['name'] as String? ?? '');
 }
 
 class DepartmentInfo {
@@ -107,7 +109,7 @@ class DepartmentInfo {
   final String name;
   DepartmentInfo({required this.id, required this.name});
   factory DepartmentInfo.fromJson(Map<String, dynamic> json) => DepartmentInfo(
-    id: json['id'] as int,
+    id: parseInt(json['id'], fieldName: 'id'),
     name: json['name'] as String? ?? '',
   );
 }
@@ -138,13 +140,13 @@ class StudentProgressModel {
 
   factory StudentProgressModel.fromJson(Map<String, dynamic> json) {
     return StudentProgressModel(
-      id: json['id'] as int,
-      studentId: json['student_id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
+      studentId: parseInt(json['student_id'], fieldName: 'student_id'),
       studentName: json['student_name'] as String? ?? '',
       status: json['status'] as String? ?? 'pending',
       viewedAt: json['viewed_at'] as String?,
       completedAt: json['completed_at'] as String?,
-      score: json['score'] as int?,
+      score: parseIntOrNull(json['score']),
       feedback: json['feedback'] as String?,
     );
   }
@@ -156,7 +158,7 @@ class StudentItem {
   final String? email;
   StudentItem({required this.id, required this.name, this.email});
   factory StudentItem.fromJson(Map<String, dynamic> json) => StudentItem(
-    id: json['id'] as int,
+    id: parseInt(json['id'], fieldName: 'id'),
     name: json['name'] as String? ?? '',
     email: json['email'] as String?,
   );
@@ -168,7 +170,7 @@ class ProgramItem {
   final String? code;
   ProgramItem({required this.id, required this.name, this.code});
   factory ProgramItem.fromJson(Map<String, dynamic> json) => ProgramItem(
-    id: json['id'] as int,
+    id: parseInt(json['id'], fieldName: 'id'),
     name: json['name'] as String? ?? '',
     code: json['code'] as String?,
   );
@@ -180,7 +182,7 @@ class DepartmentItem {
   final String? code;
   DepartmentItem({required this.id, required this.name, this.code});
   factory DepartmentItem.fromJson(Map<String, dynamic> json) => DepartmentItem(
-    id: json['id'] as int,
+    id: parseInt(json['id'], fieldName: 'id'),
     name: json['name'] as String? ?? '',
     code: json['code'] as String?,
   );

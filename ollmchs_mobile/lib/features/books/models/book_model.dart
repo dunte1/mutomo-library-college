@@ -1,3 +1,4 @@
+import '../../../core/utils/type_parsers.dart';
 import 'book_copy_model.dart';
 
 class BookModel {
@@ -71,13 +72,13 @@ class BookModel {
   factory BookModel.fromJson(Map<String, dynamic> json) {
     final copiesJson = json['copies'] as List<dynamic>?;
     return BookModel(
-      id: json['id'] as int,
-      title: json['title'] as String,
+      id: parseInt(json['id'], fieldName: 'id'),
+      title: (json['title'] as String?) ?? 'Untitled',
       isbn: json['isbn'] as String?,
       isbn13: json['isbn13'] as String?,
       description: json['description'] as String?,
-      publicationYear: json['publication_year'] as int?,
-      pageCount: json['page_count'] as int?,
+      publicationYear: parseIntOrNull(json['publication_year']),
+      pageCount: parseIntOrNull(json['page_count']),
       coverImage: json['cover_image'] as String?,
       language: json['language'] as String?,
       publisher: json['publisher'] is Map
@@ -87,15 +88,15 @@ class BookModel {
           ? json['category']['name'] as String?
           : json['category'] as String?,
       categoryId: json['category'] is Map
-          ? json['category']['id'] as int?
-          : json['category_id'] as int?,
+          ? parseIntOrNull(json['category']['id'])
+          : parseIntOrNull(json['category_id']),
       authors:
           (json['authors'] as List<dynamic>?)
-              ?.map((a) => a is Map ? a['name'] as String : a.toString())
+              ?.map((a) => a is Map ? (a['name'] as String? ?? 'Unknown') : a.toString())
               .toList() ??
           [],
-      totalCopies: json['total_copies'] as int? ?? 0,
-      availableCopies: json['available_copies'] as int? ?? 0,
+      totalCopies: parseIntOrNull(json['total_copies']) ?? 0,
+      availableCopies: parseIntOrNull(json['available_copies']) ?? 0,
       isFeatured: json['is_featured'] as bool? ?? false,
       location: json['location'] as String?,
       deweyDecimal: json['dewey_decimal'] as String?,

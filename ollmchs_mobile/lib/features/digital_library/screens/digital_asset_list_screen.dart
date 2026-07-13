@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/digital_library_bloc.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/skeleton.dart';
+import '../../../core/utils/responsive.dart';
+import '../../../core/widgets/bottom_nav_shell.dart';
 
 class DigitalAssetListScreen extends StatefulWidget {
   const DigitalAssetListScreen({super.key});
@@ -29,6 +32,12 @@ class _DigitalAssetListScreenState extends State<DigitalAssetListScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
+        leading: context.isCompact
+            ? IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => shellScaffoldKey.currentState?.openDrawer(),
+              )
+            : null,
         title: const Text('Digital Library'),
         actions: [
           IconButton(
@@ -49,7 +58,11 @@ class _DigitalAssetListScreenState extends State<DigitalAssetListScreen> {
           }
           if (state is DigitalLibraryLoaded) {
             if (state.assets.isEmpty && state.recommendations.isEmpty) {
-              return const Center(child: Text('No digital assets available'));
+              return const EmptyState(
+                icon: Icons.library_books_outlined,
+                title: 'No digital assets',
+                subtitle: 'No digital resources available yet',
+              );
             }
             return RefreshIndicator(
               onRefresh: () async {

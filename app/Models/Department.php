@@ -22,6 +22,9 @@ class Department extends Model
     protected function casts(): array
     {
         return [
+            'id' => 'integer',
+            'created_by' => 'integer',
+            'updated_by' => 'integer',
             'is_active' => 'boolean',
         ];
     }

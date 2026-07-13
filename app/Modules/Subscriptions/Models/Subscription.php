@@ -28,6 +28,9 @@ class Subscription extends Model
     ];
 
     protected $casts = [
+        'id' => 'integer',
+        'user_id' => 'integer',
+        'plan_id' => 'integer',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
         'renewal_date' => 'datetime',

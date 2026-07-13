@@ -3,6 +3,7 @@
 namespace App\Modules\API\Controllers;
 
 use App\Modules\API\Services\ApiResponseService;
+use App\Modules\Finance\Services\MpesaService;
 use App\Modules\Subscriptions\Models\Plan;
 use App\Modules\Subscriptions\Models\Subscription;
 use App\Modules\Subscriptions\Services\SubscriptionService;
@@ -13,6 +14,7 @@ class SubscriptionController extends Controller
     public function __construct(
         protected ApiResponseService $response,
         protected SubscriptionService $subscriptionService,
+        protected MpesaService $mpesaService,
     ) {}
 
     public function my(): \Illuminate\Http\JsonResponse
@@ -43,6 +45,31 @@ class SubscriptionController extends Controller
             $plan,
             ['payment_method' => $data['payment_method'] ?? null],
         );
+
+        // Initiate M-Pesa STK push if payment method is mpesa
+        if (($data['payment_method'] ?? null) === 'mpesa' && $plan->price > 0) {
+            $user = auth()->user();
+            $phone = $user->phone ?? request('phone');
+            if ($phone) {
+                try {
+                    $mpesaResult = $this->mpesaService->stkPush(
+                        amount: (float) $plan->price,
+                        phone: $phone,
+                        reference: "Subscription: {$plan->name}",
+                        userId: $user->id,
+                    );
+                    return $this->response->created(
+                        array_merge($this->format($sub), ['mpesa_stk' => $mpesaResult]),
+                        'Subscription created. Please complete M-Pesa payment.',
+                    );
+                } catch (\Exception $e) {
+                    return $this->response->created(
+                        $this->format($sub),
+                        'Subscription created but M-Pesa payment initiation failed. Please try again.',
+                    );
+                }
+            }
+        }
 
         return $this->response->created($this->format($sub), 'Subscription created successfully.');
     }

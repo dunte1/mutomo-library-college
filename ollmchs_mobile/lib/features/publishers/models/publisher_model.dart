@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class PublisherModel {
   final int id;
   final String name;
@@ -21,14 +23,14 @@ class PublisherModel {
 
   factory PublisherModel.fromJson(Map<String, dynamic> json) {
     return PublisherModel(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       name: json['name'] as String? ?? '',
       description: json['description'] as String?,
       website: json['website'] as String?,
       email: json['email'] as String?,
       phone: json['phone'] as String?,
       address: json['address'] as String?,
-      booksCount: json['books_count'] as int? ?? 0,
+      booksCount: parseIntOrNull(json['books_count']) ?? 0,
     );
   }
 }

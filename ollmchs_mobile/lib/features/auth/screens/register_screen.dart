@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/services/flag_secure_service.dart';
+import '../../../core/utils/type_parsers.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -34,6 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void initState() {
     super.initState();
+    FlagSecureService.enable();
     _fetchDepartments();
   }
 
@@ -137,8 +140,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     border: OutlineInputBorder(),
                   ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty)
+                    if (v == null || v.trim().isEmpty) {
                       return 'Enter your email';
+                    }
                     if (!v.contains('@')) return 'Enter a valid email';
                     return null;
                   },
@@ -158,7 +162,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 16),
 
                 DropdownButtonFormField<String>(
-                  value: _selectedRole,
+                  initialValue: _selectedRole,
                   decoration: const InputDecoration(
                     labelText: 'Role',
                     prefixIcon: Icon(Icons.badge_outlined),
@@ -197,7 +201,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const LinearProgressIndicator()
                   else
                     DropdownButtonFormField<int>(
-                      value: _selectedDepartmentId,
+                      initialValue: _selectedDepartmentId,
                       decoration: const InputDecoration(
                         labelText: 'Department',
                         prefixIcon: Icon(Icons.business_outlined),
@@ -206,7 +210,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       items: _departments
                           .map(
                             (d) => DropdownMenuItem(
-                              value: d['id'] as int,
+                              value: parseInt(d['id'], fieldName: 'department_id'),
                               child: Text(d['name'] as String),
                             ),
                           )
@@ -225,7 +229,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 16),
 
                   DropdownButtonFormField<int>(
-                    value: _selectedProgramId,
+                    initialValue: _selectedProgramId,
                     decoration: const InputDecoration(
                       labelText: 'Program',
                       prefixIcon: Icon(Icons.school_outlined),
@@ -234,7 +238,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     items: _programs
                         .map(
                           (p) => DropdownMenuItem(
-                            value: p['id'] as int,
+                            value: parseInt(p['id'], fieldName: 'program_id'),
                             child: Text(p['name'] as String),
                           ),
                         )
@@ -269,8 +273,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.length < 8)
+                    if (v == null || v.length < 8) {
                       return 'Password must be at least 8 characters';
+                    }
                     return null;
                   },
                 ),
@@ -295,8 +300,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v != _passwordController.text)
+                    if (v != _passwordController.text) {
                       return 'Passwords do not match';
+                    }
                     return null;
                   },
                   onFieldSubmitted: (_) => _register(),

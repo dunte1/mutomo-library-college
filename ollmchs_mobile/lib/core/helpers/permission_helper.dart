@@ -147,7 +147,9 @@ class PermissionHelper {
   static bool canSendMessages(UserModel user) =>
       hasPermission(user, permissionSendMessages) || isAdmin(user);
   static bool canViewMessages(UserModel user) =>
-      hasPermission(user, permissionViewMessages) || isAdmin(user);
+      _permissionsUnrestricted(user) ||
+      hasPermission(user, permissionViewMessages) ||
+      isAdmin(user);
   static bool canAccessNotifications(UserModel user) =>
       _permissionsUnrestricted(user) ||
       hasAnyPermission(user, [

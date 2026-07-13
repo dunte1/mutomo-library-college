@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class SubscriptionPlanModel {
   final int id;
   final String name;
@@ -21,12 +23,12 @@ class SubscriptionPlanModel {
 
   factory SubscriptionPlanModel.fromJson(Map<String, dynamic> json) {
     return SubscriptionPlanModel(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       name: json['name'] as String? ?? '',
       description: json['description'] as String?,
       price: (json['price'] as num).toDouble(),
       currency: json['currency'] as String? ?? 'KES',
-      durationDays: json['duration_days'] as int? ?? 30,
+      durationDays: parseIntOrNull(json['duration_days']) ?? 30,
       features:
           (json['features'] as List<dynamic>?)
               ?.map((e) => e.toString())
@@ -68,8 +70,8 @@ class UserSubscriptionModel {
   factory UserSubscriptionModel.fromJson(Map<String, dynamic> json) {
     final plan = json['plan'] as Map<String, dynamic>?;
     return UserSubscriptionModel(
-      id: json['id'] as int,
-      planId: plan?['id'] as int? ?? json['plan_id'] as int? ?? 0,
+      id: parseInt(json['id'], fieldName: 'id'),
+      planId: parseIntOrNull(plan?['id']) ?? parseIntOrNull(json['plan_id']) ?? 0,
       planName: plan?['name'] as String? ?? json['plan_name'] as String? ?? '',
       status: json['status'] as String? ?? 'active',
       startAt: DateTime.parse(json['start_at'] as String),

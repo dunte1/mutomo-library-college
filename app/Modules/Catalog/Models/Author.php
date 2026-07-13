@@ -29,6 +29,9 @@ class Author extends Model
     protected function casts(): array
     {
         return [
+            'id' => 'integer',
+            'created_by' => 'integer',
+            'updated_by' => 'integer',
             'birth_date' => 'date',
             'death_date' => 'date',
             'is_active' => 'boolean',

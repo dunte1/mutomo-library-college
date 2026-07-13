@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import '../bloc/profile_bloc.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../auth/bloc/auth_event.dart';
+import '../../../core/utils/responsive.dart';
+import '../../../core/widgets/bottom_nav_shell.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -22,15 +24,86 @@ class _ProfileScreenState extends State<ProfileScreen> {
     context.read<ProfileBloc>().add(const LoadProfile());
   }
 
-  Future<void> _pickAndUploadAvatar() async {
+  Future<void> _pickAndUploadAvatar(ImageSource source) async {
     final file = await _picker.pickImage(
-      source: ImageSource.gallery,
+      source: source,
       maxWidth: 512,
       maxHeight: 512,
+      imageQuality: 85,
     );
     if (file != null && mounted) {
       context.read<ProfileBloc>().add(UploadProfilePhoto(file.path));
     }
+  }
+
+  void _showAvatarOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Take Photo'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickAndUploadAvatar(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Choose from Gallery'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickAndUploadAvatar(ImageSource.gallery);
+              },
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: Icon(
+                Icons.delete_outline,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              title: Text(
+                'Remove Photo',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+              onTap: () {
+                Navigator.pop(ctx);
+                _confirmRemovePhoto();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmRemovePhoto() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove Photo'),
+        content: const Text('Are you sure you want to remove your profile photo?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<ProfileBloc>().add(const RemoveProfilePhoto());
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -38,6 +111,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
+        leading: context.isCompact
+            ? IconButton(
+                icon: const Icon(Icons.menu),
+                onPressed: () => shellScaffoldKey.currentState?.openDrawer(),
+              )
+            : null,
         title: const Text('Profile'),
         actions: [
           IconButton(
@@ -61,8 +140,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (state is ProfileError) {
             return Center(child: Text(state.error));
           }
-          if (state is ProfileLoaded) {
-            final user = state.user;
+          if (state is ProfileLoaded || state is ProfilePhotoUploading) {
+            final user = state is ProfilePhotoUploading
+                ? state.user
+                : (state as ProfileLoaded).user;
+            final isUploading = state is ProfilePhotoUploading;
             return RefreshIndicator(
               onRefresh: () async =>
                   context.read<ProfileBloc>().add(const LoadProfile()),
@@ -88,11 +170,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     )
                                   : null,
                             ),
+                            if (isUploading)
+                              const Positioned.fill(
+                                child: CircleAvatar(
+                                  radius: 48,
+                                  backgroundColor: Colors.black45,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                             Positioned(
                               bottom: 0,
                               right: 0,
                               child: GestureDetector(
-                                onTap: _pickAndUploadAvatar,
+                                onTap: _showAvatarOptions,
                                 child: CircleAvatar(
                                   radius: 14,
                                   backgroundColor: theme.colorScheme.primary,

@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/utils/type_parsers.dart';
 import '../models/teacher_assignment_model.dart';
 
 part 'teacher_assignments_event.dart';
@@ -49,7 +51,7 @@ class TeacherAssignmentsBloc
       emit(TeacherAssignmentsLoaded(assignments: assignments));
     } catch (e) {
       emit(
-        TeacherAssignmentsError('Failed to load assignments: ${e.toString()}'),
+        TeacherAssignmentsError(ErrorMapper.map(e)),
       );
     }
   }
@@ -70,7 +72,7 @@ class TeacherAssignmentsBloc
       }
     } catch (e) {
       emit(
-        TeacherAssignmentsError('Failed to load assignment: ${e.toString()}'),
+        TeacherAssignmentsError(ErrorMapper.map(e)),
       );
     }
   }
@@ -86,7 +88,7 @@ class TeacherAssignmentsBloc
         TeacherAssignmentsLoaded(message: 'Assignment created successfully'),
       );
     } catch (e) {
-      emit(TeacherAssignmentsError('Failed to create: ${e.toString()}'));
+      emit(TeacherAssignmentsError(ErrorMapper.map(e)));
     }
   }
 
@@ -104,7 +106,7 @@ class TeacherAssignmentsBloc
         TeacherAssignmentsLoaded(message: 'Assignment updated successfully'),
       );
     } catch (e) {
-      emit(TeacherAssignmentsError('Failed to update: ${e.toString()}'));
+      emit(TeacherAssignmentsError(ErrorMapper.map(e)));
     }
   }
 
@@ -117,7 +119,7 @@ class TeacherAssignmentsBloc
       add(const LoadTeacherAssignments());
       emit(TeacherAssignmentsLoaded(message: 'Assignment deleted'));
     } catch (e) {
-      emit(TeacherAssignmentsError('Failed to delete: ${e.toString()}'));
+      emit(TeacherAssignmentsError(ErrorMapper.map(e)));
     }
   }
 
@@ -147,7 +149,7 @@ class TeacherAssignmentsBloc
         );
       }
     } catch (e) {
-      emit(TeacherAssignmentsError('Failed to load progress: ${e.toString()}'));
+      emit(TeacherAssignmentsError(ErrorMapper.map(e)));
     }
   }
 
@@ -158,8 +160,9 @@ class TeacherAssignmentsBloc
     try {
       final params = <String, dynamic>{};
       if (event.programId != null) params['program_id'] = event.programId;
-      if (event.departmentId != null)
+      if (event.departmentId != null) {
         params['department_id'] = event.departmentId;
+      }
       final response = await _api.get('/v1/students', queryParameters: params);
       final data = response.data['data'] as List<dynamic>? ?? [];
       final students = data
@@ -219,7 +222,7 @@ class TeacherAssignmentsBloc
       final books = data
           .map(
             (e) => BookInfo(
-              id: e['id'] as int,
+              id: parseInt(e['id'], fieldName: 'id'),
               title: e['title'] as String? ?? '',
             ),
           )
@@ -244,7 +247,7 @@ class TeacherAssignmentsBloc
       final assets = data
           .map(
             (e) => AssetInfo(
-              id: e['id'] as int,
+              id: parseInt(e['id'], fieldName: 'id'),
               title: e['title'] as String? ?? '',
             ),
           )

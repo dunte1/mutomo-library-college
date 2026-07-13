@@ -29,6 +29,11 @@ class Fine extends Model
     protected function casts(): array
     {
         return [
+            'id' => 'integer',
+            'borrow_record_id' => 'integer',
+            'user_id' => 'integer',
+            'waived_by' => 'integer',
+            'assessed_by' => 'integer',
             'amount' => 'decimal:2',
             'paid_amount' => 'decimal:2',
             'waived_amount' => 'decimal:2',

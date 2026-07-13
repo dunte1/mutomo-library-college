@@ -25,6 +25,9 @@ class Reservation extends Model
     protected function casts(): array
     {
         return [
+            'id' => 'integer',
+            'user_id' => 'integer',
+            'book_id' => 'integer',
             'reserved_at' => 'datetime',
             'expires_at' => 'datetime',
             'notified_at' => 'datetime',

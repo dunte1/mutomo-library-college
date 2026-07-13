@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class DigitalAssetModel {
   final int id;
   final String title;
@@ -42,7 +44,7 @@ class DigitalAssetModel {
         [];
 
     return DigitalAssetModel(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       title: json['title'] as String? ?? '',
       description: json['description'] as String?,
       fileType: json['file_type'] as String?,
@@ -54,13 +56,13 @@ class DigitalAssetModel {
           : json['category'] as String?,
       authors: authors,
       fileSize: json['file_size'] != null
-          ? _formatFileSize(json['file_size'] as int)
+          ? _formatFileSize(parseInt(json['file_size'], fieldName: 'file_size'))
           : null,
-      pageCount: json['page_count'] as int?,
+      pageCount: parseIntOrNull(json['page_count']),
       averageRating: json['average_rating'] != null
           ? (json['average_rating'] as num).toDouble()
           : null,
-      downloadCount: json['download_count'] as int?,
+      downloadCount: parseIntOrNull(json['download_count']),
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'] as String)
           : null,
@@ -99,8 +101,8 @@ class ReadingHistoryModel {
     final asset = json['digital_asset'] as Map<String, dynamic>?;
 
     return ReadingHistoryModel(
-      id: json['id'] as int,
-      assetId: asset?['id'] as int? ?? json['digital_asset_id'] as int? ?? 0,
+      id: parseInt(json['id'], fieldName: 'id'),
+      assetId: parseIntOrNull(asset?['id']) ?? parseIntOrNull(json['digital_asset_id']) ?? 0,
       assetTitle:
           asset?['title'] as String? ?? json['asset_title'] as String? ?? '',
       assetCover:
@@ -113,7 +115,7 @@ class ReadingHistoryModel {
       lastReadAt: json['last_read_at'] != null
           ? DateTime.tryParse(json['last_read_at'] as String)
           : null,
-      totalPages: json['total_pages'] as int? ?? asset?['page_count'] as int?,
+      totalPages: parseIntOrNull(json['total_pages']) ?? parseIntOrNull(asset?['page_count']),
     );
   }
 }
@@ -142,7 +144,7 @@ class RecommendationModel {
     final asset = json['digital_asset'] as Map<String, dynamic>?;
 
     return RecommendationModel(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       title:
           book?['title'] as String? ??
           asset?['title'] as String? ??
@@ -154,7 +156,7 @@ class RecommendationModel {
           book?['cover_image'] as String? ?? asset?['thumbnail_url'] as String?,
       type:
           json['type'] as String? ?? (book != null ? 'book' : 'digital_asset'),
-      score: json['score'] != null ? (json['score'] as num).toDouble() : null,
+      score: json['score'] != null ? parseDouble(json['score'], fieldName: 'score') : null,
       reason: json['reason'] as String? ?? 'Recommended for you',
     );
   }

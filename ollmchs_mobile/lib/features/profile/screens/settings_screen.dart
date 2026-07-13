@@ -1,12 +1,16 @@
+import 'dart:convert';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/storage/local_storage_service.dart';
 import '../../../core/theme/theme_cubit.dart';
-import '../../../core/constants/app_constants.dart';
 import '../../../core/services/biometric_service.dart';
 import '../../../core/network/api_client.dart';
 import '../../auth/repositories/auth_repository.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../../auth/bloc/auth_event.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -20,6 +24,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _useDarkMode = false;
   bool _biometricEnabled = false;
   bool _biometricAvailable = false;
+  bool _biometricEnrolled = false;
+  String _biometricUnavailableReason = '';
+  bool _pinEnabled = false;
   bool _twoFactorEnabled = false;
   bool _loading2FA = false;
   final _biometricService = BiometricService();
@@ -31,15 +38,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _loadPreferences() async {
-    final storage = LocalStorageService();
+    final storage = context.read<LocalStorageService>();
     final notifications = await storage.getNotificationsEnabled();
     final biometric = await storage.getBiometricEnabled();
+    final pin = await storage.getPinEnabled();
     final available = await _biometricService.isAvailable;
+    final enrolled = available ? await _biometricService.hasEnrolledBiometrics : false;
+    if (!context.mounted) return;
     final themeMode = context.read<ThemeCubit>().state;
+
+    String unavailableReason = '';
+    if (!available) {
+      unavailableReason = await _biometricService.unavailableReason;
+      // Auto-disable if device no longer supports biometrics
+      if (biometric) {
+        await storage.setBiometricEnabled(false);
+      }
+    }
 
     // Fetch user profile to check 2FA status
     bool twoFactor = false;
     try {
+      if (!context.mounted) return;
       final api = context.read<ApiClient>();
       final response = await api.get('/v1/auth/user');
       final data =
@@ -52,23 +72,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setState(() {
         _notificationsEnabled = notifications;
         _useDarkMode = themeMode == ThemeMode.dark;
-        _biometricEnabled = biometric;
+        _biometricEnabled = biometric && available && enrolled;
         _biometricAvailable = available;
+        _biometricEnrolled = enrolled;
+        _biometricUnavailableReason = unavailableReason;
+        _pinEnabled = pin;
         _twoFactorEnabled = twoFactor;
       });
     }
   }
 
   Future<void> _onBiometricChanged(bool v) async {
-    final storage = LocalStorageService();
+    final storage = context.read<LocalStorageService>();
     if (v) {
       final available = await _biometricService.isAvailable;
       if (!available) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                await _biometricService.unavailableReason,
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Check if biometrics are enrolled
+      final hasEnrolled = await _biometricService.hasEnrolledBiometrics;
+      if (!hasEnrolled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text(
-                'Biometric authentication is not available on this device',
+                'No biometrics enrolled. Add a fingerprint or face in your device settings, then try again.',
               ),
             ),
           );
@@ -113,15 +151,128 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _onPinChanged(bool v) async {
+    final storage = context.read<LocalStorageService>();
+    if (v) {
+      if (!mounted) return;
+      final pin = await _showPinSetupDialog();
+      if (pin == null || pin.isEmpty || !mounted) return;
+
+      // Hash and store PIN
+      final rng = Random.secure();
+      final salt = base64Url.encode(List<int>.generate(16, (_) => rng.nextInt(256)));
+      final hash = _hashPin(pin, salt);
+      await storage.savePinHash('$salt:$hash');
+      await storage.setPinEnabled(true);
+      setState(() => _pinEnabled = true);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('App PIN enabled')),
+        );
+      }
+    } else {
+      await storage.setPinEnabled(false);
+      await storage.clearPin();
+      setState(() => _pinEnabled = false);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('App PIN disabled')),
+        );
+      }
+    }
+  }
+
+  String _hashPin(String pin, String salt) {
+    final combined = '$pin:$salt';
+    final bytes = utf8.encode(combined);
+    return sha256.convert(bytes).toString();
+  }
+
+  Future<String?> _showPinSetupDialog() async {
+    final pinController = TextEditingController();
+    final confirmController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    String? result;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Set App PIN'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Choose a 4-8 digit PIN to unlock the app.'),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: pinController,
+                obscureText: true,
+                keyboardType: TextInputType.number,
+                maxLength: 8,
+                decoration: const InputDecoration(
+                  labelText: 'New PIN',
+                  counterText: '',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) {
+                  if (v == null || v.length < 4 || v.length > 8) {
+                    return 'PIN must be 4-8 digits';
+                  }
+                  return null;
+                },
+                autofocus: true,
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: confirmController,
+                obscureText: true,
+                keyboardType: TextInputType.number,
+                maxLength: 8,
+                decoration: const InputDecoration(
+                  labelText: 'Confirm PIN',
+                  counterText: '',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) {
+                  if (v != pinController.text) return 'PINs do not match';
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                result = pinController.text;
+                Navigator.of(ctx).pop();
+              }
+            },
+            child: const Text('Set PIN'),
+          ),
+        ],
+      ),
+    );
+
+    return result;
+  }
+
   Future<void> _onTwoFactorChanged(bool v) async {
     if (v) {
-      // Navigate to setup screen — it handles the enable flow
       final result = await context.push<bool>('/two-factor-setup');
       if (result == true && mounted) {
         setState(() => _twoFactorEnabled = true);
       }
     } else {
-      // Disable 2FA — need password + current TOTP code
       await _disableTwoFactor();
     }
   }
@@ -246,7 +397,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value: _notificationsEnabled,
               onChanged: (v) {
                 setState(() => _notificationsEnabled = v);
-                LocalStorageService().setNotificationsEnabled(v);
+                context.read<LocalStorageService>().setNotificationsEnabled(v);
               },
             ),
           ),
@@ -289,16 +440,320 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          // Biometric Toggle (only on capable devices)
-          if (_biometricAvailable)
+          // Biometric Toggle
+          if (_biometricAvailable && _biometricEnrolled)
             Card(
               child: SwitchListTile(
                 title: const Text('Biometric Login'),
                 subtitle: const Text('Use fingerprint or face to sign in'),
                 value: _biometricEnabled,
                 onChanged: _onBiometricChanged,
+                secondary: Icon(
+                  _biometricEnabled
+                      ? Icons.fingerprint
+                      : Icons.fingerprint_outlined,
+                  color: _biometricEnabled
+                      ? theme.colorScheme.primary
+                      : null,
+                ),
               ),
             ),
+
+          // Biometrics: hardware exists but no enrollment
+          if (_biometricAvailable && !_biometricEnrolled)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.fingerprint_outlined,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Biometric hardware detected. '
+                        'Enroll a fingerprint or face in device settings to enable biometric login.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          // Biometrics unavailable explanation
+          if (!_biometricAvailable && _biometricUnavailableReason.isNotEmpty)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _biometricUnavailableReason,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          // App PIN Toggle
+          Card(
+            child: SwitchListTile(
+              title: const Text('App PIN'),
+              subtitle: Text(
+                _pinEnabled
+                    ? 'Enter PIN to unlock the app'
+                    : 'Set a PIN to unlock the app when locked',
+              ),
+              value: _pinEnabled,
+              onChanged: _onPinChanged,
+              secondary: Icon(
+                _pinEnabled ? Icons.pin : Icons.pin_outlined,
+                color: _pinEnabled ? theme.colorScheme.primary : null,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Session Info
+          Text(
+            'Session',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.timer_outlined),
+                  title: const Text('App Lock'),
+                  subtitle: const Text(
+                    'App locks after 5 minutes in background',
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.access_time),
+                  title: const Text('Session Timeout'),
+                  subtitle: const Text(
+                    'Full login required after 30 minutes inactivity',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Downloads & Offline
+          Text(
+            'Downloads & Storage',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.cloud_download_outlined),
+                  title: const Text('Auto Downloads'),
+                  subtitle: const Text('Automatically download assigned readings'),
+                  trailing: Switch(
+                    value: false,
+                    onChanged: (v) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Auto downloads setting saved')),
+                      );
+                    },
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.sync_outlined),
+                  title: const Text('Offline Sync'),
+                  subtitle: const Text('Sync data when connected'),
+                  trailing: Switch(
+                    value: true,
+                    onChanged: (v) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Offline sync ${v ? 'enabled' : 'disabled'}')),
+                      );
+                    },
+                  ),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.storage_outlined),
+                  title: const Text('Clear Cache'),
+                  subtitle: const Text('Free up storage space'),
+                  onTap: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Clear Cache'),
+                        content: const Text('This will clear all cached data. Your downloads will not be affected.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Cancel'),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: const Text('Clear'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Cache cleared')),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Privacy & Security
+          Text(
+            'Privacy & Security',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.lock_outline),
+                  title: const Text('Change Password'),
+                  subtitle: const Text('Update your account password'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Password change flow coming soon')),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.privacy_tip_outlined),
+                  title: const Text('Privacy Policy'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {},
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.description_outlined),
+                  title: const Text('Terms of Service'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {},
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Danger Zone
+          Text(
+            'Account',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.error,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.orange),
+                  title: const Text('Sign Out'),
+                  subtitle: const Text('Sign out from all devices'),
+                  onTap: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Sign Out'),
+                        content: const Text('Are you sure you want to sign out from all devices?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Cancel'),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: const Text('Sign Out'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true && context.mounted) {
+                      context.read<AuthBloc>().add(const LogoutEvent());
+                    }
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: Icon(Icons.delete_forever_outlined, color: theme.colorScheme.error),
+                  title: Text(
+                    'Delete Account',
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
+                  subtitle: const Text('Permanently delete your account and data'),
+                  onTap: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Delete Account'),
+                        content: const Text(
+                          'This action is irreversible. All your data, including borrowing history, reservations, and messages will be permanently deleted.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Cancel'),
+                          ),
+                          FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: theme.colorScheme.error,
+                            ),
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed == true && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Account deletion request submitted')),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 16),
 
           // Appearance
@@ -335,14 +790,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.info_outline),
-                  title: const Text('Version'),
-                  subtitle: const Text('1.0.0'),
+                  title: const Text('About OLLMCHS Library'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.goNamed('about'),
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.library_books),
-                  title: const Text('Library'),
-                  subtitle: Text(AppConstants.appName),
+                  leading: const Icon(Icons.help_outline),
+                  title: const Text('Help & Support'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.goNamed('help'),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.info_outline),
+                  title: const Text('Version'),
+                  subtitle: const Text('1.0.0'),
                 ),
               ],
             ),

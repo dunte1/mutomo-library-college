@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_client.dart';
 import '../../auth/models/user_model.dart';
 
@@ -35,6 +36,10 @@ class UploadProfilePhoto extends ProfileEvent {
   const UploadProfilePhoto(this.imagePath);
   @override
   List<Object?> get props => [imagePath];
+}
+
+class RemoveProfilePhoto extends ProfileEvent {
+  const RemoveProfilePhoto();
 }
 
 class ChangePassword extends ProfileEvent {
@@ -74,6 +79,13 @@ class ProfileError extends ProfileState {
   List<Object?> get props => [error];
 }
 
+class ProfilePhotoUploading extends ProfileState {
+  final UserModel user;
+  const ProfilePhotoUploading({required this.user});
+  @override
+  List<Object?> get props => [user];
+}
+
 // Bloc
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final ApiClient _api;
@@ -82,6 +94,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     on<LoadProfile>(_onLoad);
     on<UpdateProfile>(_onUpdate);
     on<UploadProfilePhoto>(_onUploadPhoto);
+    on<RemoveProfilePhoto>(_onRemovePhoto);
     on<ChangePassword>(_onChangePassword);
   }
 
@@ -94,7 +107,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
           response.data as Map<String, dynamic>;
       emit(ProfileLoaded(user: UserModel.fromJson(data)));
     } catch (e) {
-      emit(ProfileError('Failed to load profile: ${e.toString()}'));
+      emit(ProfileError(ErrorMapper.map(e)));
     }
   }
 
@@ -122,7 +135,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         ),
       );
     } catch (e) {
-      emit(ProfileError('Update failed: ${e.toString()}'));
+      emit(ProfileError(ErrorMapper.map(e)));
     }
   }
 
@@ -130,6 +143,10 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     UploadProfilePhoto event,
     Emitter<ProfileState> emit,
   ) async {
+    final current = state;
+    if (current is ProfileLoaded) {
+      emit(ProfilePhotoUploading(user: current.user));
+    }
     try {
       final formData = FormData.fromMap({
         'avatar': await MultipartFile.fromFile(event.imagePath),
@@ -144,7 +161,29 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         ProfileLoaded(user: UserModel.fromJson(data), message: 'Photo updated'),
       );
     } catch (e) {
-      emit(ProfileError('Photo upload failed: ${e.toString()}'));
+      emit(ProfileError(ErrorMapper.map(e)));
+    }
+  }
+
+  Future<void> _onRemovePhoto(
+    RemoveProfilePhoto event,
+    Emitter<ProfileState> emit,
+  ) async {
+    final current = state;
+    if (current is ProfileLoaded) {
+      emit(ProfilePhotoUploading(user: current.user));
+    }
+    try {
+      await _api.delete('/v1/profile/avatar');
+      final response = await _api.get('/v1/profile');
+      final data =
+          response.data['data'] as Map<String, dynamic>? ??
+          response.data as Map<String, dynamic>;
+      emit(
+        ProfileLoaded(user: UserModel.fromJson(data), message: 'Photo removed'),
+      );
+    } catch (e) {
+      emit(ProfileError(ErrorMapper.map(e)));
     }
   }
 
@@ -166,7 +205,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         emit(ProfileLoaded(user: current.user, message: 'Password changed'));
       }
     } catch (e) {
-      emit(ProfileError('Password change failed: ${e.toString()}'));
+      emit(ProfileError(ErrorMapper.map(e)));
     }
   }
 }

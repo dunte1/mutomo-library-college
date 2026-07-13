@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class LoanModel {
   final int id;
   final int bookCopyId;
@@ -67,9 +69,9 @@ class LoanModel {
     final bookData = book ?? bookCopy?['book'] as Map<String, dynamic>?;
 
     return LoanModel(
-      id: json['id'] as int,
-      bookCopyId: json['book_copy_id'] as int? ?? 0,
-      bookId: bookData?['id'] as int? ?? 0,
+      id: parseInt(json['id'], fieldName: 'id'),
+      bookCopyId: parseIntOrNull(json['book_copy_id']) ?? 0,
+      bookId: parseIntOrNull(bookData?['id']) ?? 0,
       bookTitle: _extractBookTitle(bookData, json),
       bookCover:
           bookData?['cover_image'] as String? ??
@@ -84,12 +86,12 @@ class LoanModel {
       renewedAt: json['renewed_at'] != null
           ? DateTime.tryParse(json['renewed_at'] as String)
           : null,
-      renewalCount: json['renewal_count'] as int? ?? 0,
-      maxRenewals: json['max_renewals'] as int? ?? 3,
+      renewalCount: parseIntOrNull(json['renewal_count']) ?? 0,
+      maxRenewals: parseIntOrNull(json['max_renewals']) ?? 3,
       canRenew: json['can_renew'] as bool? ?? false,
       status: json['status'] as String? ?? 'active',
-      daysRemaining: json['days_remaining'] as int?,
-      daysOverdue: json['days_overdue'] as int?,
+      daysRemaining: parseIntOrNull(json['days_remaining']),
+      daysOverdue: parseIntOrNull(json['days_overdue']),
     );
   }
 
@@ -160,7 +162,7 @@ class LoanHistoryModel {
     }
 
     return LoanHistoryModel(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       bookTitle: title,
       bookCover: cover,
       borrowedAt: DateTime.parse(json['borrowed_at'] as String),

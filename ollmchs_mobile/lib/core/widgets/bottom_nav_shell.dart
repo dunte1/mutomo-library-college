@@ -4,8 +4,12 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/bloc/auth_bloc.dart';
 import '../../features/auth/bloc/auth_state.dart';
 import '../../features/auth/models/user_model.dart';
+import '../../features/messaging/bloc/messaging_bloc.dart';
 import '../helpers/permission_helper.dart';
 import '../utils/responsive.dart';
+import 'app_drawer.dart';
+
+final GlobalKey<ScaffoldState> shellScaffoldKey = GlobalKey<ScaffoldState>();
 
 class _TabItem {
   final String label;
@@ -44,6 +48,13 @@ final _allTabs = [
     selectedIcon: Icons.library_books,
     route: '/loans',
     isAllowed: PermissionHelper.canBorrowBooks,
+  ),
+  _TabItem(
+    label: 'Messages',
+    icon: Icons.mail_outlined,
+    selectedIcon: Icons.mail,
+    route: '/messages',
+    isAllowed: PermissionHelper.canViewMessages,
   ),
   _TabItem(
     label: 'Digital',
@@ -90,22 +101,41 @@ class BottomNavShell extends StatelessWidget {
     }
   }
 
+  int _unreadCount(BuildContext context) {
+    final state = context.watch<MessagingBloc>().state;
+    if (state is MessagingLoaded) return state.unreadCount;
+    return 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     final tabs = _allowedTabs(context);
     final selectedIndex = _currentIndex(context, tabs);
+    final unread = _unreadCount(context);
 
     if (context.isCompact) {
       return Scaffold(
+        key: shellScaffoldKey,
         body: child,
+        drawer: const AppDrawer(),
         bottomNavigationBar: NavigationBar(
           selectedIndex: selectedIndex,
           onDestinationSelected: (i) => _onTap(context, tabs, i),
           destinations: tabs
               .map(
                 (t) => NavigationDestination(
-                  icon: Icon(t.icon),
-                  selectedIcon: Icon(t.selectedIcon),
+                  icon: t.label == 'Messages' && unread > 0
+                      ? Badge(
+                          label: Text(unread.toString()),
+                          child: Icon(t.icon),
+                        )
+                      : Icon(t.icon),
+                  selectedIcon: t.label == 'Messages' && unread > 0
+                      ? Badge(
+                          label: Text(unread.toString()),
+                          child: Icon(t.selectedIcon),
+                        )
+                      : Icon(t.selectedIcon),
                   label: t.label,
                 ),
               )
@@ -129,15 +159,25 @@ class BottomNavShell extends StatelessWidget {
               ),
             ),
             labelType: context.isExpanded
-                ? NavigationRailLabelType.all
+                ? null
                 : NavigationRailLabelType.none,
             extended: context.isExpanded,
             minExtendedWidth: 200,
             destinations: tabs
                 .map(
                   (t) => NavigationRailDestination(
-                    icon: Icon(t.icon),
-                    selectedIcon: Icon(t.selectedIcon),
+                    icon: t.label == 'Messages' && unread > 0
+                        ? Badge(
+                            label: Text(unread.toString()),
+                            child: Icon(t.icon),
+                          )
+                        : Icon(t.icon),
+                    selectedIcon: t.label == 'Messages' && unread > 0
+                        ? Badge(
+                            label: Text(unread.toString()),
+                            child: Icon(t.selectedIcon),
+                          )
+                        : Icon(t.selectedIcon),
                     label: Text(t.label),
                   ),
                 )

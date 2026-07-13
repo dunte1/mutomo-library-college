@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../bloc/books_bloc.dart';
 import '../bloc/books_event.dart';
 import '../bloc/books_state.dart';
+import '../../../core/widgets/empty_state.dart';
 
 class BookSearchScreen extends StatefulWidget {
   const BookSearchScreen({super.key});
@@ -60,7 +61,11 @@ class _BookSearchScreenState extends State<BookSearchScreen> {
           }
           if (state is BooksLoaded && state.searchQuery != null) {
             if (state.books.isEmpty) {
-              return const Center(child: Text('No results found'));
+              return const EmptyState(
+                icon: Icons.search_off,
+                title: 'No results found',
+                subtitle: 'Try adjusting your search terms',
+              );
             }
             return ListView.separated(
               padding: const EdgeInsets.all(12),

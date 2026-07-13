@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class NotificationModel {
   final int id;
   final String title;
@@ -23,7 +25,7 @@ class NotificationModel {
     final data = json['data'] as Map<String, dynamic>? ?? json;
 
     return NotificationModel(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       title: data['title'] as String? ?? json['title'] as String? ?? '',
       body:
           data['body'] as String? ??
@@ -31,7 +33,7 @@ class NotificationModel {
           json['message'] as String? ??
           '',
       type: data['type'] as String? ?? json['type'] as String?,
-      referenceId: data['reference_id'] as int? ?? json['reference_id'] as int?,
+      referenceId: parseIntOrNull(data['reference_id']) ?? parseIntOrNull(json['reference_id']),
       isRead: json['read_at'] != null || json['is_read'] == true,
       createdAt: DateTime.parse(json['created_at'] as String),
       iconUrl: json['icon_url'] as String?,

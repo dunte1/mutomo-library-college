@@ -43,39 +43,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final authState = context.read<AuthBloc>().state;
     final user = authState is Authenticated ? authState.user : UserModel(id: 0, name: '', email: '');
     final greeting = _greeting(user);
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              greeting,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.normal,
+    return SafeArea(
+      child: Column(
+        children: [
+          // Custom AppBar area
+          Material(
+            color: theme.colorScheme.surface,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              child: Row(
+                children: [
+                  Builder(
+                    builder: (btnContext) => IconButton(
+                      icon: const Icon(Icons.menu),
+                      onPressed: () => Scaffold.of(btnContext).openDrawer(),
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          greeting,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                        Text(
+                          user.name,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: () => context.goNamed('notifications'),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.person_outline),
+                    onPressed: () => context.goNamed('profile'),
+                  ),
+                ],
               ),
             ),
-            Text(
-              user.name,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () => context.goNamed('notifications'),
           ),
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => context.goNamed('profile'),
-          ),
-        ],
-      ),
-      body: ResponsiveCenter(
-        child: BlocBuilder<DashboardBloc, DashboardState>(
-          builder: (context, state) {
+          Divider(height: 1, color: theme.dividerColor),
+          // Body
+          Expanded(
+            child: ResponsiveCenter(
+              child: BlocBuilder<DashboardBloc, DashboardState>(
+                builder: (context, state) {
             if (state is DashboardLoading) {
               return Padding(
                 padding: context.responsivePadding,
@@ -295,11 +315,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               onTap: () => context.goNamed('teacher-assignments'),
                             ),
                           ],
-                          _ActionChip(
-                            icon: Icons.email,
-                            label: 'Messages',
-                            onTap: () => context.goNamed('messages'),
-                          ),
+                          if (PermissionHelper.canViewMessages(user))
+                            _ActionChip(
+                              icon: Icons.email,
+                              label: 'Messages',
+                              onTap: () => context.goNamed('messages'),
+                            ),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -355,6 +376,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             return const SizedBox.shrink();
           },
         ),
+      ),
+          ),
+        ],
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import '../../../core/services/flag_secure_service.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -18,6 +19,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _codeController = TextEditingController();
   final _newPasswordController = TextEditingController();
   bool _codeSent = false;
+
+  @override
+  void initState() {
+    super.initState();
+    FlagSecureService.enable();
+  }
 
   @override
   void dispose() {
@@ -95,8 +102,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       border: OutlineInputBorder(),
                     ),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty)
+                      if (v == null || v.trim().isEmpty) {
                         return 'Enter your email';
+                      }
                       if (!v.contains('@')) return 'Enter a valid email';
                       return null;
                     },
@@ -147,8 +155,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       border: OutlineInputBorder(),
                     ),
                     validator: (v) {
-                      if (v == null || v.length < 8)
+                      if (v == null || v.length < 8) {
                         return 'Password must be at least 8 characters';
+                      }
                       return null;
                     },
                   ),

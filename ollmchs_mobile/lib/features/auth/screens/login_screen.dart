@@ -5,8 +5,8 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 import '../../../core/services/biometric_service.dart';
+import '../../../core/services/flag_secure_service.dart';
 import '../../../core/storage/local_storage_service.dart';
-import '../../../core/network/api_client.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    FlagSecureService.enable();
     _checkBiometric();
   }
 
@@ -37,10 +38,15 @@ class _LoginScreenState extends State<LoginScreen> {
     final enabled = await _storage.getBiometricEnabled();
     final token = await _storage.getToken();
 
+    // Auto-disable biometrics if device no longer supports it
+    if (!available && enabled) {
+      await _storage.setBiometricEnabled(false);
+    }
+
     if (mounted) {
       setState(() {
         _bioAvailable = available;
-        _bioEnabled = enabled;
+        _bioEnabled = enabled && available;
         _hasStoredToken = token != null;
       });
     }
@@ -48,8 +54,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _authenticateWithBiometric() async {
     final messenger = ScaffoldMessenger.of(context);
-    final router = GoRouter.of(context);
-    final api = context.read<ApiClient>();
     final authBloc = context.read<AuthBloc>();
 
     final authed = await _biometricService.authenticate(
@@ -57,44 +61,23 @@ class _LoginScreenState extends State<LoginScreen> {
     );
     if (!authed || !mounted) return;
 
-    // Token exists in secure storage — try to use it directly
+    // Check if we have a stored token to reuse
     final token = await _storage.getToken();
-    if (token == null) {
-      if (mounted) {
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text(
-              'No saved session. Please log in with your password.',
-            ),
-          ),
-        );
-        setState(() => _bioEnabled = false);
-      }
+    if (token != null) {
+      // Token exists — let CheckAuthEvent verify it and navigate automatically
+      authBloc.add(const CheckAuthEvent());
       return;
     }
 
-    // Try to get user profile with stored token (Phase 3 interceptor will refresh if needed)
-    try {
-      await api.get('/v1/auth/user');
-      // Token is valid (or was refreshed by interceptor) — navigate to dashboard
-      if (mounted) {
-        authBloc.add(const CheckAuthEvent());
-        router.goNamed('dashboard');
-      }
-    } catch (_) {
-      // Token is invalid and refresh failed — user must log in with password
-      await _storage.clearAll();
-      if (mounted) {
-        setState(() {
-          _bioEnabled = false;
-          _hasStoredToken = false;
-        });
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Session expired. Please log in with your password.'),
+    // No stored token — prompt for password
+    if (mounted) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'No saved session. Please log in with your password.',
           ),
-        );
-      }
+        ),
+      );
     }
   }
 
@@ -210,6 +193,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   BlocConsumer<AuthBloc, AuthState>(
                     listener: (context, state) {
                       if (state is Authenticated) {
+                        FlagSecureService.disable();
+                        _checkBiometric();
                         context.goNamed('dashboard');
                       } else if (state is TwoFactorRequired) {
                         context.goNamed(
@@ -298,6 +283,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text('Sign Up'),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Powered by Duncowebsolutions © 2026',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),

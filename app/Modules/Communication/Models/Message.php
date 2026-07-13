@@ -52,6 +52,9 @@ class Message extends Model
     protected function casts(): array
     {
         return [
+            'id' => 'integer',
+            'parent_id' => 'integer',
+            'sender_id' => 'integer',
             'scheduled_at' => 'datetime',
             'sent_at' => 'datetime',
         ];

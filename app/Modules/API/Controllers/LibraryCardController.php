@@ -19,7 +19,10 @@ class LibraryCardController extends Controller
 
     public function show(): \Illuminate\Http\JsonResponse
     {
-        $member = Member::where('user_id', auth()->id())->firstOrFail();
+        $member = Member::where('user_id', auth()->id())->first();
+        if (! $member) {
+            return $this->response->success(null, 'No library membership found. Please register as a member.');
+        }
         $card = LibraryCard::with('member.department')
             ->where('member_id', $member->id)
             ->where('status', 'active')
@@ -34,10 +37,17 @@ class LibraryCardController extends Controller
 
     public function qrCode(): \Illuminate\Http\JsonResponse
     {
-        $member = Member::where('user_id', auth()->id())->firstOrFail();
+        $member = Member::where('user_id', auth()->id())->first();
+        if (! $member) {
+            return $this->response->notFound('No library membership found.');
+        }
         $card = LibraryCard::where('member_id', $member->id)
             ->where('status', 'active')
-            ->firstOrFail();
+            ->first();
+
+        if (! $card) {
+            return $this->response->notFound('No active library card found.');
+        }
 
         $verificationUrl = route('verify.document', ['id' => $card->card_number]);
 
@@ -48,12 +58,19 @@ class LibraryCardController extends Controller
         ]);
     }
 
-    public function pdf(): \Illuminate\Http\Response
+    public function pdf(): \Illuminate\Http\Response|\Illuminate\Http\JsonResponse
     {
-        $member = Member::where('user_id', auth()->id())->firstOrFail();
+        $member = Member::where('user_id', auth()->id())->first();
+        if (! $member) {
+            return response()->json(['message' => 'No library membership found.'], 404);
+        }
         $card = LibraryCard::where('member_id', $member->id)
             ->where('status', 'active')
-            ->firstOrFail();
+            ->first();
+
+        if (! $card) {
+            return response()->json(['message' => 'No active library card found.'], 404);
+        }
 
         $pdf = $this->libraryCardService->generateCardPdf($card, auth()->user());
 
@@ -62,10 +79,17 @@ class LibraryCardController extends Controller
 
     public function barcode(): \Illuminate\Http\JsonResponse
     {
-        $member = Member::where('user_id', auth()->id())->firstOrFail();
+        $member = Member::where('user_id', auth()->id())->first();
+        if (! $member) {
+            return $this->response->notFound('No library membership found.');
+        }
         $card = LibraryCard::where('member_id', $member->id)
             ->where('status', 'active')
-            ->firstOrFail();
+            ->first();
+
+        if (! $card) {
+            return $this->response->notFound('No active library card found.');
+        }
 
         return $this->response->success([
             'barcode' => $card->barcode,

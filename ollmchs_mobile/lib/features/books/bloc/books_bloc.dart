@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/error_mapper.dart';
 import 'books_event.dart';
 import 'books_state.dart';
 import '../models/book_model.dart';
@@ -45,7 +46,7 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
         ),
       );
     } catch (e) {
-      emit(BooksError('Failed to load books: ${e.toString()}'));
+      emit(BooksError(ErrorMapper.map(e)));
     }
   }
 
@@ -66,7 +67,7 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
         emit(BooksLoaded(selectedBook: book));
       }
     } catch (e) {
-      emit(BooksError('Failed to load book detail: ${e.toString()}'));
+      emit(BooksError(ErrorMapper.map(e)));
     }
   }
 
@@ -102,7 +103,7 @@ class BooksBloc extends Bloc<BooksEvent, BooksState> {
         ),
       );
     } catch (e) {
-      emit(BooksError('Search failed: ${e.toString()}'));
+      emit(BooksError(ErrorMapper.map(e)));
     }
   }
 

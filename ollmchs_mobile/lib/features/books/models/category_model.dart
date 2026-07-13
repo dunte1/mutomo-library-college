@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class CategoryModel {
   final int id;
   final String name;
@@ -22,13 +24,13 @@ class CategoryModel {
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
     final childrenJson = json['children'] as List<dynamic>?;
     return CategoryModel(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       name: json['name'] as String? ?? '',
       slug: json['slug'] as String? ?? '',
       description: json['description'] as String?,
-      parentId: json['parent_id'] as int?,
-      booksCount: json['books_count'] as int? ?? 0,
-      sortOrder: json['sort_order'] as int? ?? 0,
+      parentId: parseIntOrNull(json['parent_id']),
+      booksCount: parseIntOrNull(json['books_count']) ?? 0,
+      sortOrder: parseIntOrNull(json['sort_order']) ?? 0,
       children:
           childrenJson
               ?.map((e) => CategoryModel.fromJson(e as Map<String, dynamic>))

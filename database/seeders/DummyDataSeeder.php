@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\Department;
 use App\Models\Program;
 use App\Models\User;
+use App\Modules\Members\Models\Member;
+use App\Modules\Members\Services\LibraryCardService;
 use Illuminate\Database\Seeder;
 
 class DummyDataSeeder extends Seeder
@@ -42,42 +44,45 @@ class DummyDataSeeder extends Seeder
         $users = [
             [
                 'name' => 'Super Administrator', 'email' => 'admin@ollmchs.ac.ke',
-                'department_id' => 8, 'role' => 'super-admin',
+                'department_id' => 8, 'role' => 'super-admin', 'membership_type' => 'staff',
             ],
             [
                 'name' => 'Jane Librarian', 'email' => 'librarian@ollmchs.ac.ke',
-                'department_id' => 7, 'employee_id' => 'LIB001', 'role' => 'librarian',
+                'department_id' => 7, 'employee_id' => 'LIB001', 'role' => 'librarian', 'membership_type' => 'staff',
             ],
             [
                 'name' => 'Peter Assistant', 'email' => 'assistant@ollmchs.ac.ke',
-                'department_id' => 7, 'employee_id' => 'LIB002', 'role' => 'assistant-librarian',
+                'department_id' => 7, 'employee_id' => 'LIB002', 'role' => 'assistant-librarian', 'membership_type' => 'staff',
             ],
             [
                 'name' => 'John Student', 'email' => 'student@ollmchs.ac.ke',
                 'department_id' => 1, 'program_id' => 1, 'admission_number' => 'OLLMCHS/2024/001',
-                'academic_year' => '2024/2025', 'semester' => 1, 'role' => 'student',
+                'academic_year' => '2024/2025', 'semester' => 1, 'role' => 'student', 'membership_type' => 'student',
             ],
             [
                 'name' => 'Dr. Mary Lecturer', 'email' => 'lecturer@ollmchs.ac.ke',
-                'department_id' => 1, 'employee_id' => 'LEC001', 'role' => 'lecturer',
+                'department_id' => 1, 'employee_id' => 'LEC001', 'role' => 'lecturer', 'membership_type' => 'teacher',
             ],
             [
                 'name' => 'Susan Finance', 'email' => 'finance@ollmchs.ac.ke',
-                'department_id' => 8, 'employee_id' => 'FIN001', 'role' => 'finance-officer',
+                'department_id' => 8, 'employee_id' => 'FIN001', 'role' => 'finance-officer', 'membership_type' => 'staff',
             ],
             [
                 'name' => 'Dr. James HOD', 'email' => 'hod@ollmchs.ac.ke',
-                'department_id' => 1, 'employee_id' => 'HOD001', 'role' => 'department-head',
+                'department_id' => 1, 'employee_id' => 'HOD001', 'role' => 'department-head', 'membership_type' => 'staff',
             ],
             [
                 'name' => 'Tom ICT', 'email' => 'ict@ollmchs.ac.ke',
-                'department_id' => 6, 'employee_id' => 'ICT001', 'role' => 'ict-admin',
+                'department_id' => 6, 'employee_id' => 'ICT001', 'role' => 'ict-admin', 'membership_type' => 'staff',
             ],
         ];
 
+        $cardService = app(LibraryCardService::class);
+
         foreach ($users as $userData) {
             $role = $userData['role'];
-            unset($userData['role']);
+            $membershipType = $userData['membership_type'];
+            unset($userData['role'], $userData['membership_type']);
 
             $user = User::firstOrCreate(
                 ['email' => $userData['email']],
@@ -89,6 +94,28 @@ class DummyDataSeeder extends Seeder
                 ])
             );
             $user->assignRole($role);
+
+            // Create associated Member record if not already present
+            if (! $user->member) {
+                $nameParts = explode(' ', $user->name, 2);
+                $member = Member::create([
+                    'user_id' => $user->id,
+                    'first_name' => $nameParts[0],
+                    'last_name' => $nameParts[1] ?? '',
+                    'email' => $user->email,
+                    'phone' => $user->phone,
+                    'department_id' => $user->department_id,
+                    'program_id' => $user->program_id,
+                    'admission_number' => $user->admission_number,
+                    'membership_type' => $membershipType,
+                    'status' => Member::STATUS_ACTIVE,
+                    'joined_at' => now(),
+                    'registered_by' => $user->id,
+                ]);
+
+                // Auto-issue a library card for this member
+                $cardService->autoIssueCard($member);
+            }
         }
     }
 }

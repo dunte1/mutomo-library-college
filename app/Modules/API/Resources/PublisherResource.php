@@ -16,7 +16,7 @@ class PublisherResource extends JsonResource
             'phone' => $this->phone,
             'email' => $this->email,
             'website' => $this->website,
-            'books_count' => $this->whenCounted('books', fn () => $this->books_count),
+            'books_count' => $this->whenCounted('books', fn () => (int) $this->books_count),
         ];
     }
 }

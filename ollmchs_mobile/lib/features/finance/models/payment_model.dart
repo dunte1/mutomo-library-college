@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class PaymentModel {
   final int id;
   final double amount;
@@ -27,7 +29,7 @@ class PaymentModel {
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) {
     return PaymentModel(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       amount: (json['amount'] as num).toDouble(),
       currency: json['currency'] as String? ?? 'KES',
       paymentMethod: json['payment_method'] as String? ?? '',

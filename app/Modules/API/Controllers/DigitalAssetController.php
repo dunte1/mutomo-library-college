@@ -14,9 +14,19 @@ class DigitalAssetController extends Controller
         $assets = DigitalAsset::active()
             ->when(request('type'), fn ($q) => $q->where('file_type', request('type')))
             ->when(request('category'), fn ($q) => $q->where('category_id', request('category')))
-            ->when(request('search'), fn ($q) => $q->where(function ($q) {
-                $q->whereFullText('title,author', request('search'));
-            }))
+            ->when(request('search'), function ($q) {
+                $term = request('search');
+                if (config('database.default') === 'sqlite') {
+                    $q->where(function ($q) use ($term) {
+                        $q->where('title', 'like', "%{$term}%")
+                          ->orWhere('author', 'like', "%{$term}%");
+                    });
+                } else {
+                    $q->where(function ($q) use ($term) {
+                        $q->whereFullText('title,author', $term);
+                    });
+                }
+            })
             ->paginate(request('per_page', 15));
 
         return response()->json($assets);

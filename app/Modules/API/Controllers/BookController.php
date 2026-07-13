@@ -2,6 +2,7 @@
 
 namespace App\Modules\API\Controllers;
 
+use App\Modules\API\Resources\BookResource;
 use App\Modules\Catalog\Models\Book;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
@@ -21,10 +22,25 @@ class BookController extends Controller
         ]);
 
         $books = Book::with(['authors', 'category', 'publisher'])
-            ->when($data['search'] ?? null, fn ($q) => $q->where(function ($q) use ($data) {
-                $q->whereFullText('title,description', $data['search'])
-                    ->orWhere('isbn', 'like', '%'.$data['search'].'%');
-            }))
+            ->withCount([
+                'copies as copies_total',
+                'copies as copies_available' => fn ($q) => $q->where('status', 'available'),
+            ])
+            ->when($data['search'] ?? null, function ($q) use ($data) {
+                $term = $data['search'];
+                if (config('database.default') === 'sqlite') {
+                    $q->where(function ($q) use ($term) {
+                        $q->where('title', 'like', "%{$term}%")
+                          ->orWhere('description', 'like', "%{$term}%")
+                          ->orWhere('isbn', 'like', "%{$term}%");
+                    });
+                } else {
+                    $q->where(function ($q) use ($term) {
+                        $q->whereFullText('title,description', $term)
+                            ->orWhere('isbn', 'like', "%{$term}%");
+                    });
+                }
+            })
             ->when($data['category'] ?? null, fn ($q) => $q->whereHas('category', fn ($q) => $q->where('slug', $data['category'])))
             ->when($data['category_id'] ?? null, fn ($q) => $q->where('category_id', $data['category_id']))
             ->when($data['author'] ?? null, fn ($q) => $q->whereHas('authors', fn ($q) => $q->where('id', $data['author'])))
@@ -33,7 +49,7 @@ class BookController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($data['per_page'] ?? 15);
 
-        return response()->json($books);
+        return BookResource::collection($books);
     }
 
     public function show(Book $book): JsonResponse
@@ -49,9 +65,21 @@ class BookController extends Controller
             'q' => 'required|string|min:2|max:255',
         ]);
 
-        $books = Book::whereFullText('title,description', $data['q'])
-            ->orWhere('isbn', 'like', "%{$data['q']}%")
-            ->orWhereHas('authors', fn ($q) => $q->where('name', 'like', "%{$data['q']}%"))
+        $term = $data['q'];
+        $isSqlite = config('database.default') === 'sqlite';
+
+        $books = Book::query()
+            ->when($isSqlite,
+                fn ($q) => $q->where(function ($q) use ($term) {
+                    $q->where('title', 'like', "%{$term}%")
+                      ->orWhere('description', 'like', "%{$term}%")
+                      ->orWhere('isbn', 'like', "%{$term}%")
+                      ->orWhereHas('authors', fn ($a) => $a->where('name', 'like', "%{$term}%"));
+                }),
+                fn ($q) => $q->whereFullText('title,description', $term)
+                    ->orWhere('isbn', 'like', "%{$term}%")
+                    ->orWhereHas('authors', fn ($a) => $a->where('name', 'like', "%{$term}%"))
+            )
             ->limit(20)
             ->get();
 

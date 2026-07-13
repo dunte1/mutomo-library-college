@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class ReservationModel {
   final int id;
   final int bookId;
@@ -41,8 +43,8 @@ class ReservationModel {
     final authors = book?['authors'] as List<dynamic>?;
 
     return ReservationModel(
-      id: json['id'] as int,
-      bookId: book?['id'] as int? ?? 0,
+      id: parseInt(json['id'], fieldName: 'id'),
+      bookId: parseIntOrNull(book?['id']) ?? 0,
       bookTitle:
           book?['title'] as String? ?? json['book_title'] as String? ?? '',
       bookCover: book?['cover_image'] as String?,
@@ -55,7 +57,7 @@ class ReservationModel {
       expiresAt: json['expires_at'] != null
           ? DateTime.tryParse(json['expires_at'] as String)
           : null,
-      position: json['position'] as int? ?? 1,
+      position: parseIntOrNull(json['position']) ?? 1,
       status: json['status'] as String? ?? 'active',
     );
   }

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_client.dart';
 import '../models/announcement_model.dart';
 import '../models/event_model.dart';
@@ -116,7 +117,7 @@ class CommunicationBloc extends Bloc<CommunicationEvent, CommunicationState> {
         ),
       );
     } catch (e) {
-      emit(CommunicationError('Failed to load announcements: ${e.toString()}'));
+      emit(CommunicationError(ErrorMapper.map(e)));
     }
   }
 
@@ -141,7 +142,7 @@ class CommunicationBloc extends Bloc<CommunicationEvent, CommunicationState> {
         );
       }
     } catch (e) {
-      emit(CommunicationError('Failed to load announcement: ${e.toString()}'));
+      emit(CommunicationError(ErrorMapper.map(e)));
     }
   }
 
@@ -169,7 +170,7 @@ class CommunicationBloc extends Bloc<CommunicationEvent, CommunicationState> {
         ),
       );
     } catch (e) {
-      emit(CommunicationError('Failed to load events: ${e.toString()}'));
+      emit(CommunicationError(ErrorMapper.map(e)));
     }
   }
 
@@ -194,7 +195,7 @@ class CommunicationBloc extends Bloc<CommunicationEvent, CommunicationState> {
         );
       }
     } catch (e) {
-      emit(CommunicationError('Failed to load event: ${e.toString()}'));
+      emit(CommunicationError(ErrorMapper.map(e)));
     }
   }
 }

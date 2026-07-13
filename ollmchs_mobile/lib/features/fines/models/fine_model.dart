@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class FineModel {
   final int id;
   final double amount;
@@ -34,11 +36,9 @@ class FineModel {
     title ??= json['book_title'] as String?;
 
     return FineModel(
-      id: json['id'] as int,
-      amount: (json['amount'] as num).toDouble(),
-      amountPaid: json['paid_amount'] != null
-          ? (json['paid_amount'] as num).toDouble()
-          : null,
+      id: parseInt(json['id'], fieldName: 'id'),
+      amount: parseDouble(json['amount'], fieldName: 'amount'),
+      amountPaid: parseDoubleOrNull(json['paid_amount']),
       reason: json['reason'] as String? ?? '',
       status: json['status'] as String? ?? 'pending',
       assessedAt: DateTime.parse(json['assessed_at'] as String),

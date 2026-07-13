@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class AssignmentModel {
   final int id;
   final String title;
@@ -35,7 +37,7 @@ class AssignmentModel {
   factory AssignmentModel.fromJson(Map<String, dynamic> json) {
     final teacher = json['teacher'] as Map<String, dynamic>?;
     return AssignmentModel(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       title: json['title'] as String? ?? '',
       description: json['description'] as String?,
       attachmentUrl: json['attachment_url'] as String?,
@@ -48,7 +50,7 @@ class AssignmentModel {
           ? DateTime.tryParse(json['submitted_at'] as String)
           : null,
       feedback: json['feedback'] as String?,
-      score: json['score'] as int?,
+      score: parseIntOrNull(json['score']),
     );
   }
 }

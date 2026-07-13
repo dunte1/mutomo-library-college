@@ -24,6 +24,8 @@ class InAppNotification extends Model
     protected function casts(): array
     {
         return [
+            'id' => 'integer',
+            'user_id' => 'integer',
             'data' => 'json',
             'is_read' => 'boolean',
             'read_at' => 'datetime',

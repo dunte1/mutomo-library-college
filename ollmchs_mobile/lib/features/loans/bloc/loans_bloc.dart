@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/error_mapper.dart';
 import 'loans_event.dart';
 import 'loans_state.dart';
 import '../models/loan_model.dart';
@@ -46,7 +47,7 @@ class LoansBloc extends Bloc<LoansEvent, LoansState> {
         ),
       );
     } catch (e) {
-      emit(LoansError('Failed to load loans: ${e.toString()}'));
+      emit(LoansError(ErrorMapper.map(e)));
     }
   }
 
@@ -82,7 +83,7 @@ class LoansBloc extends Bloc<LoansEvent, LoansState> {
         ),
       );
     } catch (e) {
-      emit(LoansError('Failed to load history: ${e.toString()}'));
+      emit(LoansError(ErrorMapper.map(e)));
     }
   }
 
@@ -97,7 +98,7 @@ class LoansBloc extends Bloc<LoansEvent, LoansState> {
         emit(currentState.copyWith(selectedLoan: loan));
       }
     } catch (e) {
-      emit(LoansError('Failed to load loan details: ${e.toString()}'));
+      emit(LoansError(ErrorMapper.map(e)));
     }
   }
 
@@ -118,7 +119,7 @@ class LoansBloc extends Bloc<LoansEvent, LoansState> {
         );
       }
     } catch (e) {
-      emit(LoansError('Renewal failed: ${e.toString()}'));
+      emit(LoansError(ErrorMapper.map(e)));
     }
   }
 }

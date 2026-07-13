@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../utils/type_parsers.dart';
 import '../../features/auth/bloc/auth_bloc.dart';
 import '../../features/auth/bloc/auth_state.dart';
 import '../../features/auth/screens/splash_screen.dart';
@@ -10,6 +11,7 @@ import '../../features/auth/screens/register_screen.dart';
 import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/auth/screens/two_factor_screen.dart';
 import '../../features/auth/screens/two_factor_setup_screen.dart';
+import '../../features/auth/screens/email_verification_screen.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/books/screens/book_list_screen.dart';
 import '../../features/books/screens/book_detail_screen.dart';
@@ -19,7 +21,10 @@ import '../../features/books/screens/category_list_screen.dart';
 import '../../features/books/screens/category_book_list_screen.dart';
 import '../../features/books/screens/new_arrivals_screen.dart';
 import '../../features/authors/screens/author_list_screen.dart';
+import '../../features/authors/screens/author_detail_screen.dart';
 import '../../features/publishers/screens/publisher_list_screen.dart';
+import '../../features/publishers/screens/publisher_detail_screen.dart';
+import '../../features/scanner/screens/scanner_screen.dart';
 import '../../features/loans/screens/active_loans_screen.dart';
 import '../../features/loans/screens/loan_history_screen.dart';
 import '../../features/reservations/screens/reservation_list_screen.dart';
@@ -28,6 +33,8 @@ import '../../features/library_card/screens/library_card_screen.dart';
 import '../../features/digital_library/screens/digital_asset_list_screen.dart';
 import '../../features/digital_library/screens/digital_asset_reader_screen.dart';
 import '../../features/digital_library/screens/reading_history_screen.dart';
+import '../../features/digital_library/screens/recommendations_screen.dart';
+import '../../features/digital_library/screens/downloaded_assets_screen.dart';
 import '../../features/messaging/screens/inbox_screen.dart';
 import '../../features/messaging/screens/message_detail_screen.dart';
 import '../../features/messaging/screens/compose_message_screen.dart';
@@ -53,9 +60,15 @@ import '../../features/communication/screens/bulletin_list_screen.dart';
 import '../../features/communication/screens/bulletin_detail_screen.dart';
 import '../../features/finance/screens/payment_history_screen.dart';
 import '../../features/finance/screens/receipt_detail_screen.dart';
+import '../../features/reports/screens/reports_screen.dart';
+import '../../features/reports/screens/loan_history_screen.dart' as reports;
+import '../../features/reports/screens/fine_history_screen.dart';
 import '../../features/auth/models/user_model.dart';
 import '../helpers/permission_helper.dart';
 import '../widgets/bottom_nav_shell.dart';
+import '../../features/bookmarks/screens/bookmarks_screen.dart';
+import '../../features/profile/screens/help_screen.dart';
+import '../../features/profile/screens/about_screen.dart';
 
 class AppRouter {
   AppRouter._();
@@ -75,8 +88,8 @@ class AppRouter {
 
   static final Map<String, bool Function(UserModel)> _permissionGates = {
     '/dashboard': (user) => PermissionHelper.canAccessDashboard(user),
-    '/notifications': (user) => PermissionHelper.canAccessNotifications(user),
-    '/messages': (user) => PermissionHelper.canViewMessages(user),
+    // Messages and notifications are accessible to all authenticated users;
+    // the drawer shows them unconditionally and the screens handle empty states.
     '/teacher-assignments': (user) => PermissionHelper.canCreateAssignments(user),
     '/settings': (user) => PermissionHelper.canManageSettings(user),
     '/library-card': (user) => PermissionHelper.canViewLibraryCards(user),
@@ -149,7 +162,7 @@ class AppRouter {
         builder: (_, state) {
           final extras = state.extra as Map<String, dynamic>?;
           return TwoFactorScreen(
-            userId: extras?['userId'] as int? ?? 0,
+            userId: parseIntOrNull(extras?['userId']) ?? 0,
             tempToken: extras?['tempToken'] as String? ?? '',
           );
         },
@@ -158,6 +171,13 @@ class AppRouter {
         path: '/two-factor-setup',
         name: 'two-factor-setup',
         builder: (_, __) => const TwoFactorSetupScreen(),
+      ),
+      GoRoute(
+        path: '/verify-email',
+        name: 'verify-email',
+        builder: (_, state) => EmailVerificationScreen(
+          email: state.extra as String?,
+        ),
       ),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
@@ -252,6 +272,16 @@ class AppRouter {
                 builder: (_, __) => const ReadingHistoryScreen(),
               ),
               GoRoute(
+                path: 'recommendations',
+                name: 'recommendations',
+                builder: (_, __) => const RecommendationsScreen(),
+              ),
+              GoRoute(
+                path: 'downloads',
+                name: 'downloaded-assets',
+                builder: (_, __) => const DownloadedAssetsScreen(),
+              ),
+              GoRoute(
                 path: ':id',
                 name: 'digital-asset-reader',
                 builder: (_, state) => DigitalAssetReaderScreen(
@@ -271,7 +301,7 @@ class AppRouter {
                 builder: (_, state) {
                   final extra = state.extra as Map<String, dynamic>?;
                   return ComposeMessageScreen(
-                    recipientId: extra?['recipientId'] as int?,
+                    recipientId: parseIntOrNull(extra?['recipientId']),
                     recipientName: extra?['recipientName'] as String?,
                   );
                 },
@@ -364,12 +394,12 @@ class AppRouter {
                 builder: (_, state) {
                   final extra = state.extra as Map<String, dynamic>?;
                   return SubscriptionCheckoutScreen(
-                    planId: extra?['planId'] as int? ?? 0,
+                    planId: parseIntOrNull(extra?['planId']) ?? 0,
                     planName: extra?['planName'] as String? ?? '',
                     planPrice: extra?['planPrice'] as String? ?? '0',
                     planCurrency: extra?['planCurrency'] as String?,
                     planDuration: extra?['planDuration'] as String?,
-                    planDurationDays: extra?['planDurationDays'] as int?,
+                    planDurationDays: parseIntOrNull(extra?['planDurationDays']),
                   );
                 },
               ),
@@ -421,11 +451,31 @@ class AppRouter {
             path: '/authors',
             name: 'authors',
             builder: (_, __) => const AuthorListScreen(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                name: 'author-detail',
+                builder: (_, state) => AuthorDetailScreen(
+                  authorId: int.parse(state.pathParameters['id']!),
+                  authorName: state.extra as String?,
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: '/publishers',
             name: 'publishers',
             builder: (_, __) => const PublisherListScreen(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                name: 'publisher-detail',
+                builder: (_, state) => PublisherDetailScreen(
+                  publisherId: int.parse(state.pathParameters['id']!),
+                  publisherName: state.extra as String?,
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: '/payments',
@@ -440,6 +490,43 @@ class AppRouter {
                 ),
               ),
             ],
+          ),
+          GoRoute(
+            path: '/reports',
+            name: 'reports',
+            builder: (_, __) => const ReportsScreen(),
+            routes: [
+              GoRoute(
+                path: 'loan-history',
+                name: 'reports-loan-history',
+                builder: (_, __) => const reports.LoanHistoryScreen(),
+              ),
+              GoRoute(
+                path: 'fine-history',
+                name: 'reports-fine-history',
+                builder: (_, __) => const FineHistoryScreen(),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: '/scanner',
+            name: 'scanner',
+            builder: (_, __) => const ScannerScreen(),
+          ),
+          GoRoute(
+            path: '/bookmarks',
+            name: 'bookmarks',
+            builder: (_, __) => const BookmarksScreen(),
+          ),
+          GoRoute(
+            path: '/help',
+            name: 'help',
+            builder: (_, __) => const HelpScreen(),
+          ),
+          GoRoute(
+            path: '/about',
+            name: 'about',
+            builder: (_, __) => const AboutScreen(),
           ),
         ],
       ),

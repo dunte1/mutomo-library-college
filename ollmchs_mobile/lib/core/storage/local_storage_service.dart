@@ -4,7 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 /// Local storage service for persisting auth tokens and user preferences.
 ///
 /// - On native (Android/iOS): uses [FlutterSecureStorage] (encrypted keychain)
-/// - On web: uses an in-memory fallback (browser localStorage not suitable for tokens)
+/// - On web: uses an in-memory fallback
 ///
 /// All methods are async for uniform API across platforms.
 class LocalStorageService {
@@ -16,11 +16,12 @@ class LocalStorageService {
   static const _notificationsKey = 'notifications_enabled';
   static const _onboardingKey = 'onboarding_completed';
   static const _biometricEnabledKey = 'biometric_enabled';
-  static const _savedEmailKey = 'saved_email';
-  static const _savedPasswordKey = 'saved_password';
+  static const _pinEnabledKey = 'pin_enabled';
+  static const _pinHashKey = 'pin_hash';
+  static const _lastBackgroundKey = 'last_background_timestamp';
+  static const _lastActivityKey = 'last_user_activity';
 
   final FlutterSecureStorage? _secure;
-  // Web fallback: in-memory store (avoids [MissingPluginException] on web)
   final Map<String, String> _inMemory = {};
 
   LocalStorageService()
@@ -108,23 +109,41 @@ class LocalStorageService {
     return val == 'true';
   }
 
-  Future<void> saveBiometricCredentials(String email, String password) async {
-    await Future.wait([
-      _write(_savedEmailKey, email),
-      _write(_savedPasswordKey, password),
-    ]);
+  // ---- PIN Lock ----
+
+  Future<void> setPinEnabled(bool enabled) =>
+      _write(_pinEnabledKey, enabled.toString());
+
+  Future<bool> getPinEnabled() async {
+    final val = await _read(_pinEnabledKey);
+    return val == 'true';
   }
 
-  Future<Map<String, String?>> getBiometricCredentials() async {
-    final results = await Future.wait([
-      _read(_savedEmailKey),
-      _read(_savedPasswordKey),
-    ]);
-    return {'email': results[0], 'password': results[1]};
+  Future<void> savePinHash(String hash) =>
+      _write(_pinHashKey, hash);
+
+  Future<String?> getPinHash() => _read(_pinHashKey);
+
+  Future<void> clearPin() => _delete(_pinHashKey);
+
+  // ---- Session tracking (app lock) ----
+
+  Future<void> saveLastBackgroundTimestamp(DateTime timestamp) =>
+      _write(_lastBackgroundKey, timestamp.toIso8601String());
+
+  Future<DateTime?> getLastBackgroundTimestamp() async {
+    final raw = await _read(_lastBackgroundKey);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
   }
 
-  Future<void> clearBiometricCredentials() async {
-    await Future.wait([_delete(_savedEmailKey), _delete(_savedPasswordKey)]);
+  Future<void> saveLastUserActivity(DateTime timestamp) =>
+      _write(_lastActivityKey, timestamp.toIso8601String());
+
+  Future<DateTime?> getLastUserActivity() async {
+    final raw = await _read(_lastActivityKey);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
   }
 
   // ---- Clear all (logout) ----
@@ -135,6 +154,9 @@ class LocalStorageService {
       _delete(_refreshTokenKey),
       _delete(_tokenExpiryKey),
       _delete(_userKey),
+      _delete(_lastBackgroundKey),
+      _delete(_lastActivityKey),
+      _delete(_pinHashKey),
     ]);
   }
 
@@ -146,9 +168,7 @@ class LocalStorageService {
       try {
         await s.write(key: key, value: value);
         return;
-      } catch (_) {
-        // Fall through to in-memory on error
-      }
+      } catch (_) {}
     }
     _inMemory[key] = value;
   }
@@ -159,9 +179,7 @@ class LocalStorageService {
       try {
         final val = await s.read(key: key);
         if (val != null) return val;
-      } catch (_) {
-        // Fall through to in-memory
-      }
+      } catch (_) {}
     }
     return _inMemory[key];
   }
@@ -172,9 +190,7 @@ class LocalStorageService {
       try {
         await s.delete(key: key);
         return;
-      } catch (_) {
-        // Fall through to in-memory
-      }
+      } catch (_) {}
     }
     _inMemory.remove(key);
   }

@@ -1,4 +1,5 @@
 import '../../../core/network/api_client.dart';
+import '../../../core/utils/type_parsers.dart';
 import '../models/book_model.dart';
 import '../../../core/storage/hive_cache_service.dart';
 
@@ -35,19 +36,27 @@ class BooksRepository {
       final data = response.data;
       final rawList =
           (data['data'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
-      await _cache.cacheBooks(rawList);
+      try {
+        await _cache.cacheBooks(rawList);
+      } catch (_) {
+        // Cache failure should not block the response
+      }
       return _parsePaginated(data);
     } catch (e) {
       if (page == 1) {
-        final cached = _cache.getCachedBooks();
-        if (cached != null) {
-          return PaginatedResult(
-            items: cached
-                .map((e) => BookModel.fromJson(e))
-                .toList(),
-            hasMore: false,
-            total: cached.length,
-          );
+        try {
+          final cached = _cache.getCachedBooks();
+          if (cached != null) {
+            return PaginatedResult(
+              items: cached
+                  .map((e) => BookModel.fromJson(e))
+                  .toList(),
+              hasMore: false,
+              total: cached.length,
+            );
+          }
+        } catch (_) {
+          // Cache read failure — fall through to rethrow original error
         }
       }
       rethrow;
@@ -60,8 +69,12 @@ class BooksRepository {
       final book =
           response.data['data'] as Map<String, dynamic>? ??
           response.data as Map<String, dynamic>;
-      await _cache.put('book_detail_$id', book,
-          ttl: const Duration(hours: 2));
+      try {
+        await _cache.put('book_detail_$id', book,
+            ttl: const Duration(hours: 2));
+      } catch (_) {
+        // Cache failure should not block the response
+      }
       return BookModel.fromJson(book);
     } catch (e) {
       final cached = _cache.get<Map<String, dynamic>>('book_detail_$id');
@@ -79,7 +92,11 @@ class BooksRepository {
       final data = response.data;
       final rawList =
           (data['data'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
-      await _cache.cacheBooks(rawList);
+      try {
+        await _cache.cacheBooks(rawList);
+      } catch (_) {
+        // Cache failure should not block the response
+      }
       return rawList
           .map((e) => BookModel.fromJson(e))
           .toList();
@@ -121,9 +138,9 @@ class BooksRepository {
   PaginatedResult<BookModel> _parsePaginated(dynamic data) {
     final list = data['data'] as List<dynamic>? ?? [];
     final meta = data['meta'] as Map<String, dynamic>? ?? data;
-    final total = meta['total'] as int? ?? list.length;
-    final lastPage = meta['last_page'] as int? ?? 1;
-    final currentPage = meta['current_page'] as int? ?? 1;
+    final total = parseIntOrNull(meta['total']) ?? list.length;
+    final lastPage = parseIntOrNull(meta['last_page']) ?? 1;
+    final currentPage = parseIntOrNull(meta['current_page']) ?? 1;
 
     return PaginatedResult(
       items: list

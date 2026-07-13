@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_client.dart';
 import '../models/dashboard_model.dart';
 
@@ -59,7 +60,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
           response.data as Map<String, dynamic>;
       emit(DashboardLoaded(dashboard: DashboardModel.fromJson(data)));
     } catch (e) {
-      emit(DashboardError('Failed to load dashboard: ${e.toString()}'));
+      emit(DashboardError(ErrorMapper.map(e)));
     }
   }
 }

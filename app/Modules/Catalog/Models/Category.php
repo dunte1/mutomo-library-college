@@ -25,6 +25,10 @@ class Category extends Model
     protected function casts(): array
     {
         return [
+            'id' => 'integer',
+            'parent_id' => 'integer',
+            'created_by' => 'integer',
+            'updated_by' => 'integer',
             'is_active' => 'boolean',
             'sort_order' => 'integer',
         ];

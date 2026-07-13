@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class ReviewModel {
   final int id;
   final int bookId;
@@ -23,12 +25,12 @@ class ReviewModel {
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
     return ReviewModel(
-      id: json['id'] as int,
-      bookId: json['book_id'] as int,
-      userId: json['user_id'] as int? ?? 0,
+      id: parseInt(json['id'], fieldName: 'id'),
+      bookId: parseInt(json['book_id'], fieldName: 'book_id'),
+      userId: parseIntOrNull(json['user_id']) ?? 0,
       userName: json['user_name'] as String?,
       userAvatar: json['user_avatar'] as String?,
-      rating: json['rating'] as int,
+      rating: parseInt(json['rating'], fieldName: 'rating'),
       review: json['review'] as String?,
       isApproved: json['is_approved'] as bool? ?? false,
       createdAt: json['created_at'] != null
@@ -53,7 +55,7 @@ class ReviewStats {
     final dist = json['distribution'] as Map<String, dynamic>? ?? {};
     return ReviewStats(
       averageRating: (json['average_rating'] as num?)?.toDouble() ?? 0,
-      totalReviews: json['total_reviews'] as int? ?? 0,
+      totalReviews: parseIntOrNull(json['total_reviews']) ?? 0,
       distribution: dist.map(
         (k, v) => MapEntry(int.parse(k), (v as num).toInt()),
       ),

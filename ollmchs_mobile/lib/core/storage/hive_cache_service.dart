@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../utils/type_parsers.dart';
 
 class HiveCacheService {
   static const String _boxName = 'app_cache';
@@ -26,7 +27,7 @@ class HiveCacheService {
     if (raw == null) return null;
     try {
       final entry = jsonDecode(raw) as Map<String, dynamic>;
-      final expiry = entry['expiry'] as int;
+      final expiry = parseInt(entry['expiry'], fieldName: 'expiry');
       if (DateTime.now().millisecondsSinceEpoch > expiry) {
         _box.delete(key);
         return null;

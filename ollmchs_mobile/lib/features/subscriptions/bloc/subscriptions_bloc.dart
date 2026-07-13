@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_client.dart';
 import '../models/subscription_model.dart';
 
@@ -92,7 +93,7 @@ class SubscriptionsBloc extends Bloc<SubscriptionsEvent, SubscriptionsState> {
           .toList();
       emit(SubscriptionsLoaded(plans: plans));
     } catch (e) {
-      emit(SubscriptionsError('Failed to load plans: ${e.toString()}'));
+      emit(SubscriptionsError(ErrorMapper.map(e)));
     }
   }
 
@@ -108,7 +109,7 @@ class SubscriptionsBloc extends Bloc<SubscriptionsEvent, SubscriptionsState> {
       if (data != null) sub = UserSubscriptionModel.fromJson(data);
       emit(SubscriptionsLoaded(mySubscription: sub));
     } catch (e) {
-      emit(SubscriptionsError('Failed to load subscription: ${e.toString()}'));
+      emit(SubscriptionsError(ErrorMapper.map(e)));
     }
   }
 
@@ -137,7 +138,7 @@ class SubscriptionsBloc extends Bloc<SubscriptionsEvent, SubscriptionsState> {
         ),
       );
     } catch (e) {
-      emit(SubscriptionsError('Subscription failed: ${e.toString()}'));
+      emit(SubscriptionsError(ErrorMapper.map(e)));
     }
   }
 
@@ -150,7 +151,7 @@ class SubscriptionsBloc extends Bloc<SubscriptionsEvent, SubscriptionsState> {
       add(const LoadMySubscription());
       emit(SubscriptionsLoaded(message: 'Subscription cancelled'));
     } catch (e) {
-      emit(SubscriptionsError('Cancellation failed: ${e.toString()}'));
+      emit(SubscriptionsError(ErrorMapper.map(e)));
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_client.dart';
 import '../models/review_model.dart';
 
@@ -87,7 +88,7 @@ class ReviewsBloc extends Bloc<ReviewsEvent, ReviewsState> {
       final stats = ReviewStats.fromJson(meta);
       emit(ReviewsLoaded(reviews: reviews, stats: stats));
     } catch (e) {
-      emit(ReviewsError('Failed to load reviews: ${e.toString()}'));
+      emit(ReviewsError(ErrorMapper.map(e)));
     }
   }
 
@@ -107,7 +108,7 @@ class ReviewsBloc extends Bloc<ReviewsEvent, ReviewsState> {
       add(LoadReviews(event.bookId));
       emit(ReviewsLoaded(message: 'Review submitted for approval'));
     } catch (e) {
-      emit(ReviewsError('Failed to submit review: ${e.toString()}'));
+      emit(ReviewsError(ErrorMapper.map(e)));
     }
   }
 
@@ -124,7 +125,7 @@ class ReviewsBloc extends Bloc<ReviewsEvent, ReviewsState> {
           .toList();
       emit(ReviewsLoaded(reviews: reviews));
     } catch (e) {
-      emit(ReviewsError('Failed to load reviews: ${e.toString()}'));
+      emit(ReviewsError(ErrorMapper.map(e)));
     }
   }
 }

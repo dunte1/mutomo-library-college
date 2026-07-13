@@ -1,4 +1,5 @@
 import '../../../core/network/api_client.dart';
+import '../../../core/utils/type_parsers.dart';
 import '../models/loan_model.dart';
 import '../../books/repositories/books_repository.dart';
 import '../../../core/storage/hive_cache_service.dart';
@@ -45,9 +46,9 @@ class LoansRepository {
     return PaginatedResult(
       items: rawList.map((e) => LoanModel.fromJson(e)).toList(),
       hasMore:
-          (meta['current_page'] as int? ?? 1) <
-          (meta['last_page'] as int? ?? 1),
-      total: meta['total'] as int? ?? rawList.length,
+          (parseIntOrNull(meta['current_page']) ?? 1) <
+          (parseIntOrNull(meta['last_page']) ?? 1),
+      total: parseIntOrNull(meta['total']) ?? rawList.length,
     );
   }
 
@@ -108,9 +109,9 @@ class LoansRepository {
           .map((e) => LoanHistoryModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       hasMore:
-          (meta['current_page'] as int? ?? 1) <
-          (meta['last_page'] as int? ?? 1),
-      total: meta['total'] as int? ?? list.length,
+          (parseIntOrNull(meta['current_page']) ?? 1) <
+          (parseIntOrNull(meta['last_page']) ?? 1),
+      total: parseIntOrNull(meta['total']) ?? list.length,
     );
   }
 

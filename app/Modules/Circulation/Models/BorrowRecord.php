@@ -33,6 +33,13 @@ class BorrowRecord extends Model
     protected function casts(): array
     {
         return [
+            'id' => 'integer',
+            'user_id' => 'integer',
+            'book_copy_id' => 'integer',
+            'issued_by' => 'integer',
+            'received_by' => 'integer',
+            'created_by' => 'integer',
+            'updated_by' => 'integer',
             'borrowed_at' => 'datetime',
             'due_at' => 'datetime',
             'returned_at' => 'datetime',

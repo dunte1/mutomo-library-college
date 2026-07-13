@@ -5,6 +5,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import '../../../core/services/flag_secure_service.dart';
 
 class TwoFactorSetupScreen extends StatefulWidget {
   const TwoFactorSetupScreen({super.key});
@@ -20,6 +21,7 @@ class _TwoFactorSetupScreenState extends State<TwoFactorSetupScreen> {
   @override
   void initState() {
     super.initState();
+    FlagSecureService.enable();
     _requestPassword();
   }
 

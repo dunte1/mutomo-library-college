@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class AnnouncementModel {
   final int id;
   final String title;
@@ -22,7 +24,7 @@ class AnnouncementModel {
   factory AnnouncementModel.fromJson(Map<String, dynamic> json) {
     final author = json['author'] as Map<String, dynamic>?;
     return AnnouncementModel(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       title: json['title'] as String? ?? '',
       body: json['body'] as String?,
       category: json['category'] as String?,

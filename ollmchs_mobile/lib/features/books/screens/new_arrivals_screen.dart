@@ -2,8 +2,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_client.dart';
 import '../models/book_model.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../models/category_model.dart';
 
 class NewArrivalsScreen extends StatefulWidget {
@@ -58,7 +60,7 @@ class _NewArrivalsScreenState extends State<NewArrivalsScreen> {
     } catch (e) {
       setState(() {
         _loading = false;
-        _error = e.toString();
+        _error = ErrorMapper.map(e);
       });
     }
   }
@@ -140,29 +142,10 @@ class _NewArrivalsScreenState extends State<NewArrivalsScreen> {
                 : _error != null
                 ? Center(child: Text(_error!))
                 : _books.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.library_books_outlined,
-                          size: 64,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No new arrivals found',
-                          style: theme.textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Try a different period or category',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
+                ? const EmptyState(
+                    icon: Icons.new_releases_outlined,
+                    title: 'No new arrivals',
+                    subtitle: 'No new books have been added recently',
                   )
                 : RefreshIndicator(
                     onRefresh: _load,
@@ -238,7 +221,7 @@ class _NewArrivalsScreenState extends State<NewArrivalsScreen> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '$book.availableCopies/$book.totalCopies available',
+                                        '${book.availableCopies}/${book.totalCopies} available',
                                         style: TextStyle(
                                           fontSize: 11,
                                           color: book.availableCopies > 0

@@ -25,6 +25,10 @@ class LibraryCard extends Model
     protected function casts(): array
     {
         return [
+            'id' => 'integer',
+            'member_id' => 'integer',
+            'issued_by' => 'integer',
+            'replaced_by' => 'integer',
             'issued_at' => 'date',
             'expires_at' => 'date',
         ];

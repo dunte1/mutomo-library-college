@@ -20,7 +20,10 @@ class LibraryCardResource extends JsonResource
                 'full_name' => $this->member->full_name,
                 'member_id' => $this->member->member_id,
                 'membership_type' => $this->member->membership_type,
+                'member_status' => $this->member->status,
                 'photo' => $this->member->photo ? url('storage/'.$this->member->photo) : null,
+                'email' => $this->member->email,
+                'phone' => $this->member->phone,
                 'department' => $this->member->relationLoaded('department') && $this->member->department
                     ? $this->member->department->name : null,
             ]),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../bloc/digital_library_bloc.dart';
 import '../models/digital_asset_model.dart';
+import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/skeleton.dart';
 
 class ReadingHistoryScreen extends StatefulWidget {
@@ -40,29 +41,10 @@ class _ReadingHistoryScreenState extends State<ReadingHistoryScreen> {
             );
           }
           if (history.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.history,
-                    size: 64,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No reading history',
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Start reading digital assets to track progress',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
+            return const EmptyState(
+              icon: Icons.auto_stories,
+              title: 'No reading history',
+              subtitle: 'Start reading to build your history',
             );
           }
           return RefreshIndicator(

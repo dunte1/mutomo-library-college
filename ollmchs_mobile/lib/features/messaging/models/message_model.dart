@@ -1,3 +1,5 @@
+import '../../../core/utils/type_parsers.dart';
+
 class MessageModel {
   final int id;
   final String subject;
@@ -9,6 +11,7 @@ class MessageModel {
   final bool hasAttachments;
   final String priority;
   final int? replyCount;
+  final List<String>? recipientNames;
 
   MessageModel({
     required this.id,
@@ -21,15 +24,29 @@ class MessageModel {
     this.hasAttachments = false,
     this.priority = 'normal',
     this.replyCount,
+    this.recipientNames,
   });
 
   bool get isUrgent => priority == 'urgent' || priority == 'high';
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     final sender = json['sender'] as Map<String, dynamic>?;
+    final recipients = json['recipients'] as List<dynamic>?;
+
+    List<String>? names;
+    if (recipients != null) {
+      names = recipients
+          .map((r) => r is Map<String, dynamic>
+              ? r['recipient'] is Map<String, dynamic>
+                  ? r['recipient']['name'] as String? ?? ''
+                  : ''
+              : '')
+          .where((n) => n.isNotEmpty)
+          .toList();
+    }
 
     return MessageModel(
-      id: json['id'] as int,
+      id: parseInt(json['id'], fieldName: 'id'),
       subject: json['subject'] as String? ?? '(No Subject)',
       body: json['body'] as String? ?? '',
       senderName:
@@ -46,7 +63,8 @@ class MessageModel {
           (json['attachments'] != null &&
               (json['attachments'] as List).isNotEmpty),
       priority: json['priority'] as String? ?? 'normal',
-      replyCount: json['replies_count'] as int?,
+      replyCount: parseIntOrNull(json['replies_count']),
+      recipientNames: names,
     );
   }
 }

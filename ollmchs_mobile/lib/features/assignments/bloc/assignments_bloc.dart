@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_client.dart';
 import '../models/assignment_model.dart';
 
@@ -109,7 +110,7 @@ class AssignmentsBloc extends Bloc<AssignmentsEvent, AssignmentsState> {
           .toList();
       emit(AssignmentsLoaded(assignments: assignments));
     } catch (e) {
-      emit(AssignmentsError('Failed to load assignments: ${e.toString()}'));
+      emit(AssignmentsError(ErrorMapper.map(e)));
     }
   }
 
@@ -133,7 +134,7 @@ class AssignmentsBloc extends Bloc<AssignmentsEvent, AssignmentsState> {
         );
       }
     } catch (e) {
-      emit(AssignmentsError('Failed to load assignment: ${e.toString()}'));
+      emit(AssignmentsError(ErrorMapper.map(e)));
     }
   }
 
@@ -161,7 +162,7 @@ class AssignmentsBloc extends Bloc<AssignmentsEvent, AssignmentsState> {
         );
       }
     } catch (e) {
-      emit(AssignmentsError('Submission failed: ${e.toString()}'));
+      emit(AssignmentsError(ErrorMapper.map(e)));
     }
   }
 
@@ -184,7 +185,7 @@ class AssignmentsBloc extends Bloc<AssignmentsEvent, AssignmentsState> {
         );
       }
     } catch (e) {
-      emit(AssignmentsError('Failed to mark complete: ${e.toString()}'));
+      emit(AssignmentsError(ErrorMapper.map(e)));
     }
   }
 }
