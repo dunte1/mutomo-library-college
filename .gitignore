@@ -50,3 +50,24 @@ added_files.txt
 all_changes.txt
 /ollmchs_mobile/installer/
 ollmchs_mobile/installer.iss
+
+# Production cleanup
+*.phar
+*.ps1
+*.bat
+docker-compose.yml
+Dockerfile
+/docker/
+deploy.sh
+rollback.sh
+health-check-validation.sh
+library_card.html
+opencode-prompts-*.md
+GAP_ANALYSIS.md
+MOBILE_*
+PERMISSION_AUDIT_REPORT.md
+PRODUCTION_READINESS_REPORT.md
+SYSTEM_DOCUMENTATION.md
+IMPLEMENTED_PERMISSION_REPORT.md
+modified_yesterday.txt
+.npmrc
