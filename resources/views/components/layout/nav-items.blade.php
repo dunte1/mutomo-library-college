@@ -667,6 +667,7 @@
         </svg>
         <span>My Profile</span>
     </a>
+    @if(\Illuminate\Support\Facades\Route::has('members.my-card'))
     <a href="{{ route('members.my-card') }}" wire:navigate
         class="sidebar-link {{ request()->routeIs('members.my-card') ? 'sidebar-link-active' : '' }}">
         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -674,4 +675,5 @@
         </svg>
         <span>My Library Card</span>
     </a>
+    @endif
 @endcan

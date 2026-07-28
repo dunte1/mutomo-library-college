@@ -892,10 +892,12 @@ new class extends Component {
                             class="sidebar-link-sub {{ request()->routeIs('profile') ? 'sidebar-link-sub-active' : '' }}">
                             <span class="text-sm">My Profile</span>
                         </a>
+                        @if(\Illuminate\Support\Facades\Route::has('members.my-card'))
                         <a href="{{ route('members.my-card') }}" wire:navigate
                             class="sidebar-link-sub {{ request()->routeIs('members.my-card') ? 'sidebar-link-sub-active' : '' }}">
                             <span class="text-sm">My Library Card</span>
                         </a>
+                        @endif
                     </div>
                 </div>
             </div>
