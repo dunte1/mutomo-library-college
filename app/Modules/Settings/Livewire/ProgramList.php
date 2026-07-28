@@ -21,6 +21,7 @@ class ProgramList extends Component
 
     public function delete(int $id): void
     {
+        abort_unless(auth()->user()->can('manage-settings'), 403);
         $program = Program::findOrFail($id);
         $program->delete();
         session()->flash('success', 'Program deleted successfully.');

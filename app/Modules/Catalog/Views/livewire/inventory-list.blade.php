@@ -57,6 +57,9 @@
                             <th>Status</th>
                             <th>Location</th>
                             <th>Added</th>
+                            @can('manage-inventory')
+                            <th>Actions</th>
+                            @endcan
                         </tr>
                     </thead>
                     <tbody>
@@ -76,10 +79,25 @@
                             </td>
                             <td class="text-sm text-surface-500">{{ $copy->shelf_location ?? '—' }}</td>
                             <td class="text-sm text-surface-500">{{ $copy->created_at->format('M d, Y') }}</td>
+                            @can('manage-inventory')
+                            <td>
+                                <div class="flex items-center gap-1 flex-wrap">
+                                    @if($copy->status === 'available')
+                                        <button wire:click="markDamaged({{ $copy->id }})" class="text-xs text-amber-600 hover:text-amber-800">Damaged</button>
+                                        <button wire:click="markLost({{ $copy->id }})" class="text-xs text-red-600 hover:text-red-800">Lost</button>
+                                    @elseif($copy->status === 'damaged' || $copy->status === 'lost')
+                                        <button wire:click="markAvailable({{ $copy->id }})" class="text-xs text-emerald-600 hover:text-emerald-800">Available</button>
+                                    @endif
+                                    @if($copy->status !== 'withdrawn' && $copy->status !== 'borrowed')
+                                        <button wire:click="markWithdrawn({{ $copy->id }})" wire:confirm="Withdraw this copy permanently?" class="text-xs text-surface-400 hover:text-surface-600">Withdraw</button>
+                                    @endif
+                                </div>
+                            </td>
+                            @endcan
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center py-8 text-surface-400">No copies found.</td>
+                            <td colspan="{{ auth()->user()->can('manage-inventory') ? 6 : 5 }}" class="text-center py-8 text-surface-400">No copies found.</td>
                         </tr>
                         @endforelse
                     </tbody>

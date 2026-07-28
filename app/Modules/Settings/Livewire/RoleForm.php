@@ -22,7 +22,7 @@ class RoleForm extends Component
 
     public function mount(?int $id = null): void
     {
-        abort_unless(auth()->user()->can('manage-settings'), 403);
+        abort_unless(auth()->user()->can('manage-roles'), 403);
 
         if ($id) {
             $this->roleId = $id;
@@ -69,6 +69,17 @@ class RoleForm extends Component
     public function save(): void
     {
         $this->validate();
+
+        if (! auth()->user()->can('manage-permissions') && $this->isEditing) {
+            $role = Role::findOrFail($this->roleId);
+            $originalPermissions = $role->permissions->pluck('id')->map(fn ($id) => (string) $id)->sort()->values()->toArray();
+            $requestedPermissions = collect($this->selectedPermissions)->sort()->values()->toArray();
+            if ($originalPermissions !== $requestedPermissions) {
+                session()->flash('error', 'You do not have permission to modify role permissions.');
+
+                return;
+            }
+        }
 
         if ($this->isEditing) {
             $role = Role::findOrFail($this->roleId);

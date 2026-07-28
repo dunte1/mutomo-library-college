@@ -22,6 +22,7 @@ class ReportViewer extends Component
 
     public function generate()
     {
+        abort_unless(auth()->user()->can('generate-reports'), 403);
         $this->validate([
             'format' => 'required|in:pdf,csv',
         ]);
@@ -39,6 +40,7 @@ class ReportViewer extends Component
 
     public function download(int $reportId)
     {
+        abort_unless(auth()->user()->can('generate-reports') || auth()->user()->can('export-reports'), 403);
         $report = Report::findOrFail($reportId);
 
         if (! $report->file_path || ! Storage::disk('local')->exists($report->file_path)) {

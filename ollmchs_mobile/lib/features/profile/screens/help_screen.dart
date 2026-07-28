@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/network/api_client.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
@@ -74,7 +76,10 @@ class HelpScreen extends StatelessWidget {
                 leading: const Icon(Icons.location_on_outlined),
                 title: const Text('Visit Library'),
                 subtitle: const Text('OLLMCHS Main Library, Mutomo'),
-                onTap: () {},
+                trailing: const Icon(Icons.open_in_new, size: 18),
+                onTap: () => _launchUrl(
+                  'https://www.google.com/maps/search/OLLMCHS+Library+Mutomo',
+                ),
               ),
             ],
           ),
@@ -120,19 +125,36 @@ class HelpScreen extends StatelessWidget {
 
   void _showReportDialog(BuildContext context, String title) {
     final controller = TextEditingController();
+    final emailController = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(title),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Describe your issue or feedback',
-            border: OutlineInputBorder(),
-            alignLabelWithHint: true,
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Your email (optional)',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  labelText: 'Describe your issue or feedback',
+                  border: OutlineInputBorder(),
+                  alignLabelWithHint: true,
+                ),
+                maxLines: 5,
+                minLines: 3,
+              ),
+            ],
           ),
-          maxLines: 5,
-          minLines: 3,
         ),
         actions: [
           TextButton(
@@ -140,11 +162,44 @@ class HelpScreen extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
+              final text = controller.text.trim();
+              if (text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please describe your issue')),
+                );
+                return;
+              }
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Thank you for your feedback!')),
-              );
+              try {
+                final api = context.read<ApiClient>();
+                await api.post('/v1/messages/send', data: {
+                  'subject': '$title - OLLMCHS Library App',
+                  'body': [
+                    text,
+                    if (emailController.text.trim().isNotEmpty)
+                      '\nContact: ${emailController.text.trim()}',
+                  ].join('\n'),
+                  'type': 'direct',
+                  'priority': title == 'Bug Report' ? 'high' : 'normal',
+                });
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Thank you for your feedback!'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to submit: $e'),
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                  );
+                }
+              }
             },
             child: const Text('Submit'),
           ),

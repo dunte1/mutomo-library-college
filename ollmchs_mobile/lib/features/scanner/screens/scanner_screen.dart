@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../../../core/network/api_client.dart';
 
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
@@ -60,13 +62,87 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
     // Check if it's a library card number
     if (code.toUpperCase().startsWith('LIB') ||
-        code.toUpperCase().startsWith('CARD')) {
-      _showResult('Library Card', 'Card number: $code');
+        code.toUpperCase().startsWith('CARD') ||
+        code.toUpperCase().startsWith('MEM')) {
+      _verifyLibraryCard(code);
       return;
     }
 
     // Generic result
     _showResult('Scanned Code', code);
+  }
+
+  Future<void> _verifyLibraryCard(String cardCode) async {
+    try {
+      final api = context.read<ApiClient>();
+      final response = await api.get(
+        '/v1/library-cards/verify',
+        queryParameters: {'card_number': cardCode},
+      );
+      final data = response.data['data'] as Map<String, dynamic>?;
+      if (mounted && data != null) {
+        _showVerificationResult(cardCode, data);
+      } else if (mounted) {
+        _showResult('Card Not Found', 'No card found with number: $cardCode');
+      }
+    } catch (e) {
+      if (mounted) {
+        _showResult('Verification Failed', 'Could not verify card: $e');
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  void _showVerificationResult(String cardCode, Map<String, dynamic> data) {
+    final memberName = data['member_name'] as String? ?? data['name'] as String?;
+    final status = data['status'] as String? ?? data['card_status'] as String?;
+    final isActive = status == 'active';
+    final expiry = data['expires_at'] as String?;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: Icon(
+          isActive ? Icons.check_circle : Icons.warning,
+          color: isActive ? Colors.green : Colors.orange,
+          size: 48,
+        ),
+        title: Text(isActive ? 'Valid Card' : 'Card Issue'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (memberName != null) _resultRow('Name', memberName),
+            _resultRow('Card #', cardCode),
+            if (status != null) _resultRow('Status', status.toUpperCase()),
+            if (expiry != null) _resultRow('Expires', expiry),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              setState(() => _isProcessing = false);
+            },
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _resultRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(value),
+        ],
+      ),
+    );
   }
 
   void _showResult(String title, String content) {

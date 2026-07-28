@@ -4,6 +4,7 @@ import '../../../core/errors/error_mapper.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/utils/type_parsers.dart';
 import '../models/digital_asset_model.dart';
+import '../models/citation_model.dart';
 
 // Events
 abstract class DigitalLibraryEvent extends Equatable {
@@ -15,9 +16,10 @@ abstract class DigitalLibraryEvent extends Equatable {
 class LoadDigitalAssets extends DigitalLibraryEvent {
   final int page;
   final String? category;
-  const LoadDigitalAssets({this.page = 1, this.category});
+  final String? search;
+  const LoadDigitalAssets({this.page = 1, this.category, this.search});
   @override
-  List<Object?> get props => [page, category];
+  List<Object?> get props => [page, category, search];
 }
 
 class LoadReadingHistory extends DigitalLibraryEvent {
@@ -48,6 +50,21 @@ class LoadDigitalCategories extends DigitalLibraryEvent {
   const LoadDigitalCategories();
 }
 
+class GenerateCitation extends DigitalLibraryEvent {
+  final int assetId;
+  final String style;
+  const GenerateCitation({required this.assetId, required this.style});
+  @override
+  List<Object?> get props => [assetId, style];
+}
+
+class LoadCitations extends DigitalLibraryEvent {
+  final int assetId;
+  const LoadCitations({required this.assetId});
+  @override
+  List<Object?> get props => [assetId];
+}
+
 // States
 abstract class DigitalLibraryState extends Equatable {
   const DigitalLibraryState();
@@ -69,6 +86,7 @@ class DigitalLibraryLoaded extends DigitalLibraryState {
   final List<RecommendationModel> recommendations;
   final List<String> categories;
   final String? message;
+  final Map<int, List<CitationModel>> citations;
 
   const DigitalLibraryLoaded({
     this.assets = const [],
@@ -80,6 +98,7 @@ class DigitalLibraryLoaded extends DigitalLibraryState {
     this.recommendations = const [],
     this.categories = const [],
     this.message,
+    this.citations = const {},
   });
   @override
   List<Object?> get props => [
@@ -92,6 +111,7 @@ class DigitalLibraryLoaded extends DigitalLibraryState {
     recommendations,
     categories,
     message,
+    citations,
   ];
 }
 
@@ -113,6 +133,8 @@ class DigitalLibraryBloc
     on<UpdateReadingProgress>(_onUpdateProgress);
     on<LoadRecommendations>(_onLoadRecommendations);
     on<LoadDigitalCategories>(_onLoadCategories);
+    on<GenerateCitation>(_onGenerateCitation);
+    on<LoadCitations>(_onLoadCitations);
   }
 
   Future<void> _onLoadAssets(
@@ -126,6 +148,7 @@ class DigitalLibraryBloc
     try {
       final params = <String, dynamic>{'page': event.page, 'per_page': 20};
       if (event.category != null) params['category'] = event.category;
+      if (event.search != null) params['search'] = event.search;
 
       final response = await _api.get(
         '/v1/digital-assets',
@@ -263,6 +286,70 @@ class DigitalLibraryBloc
             categories: categories,
           ),
         );
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _onGenerateCitation(
+    GenerateCitation event,
+    Emitter<DigitalLibraryState> emit,
+  ) async {
+    try {
+      final response = await _api.post(
+        '/v1/digital-assets/${event.assetId}/citations',
+        data: {'style': event.style},
+      );
+      final data = response.data['data'] as Map<String, dynamic>? ??
+          response.data as Map<String, dynamic>;
+      final citation = CitationModel.fromJson(data);
+      final current = state;
+      if (current is DigitalLibraryLoaded) {
+        final updatedCitations = Map<int, List<CitationModel>>.from(current.citations);
+        final existing = updatedCitations[event.assetId] ?? [];
+        updatedCitations[event.assetId] = [...existing, citation];
+        emit(DigitalLibraryLoaded(
+          assets: current.assets,
+          hasMoreAssets: current.hasMoreAssets,
+          currentPage: current.currentPage,
+          selectedCategory: current.selectedCategory,
+          readingHistory: current.readingHistory,
+          hasMoreHistory: current.hasMoreHistory,
+          recommendations: current.recommendations,
+          categories: current.categories,
+          citations: updatedCitations,
+          message: 'Citation generated',
+        ));
+      }
+    } catch (e) {
+      emit(DigitalLibraryError(ErrorMapper.map(e)));
+    }
+  }
+
+  Future<void> _onLoadCitations(
+    LoadCitations event,
+    Emitter<DigitalLibraryState> emit,
+  ) async {
+    try {
+      final response = await _api.get('/v1/digital-assets/${event.assetId}/citations');
+      final data = response.data['data'] as List<dynamic>? ?? [];
+      final citations = data
+          .map((e) => CitationModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+      final current = state;
+      if (current is DigitalLibraryLoaded) {
+        final updatedCitations = Map<int, List<CitationModel>>.from(current.citations);
+        updatedCitations[event.assetId] = citations;
+        emit(DigitalLibraryLoaded(
+          assets: current.assets,
+          hasMoreAssets: current.hasMoreAssets,
+          currentPage: current.currentPage,
+          selectedCategory: current.selectedCategory,
+          readingHistory: current.readingHistory,
+          hasMoreHistory: current.hasMoreHistory,
+          recommendations: current.recommendations,
+          categories: current.categories,
+          citations: updatedCitations,
+        ));
       }
     } catch (_) {}
   }

@@ -21,9 +21,11 @@ class PublisherList extends Component
 
     public function delete(int $id): void
     {
+        abort_unless(auth()->user()->can('delete-publishers'), 403);
+
         $publisher = Publisher::findOrFail($id);
         if ($publisher->books()->count() > 0) {
-            $this->dispatch('notify', message: 'Cannot delete publisher with associated books.', type: 'error');
+            $this->dispatch('notify', message: 'Cannot delete publisher with associated books. Remove all books from this publisher first.', type: 'error');
 
             return;
         }

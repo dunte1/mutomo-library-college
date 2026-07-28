@@ -29,6 +29,7 @@ class NewsletterSubscriberList extends Component
 
     public function delete(int $id): void
     {
+        abort_unless(auth()->user()->can('manage-settings'), 403);
         $subscriber = NewsletterSubscriber::findOrFail($id);
         $subscriber->delete();
         $this->dispatch('notify', message: 'Subscriber deleted.', type: 'success');
@@ -36,6 +37,7 @@ class NewsletterSubscriberList extends Component
 
     public function exportCsv(): StreamedResponse
     {
+        abort_unless(auth()->user()->can('manage-settings'), 403);
         $subscribers = NewsletterSubscriber::query()
             ->when($this->search, fn ($q) => $q->search($this->search))
             ->when($this->filterStatus === 'active', fn ($q) => $q->where('is_active', true))

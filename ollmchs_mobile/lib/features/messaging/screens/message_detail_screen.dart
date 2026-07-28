@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../bloc/messaging_bloc.dart';
 
 class MessageDetailScreen extends StatefulWidget {
@@ -184,12 +185,26 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
                           const Divider(),
                           Text('Attachments', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              const Icon(Icons.attach_file, size: 16),
-                              const SizedBox(width: 4),
-                              Text('Tap to view attachments', style: theme.textTheme.bodySmall),
-                            ],
+                          InkWell(
+                            onTap: () async {
+                              final uri = Uri.parse('/v1/messages/${msg.id}/attachments');
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.attach_file, size: 16),
+                                  const SizedBox(width: 4),
+                                  Text('Tap to view attachments', style: theme.textTheme.bodySmall),
+                                  const SizedBox(width: 4),
+                                  Icon(Icons.open_in_new, size: 12, color: theme.colorScheme.primary),
+                                ],
+                              ),
+                            ),
                           ),
                         ],
                       ],

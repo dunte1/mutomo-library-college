@@ -20,20 +20,30 @@ class SubscriptionList extends Component
 
     public function cancelSubscription(Subscription $subscription): void
     {
+        abort_unless(auth()->user()->can('manage-subscriptions'), 403);
         $subscription->cancel('Cancelled by admin');
         $this->dispatch('notify', message: 'Subscription cancelled.', type: 'success');
     }
 
     public function suspendSubscription(Subscription $subscription): void
     {
+        abort_unless(auth()->user()->can('manage-subscriptions'), 403);
         $subscription->suspend();
         $this->dispatch('notify', message: 'Subscription suspended.', type: 'success');
     }
 
     public function activateSubscription(Subscription $subscription): void
     {
+        abort_unless(auth()->user()->can('manage-subscriptions'), 403);
         $subscription->activate();
         $this->dispatch('notify', message: 'Subscription activated.', type: 'success');
+    }
+
+    public function processPayment(Subscription $subscription): void
+    {
+        abort_unless(auth()->user()->can('process-subscription-payments'), 403);
+        $subscription->activate();
+        $this->dispatch('notify', message: 'Payment confirmed and subscription activated.', type: 'success');
     }
 
     public function render()

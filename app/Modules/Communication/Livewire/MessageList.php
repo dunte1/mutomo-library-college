@@ -40,6 +40,7 @@ class MessageList extends Component
 
     public function cancelScheduled(int $id, MessagingService $messagingService): void
     {
+        abort_unless(auth()->user()->can('manage-scheduled-messages'), 403);
         $message = Message::findOrFail($id);
         $messagingService->cancelScheduledMessage($message, auth()->user());
         $this->dispatch('notify', message: 'Scheduled message cancelled.', type: 'success');

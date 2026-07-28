@@ -25,8 +25,8 @@ new #[Layout('layouts.guest')] class extends Component
 
         $user = auth()->user();
 
-        // Role-based redirect: staff go to admin dashboard, students/lecturers go to catalog
-        if ($user->hasAnyRole(['super-admin', 'admin', 'librarian', 'assistant-librarian', 'finance-officer', 'ict-admin', 'department-head', 'staff'])) {
+        // Permission-based redirect: staff go to admin dashboard, patrons go to catalog
+        if ($user->hasAnyPermission(['view-dashboard', 'manage-settings', 'view-circulation'])) {
             $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
         } else {
             // Students & lecturers go to browse the catalog (their primary use-case)

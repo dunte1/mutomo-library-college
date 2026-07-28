@@ -25,6 +25,7 @@ class AiSettings extends Component
 
     public function mount(): void
     {
+        abort_unless(auth()->user()->can('manage-ai-settings'), 403);
         $service = app(SettingsService::class);
         $this->settings = [
             'ai_enabled' => (bool) $service->cached('ai_enabled', false),

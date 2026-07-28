@@ -25,11 +25,13 @@ class CirculationList extends Component
 
     public function exportCsv(): Response
     {
+        abort_unless(auth()->user()->can('view-circulation'), 403);
         return app(ExportService::class)->exportCirculationCsv($this->tab);
     }
 
     public function markAsLost(int $id): void
     {
+        abort_unless(auth()->user()->can('view-circulation'), 403);
         $record = BorrowRecord::with('bookCopy.book')->findOrFail($id);
         app(BorrowingService::class)->markAsLost($record);
         $this->dispatch('notify', message: 'Book marked as lost. Fine assessed.', type: 'success');
@@ -37,6 +39,7 @@ class CirculationList extends Component
 
     public function markAsDamaged(int $id): void
     {
+        abort_unless(auth()->user()->can('view-circulation'), 403);
         $record = BorrowRecord::with('bookCopy.book')->findOrFail($id);
         app(BorrowingService::class)->markAsDamaged($record);
         $this->dispatch('notify', message: 'Book marked as damaged. Fine assessed.', type: 'success');

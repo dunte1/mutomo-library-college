@@ -57,7 +57,9 @@
                             <td class="table-cell">
                                 <div class="flex items-center gap-2">
                                     <a href="{{ route('catalog.categories.edit', $category->id) }}" wire:navigate class="btn-sm btn-outline">Edit</a>
-                                    <button wire:click="delete({{ $category->id }})" wire:confirm="Delete this category?" class="btn-sm btn-danger">Delete</button>
+                                    @can('delete-categories')
+                                        <button wire:click="delete({{ $category->id }})" wire:confirm="Delete this category? Subcategories must be removed first." class="btn-sm btn-danger">Delete</button>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>

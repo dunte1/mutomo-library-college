@@ -43,6 +43,7 @@ class ReturnBook extends Component
 
     public function confirmReturn(): void
     {
+        $this->authorize('return-books');
         try {
             $service = app(BorrowingService::class);
             $record = $service->returnBook($this->record->id, $this->condition);

@@ -25,6 +25,7 @@ class SubscriptionSettings extends Component
 
     public function mount(): void
     {
+        abort_unless(auth()->user()->can('manage-settings'), 403);
         $this->settings = [
             'individual_monthly_fee' => (float) Setting::value('individual_monthly_fee', 500),
             'individual_yearly_fee' => (float) Setting::value('individual_yearly_fee', 5000),

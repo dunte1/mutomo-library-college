@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../bloc/fines_bloc.dart';
 import '../models/fine_model.dart';
@@ -13,13 +14,21 @@ class FinesScreen extends StatefulWidget {
   State<FinesScreen> createState() => _FinesScreenState();
 }
 
-class _FinesScreenState extends State<FinesScreen> {
-  int _payingId = -1;
+class _FinesScreenState extends State<FinesScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     context.read<FinesBloc>().add(const LoadFines());
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Widget _buildFineCard(FineModel fine, ThemeData theme) {
@@ -30,7 +39,21 @@ class _FinesScreenState extends State<FinesScreen> {
           color: fine.isPaid ? Colors.green : Colors.orange,
         ),
         title: Text(fine.reason, maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: Text(DateFormat('MMM d, y').format(fine.assessedAt)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(DateFormat('MMM d, y').format(fine.assessedAt)),
+            if (fine.bookTitle != null)
+              Text(
+                fine.bookTitle!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+          ],
+        ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -44,24 +67,18 @@ class _FinesScreenState extends State<FinesScreen> {
             ),
             const SizedBox(height: 4),
             if (fine.isPending)
-              _payingId == fine.id
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : FilledButton.tonal(
-                      onPressed: () => _confirmPayFine(fine),
-                      style: FilledButton.styleFrom(
-                        minimumSize: Size.zero,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: const Text('Pay', style: TextStyle(fontSize: 12)),
-                    )
+              FilledButton.tonal(
+                onPressed: () => context.pushNamed(
+                  'fine-payment',
+                  pathParameters: {'id': '${fine.id}'},
+                ),
+                style: FilledButton.styleFrom(
+                  minimumSize: Size.zero,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text('Pay', style: TextStyle(fontSize: 12)),
+              )
             else
               Chip(
                 label: Text(fine.status, style: const TextStyle(fontSize: 10)),
@@ -69,59 +86,39 @@ class _FinesScreenState extends State<FinesScreen> {
               ),
           ],
         ),
-        isThreeLine: true,
-      ),
-    );
-  }
-
-  Future<void> _confirmPayFine(FineModel fine) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Pay Fine'),
-        content: Text(
-          'Pay KES ${fine.amount.toStringAsFixed(2)} for "${fine.reason}"?',
+        isThreeLine: fine.bookTitle != null,
+        onTap: () => context.pushNamed(
+          'fine-detail',
+          pathParameters: {'id': '${fine.id}'},
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Pay Now'),
-          ),
-        ],
       ),
     );
-    if (confirmed == true && mounted) {
-      setState(() => _payingId = fine.id);
-      context.read<FinesBloc>().add(PayFine(fine.id));
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Fines')),
+      appBar: AppBar(
+        title: const Text('Fines'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Outstanding'),
+            Tab(text: 'Paid'),
+          ],
+        ),
+      ),
       body: BlocConsumer<FinesBloc, FinesState>(
         listener: (context, state) {
           if (state is FinesLoaded && state.message != null) {
-            setState(() => _payingId = -1);
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text(state.message!)));
           }
-          if (state is FinesError) {
-            setState(() => _payingId = -1);
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.error)));
-          }
         },
         builder: (context, state) {
-          if (state is FinesLoading) {
+          if (state is FinesLoading && state is! FinesLoaded) {
             return const Padding(
               padding: EdgeInsets.all(16),
               child: Column(
@@ -135,62 +132,116 @@ class _FinesScreenState extends State<FinesScreen> {
             );
           }
           if (state is FinesError) {
-            return Center(child: Text(state.error));
-          }
-          if (state is FinesLoaded) {
-            if (state.fines.isEmpty) {
-              return const EmptyState(
-                icon: Icons.payments_outlined,
-                title: 'No fines',
-                subtitle: "You don't have any outstanding fines",
-              );
-            }
-            return RefreshIndicator(
-              onRefresh: () async =>
-                  context.read<FinesBloc>().add(const LoadFines()),
-              child: ListView(
-                padding: const EdgeInsets.all(16),
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Total pending card
-                  Card(
-                    color: theme.colorScheme.errorContainer,
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Total Pending Fines',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: theme.colorScheme.onErrorContainer,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'KES ${state.totalPending.toStringAsFixed(2)}',
-                            style: theme.textTheme.headlineLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onErrorContainer,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Fine History',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
                   const SizedBox(height: 8),
-                  ...state.fines.map((fine) => _buildFineCard(fine, theme)),
+                  Text(state.error),
+                  const SizedBox(height: 16),
+                  FilledButton.tonal(
+                    onPressed: () => context.read<FinesBloc>().add(const LoadFines()),
+                    child: const Text('Retry'),
+                  ),
                 ],
               ),
             );
           }
+          if (state is FinesLoaded) {
+            final pending = state.fines.where((f) => f.isPending).toList();
+            final paid = state.fines.where((f) => f.isPaid).toList();
+            return TabBarView(
+              controller: _tabController,
+              children: [
+                _buildOutstandingTab(pending, state.totalPending, theme),
+                _buildPaidTab(paid, theme),
+              ],
+            );
+          }
           return const SizedBox.shrink();
         },
+      ),
+    );
+  }
+
+  Widget _buildOutstandingTab(List<FineModel> pending, double total, ThemeData theme) {
+    if (pending.isEmpty) {
+      return const EmptyState(
+        icon: Icons.check_circle_outline,
+        title: 'No outstanding fines',
+        subtitle: "You're all caught up!",
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: () async => context.read<FinesBloc>().add(const LoadFines()),
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
+            color: theme.colorScheme.errorContainer,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Text(
+                    'Total Outstanding',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onErrorContainer,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'KES ${total.toStringAsFixed(2)}',
+                    style: theme.textTheme.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onErrorContainer,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ...pending.map((fine) => _buildFineCard(fine, theme)),
+          if (pending.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () {
+                  for (final fine in pending) {
+                    context.pushNamed(
+                      'fine-payment',
+                      pathParameters: {'id': '${fine.id}'},
+                    );
+                  }
+                },
+                icon: const Icon(Icons.payment),
+                label: const Text('Pay All Outstanding'),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaidTab(List<FineModel> paid, ThemeData theme) {
+    if (paid.isEmpty) {
+      return const EmptyState(
+        icon: Icons.history,
+        title: 'No paid fines',
+        subtitle: 'Payment history will appear here',
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: () async => context.read<FinesBloc>().add(const LoadFines()),
+      child: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          ...paid.map((fine) => _buildFineCard(fine, theme)),
+        ],
       ),
     );
   }

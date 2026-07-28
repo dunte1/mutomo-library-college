@@ -9,6 +9,8 @@ class NotificationModel {
   final bool isRead;
   final DateTime createdAt;
   final String? iconUrl;
+  final String? actionUrl;
+  final int? entityId;
 
   NotificationModel({
     required this.id,
@@ -19,6 +21,8 @@ class NotificationModel {
     this.isRead = false,
     required this.createdAt,
     this.iconUrl,
+    this.actionUrl,
+    this.entityId,
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +41,8 @@ class NotificationModel {
       isRead: json['read_at'] != null || json['is_read'] == true,
       createdAt: DateTime.parse(json['created_at'] as String),
       iconUrl: json['icon_url'] as String?,
+      actionUrl: data['action_url'] as String? ?? json['action_url'] as String?,
+      entityId: parseIntOrNull(data['entity_id']) ?? parseIntOrNull(json['entity_id']),
     );
   }
 }

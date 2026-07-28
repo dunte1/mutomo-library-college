@@ -18,6 +18,7 @@ class MaintenanceSettings extends Component
 
     public function mount(): void
     {
+        abort_unless(auth()->user()->can('manage-maintenance'), 403);
         $this->maintenanceMode = app()->isDownForMaintenance();
         $this->secret = app(SettingsService::class)->cached('maintenance_secret', '');
         $this->message = app(SettingsService::class)->cached('maintenance_message', 'We are currently performing scheduled maintenance. Please check back shortly.');

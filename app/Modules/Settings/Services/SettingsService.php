@@ -20,6 +20,8 @@ class SettingsService
             'library_address' => $this->cached('library_address', ''),
             'library_phone' => $this->cached('library_phone', ''),
             'library_email' => $this->cached('library_email', ''),
+            'library_website' => $this->cached('library_website', ''),
+            'library_motto' => $this->cached('library_motto', 'Learn • Discover • Succeed'),
             'opening_hours' => $this->cached('opening_hours', 'Mon-Fri: 8:00 AM - 5:00 PM'),
         ];
     }
@@ -152,6 +154,18 @@ class SettingsService
         ];
     }
 
+    public function getCardBrandingSettings(): array
+    {
+        return [
+            'card_primary_color' => $this->cached('card_primary_color', '#1a365d'),
+            'card_secondary_color' => $this->cached('card_secondary_color', '#153168'),
+            'card_tertiary_color' => $this->cached('card_tertiary_color', '#0f2453'),
+            'card_text_color' => $this->cached('card_text_color', '#ffffff'),
+            'card_accent_color' => $this->cached('card_accent_color', '#93c5fd'),
+            'card_logo' => $this->cached('card_logo', ''),
+        ];
+    }
+
     public function updateSettings(string $group, array $data, array $sensitiveKeys = []): void
     {
         foreach ($data as $key => $value) {
@@ -229,7 +243,7 @@ class SettingsService
         return $value;
     }
 
-    protected function clearGroupCache(string $group): void
+    public function clearGroupCache(string $group): void
     {
         $keys = Setting::byGroup($group)->pluck('key');
 

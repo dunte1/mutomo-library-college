@@ -381,6 +381,28 @@ class _LibraryCardScreenState extends State<LibraryCardScreen> {
     return Card(
       child: Column(
         children: [
+          if (card.barcode != null && card.barcode!.isNotEmpty)
+            ListTile(
+              leading: const Icon(Icons.barcode_reader),
+              title: const Text('Barcode'),
+              subtitle: card.barcode!.trimLeft().startsWith('<svg')
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: SvgPicture.string(
+                        card.barcode!,
+                        height: 50,
+                        fit: BoxFit.fitWidth,
+                      ),
+                    )
+                  : Text(
+                      card.barcode!,
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 16,
+                        letterSpacing: 2,
+                      ),
+                    ),
+            ),
           if (card.membershipType != null)
             ListTile(
               leading: const Icon(Icons.badge_outlined),

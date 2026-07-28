@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../bloc/notifications_bloc.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -223,6 +224,12 @@ class _NotificationListScreenState extends State<NotificationListScreen>
                                   .add(MarkNotificationRead(notification.id)),
                             ),
                       isThreeLine: true,
+                      onTap: () {
+                        // Navigate to notification detail
+                        context.push(
+                          '/notifications/${notification.id}',
+                        );
+                      },
                     ),
                   );
                 },

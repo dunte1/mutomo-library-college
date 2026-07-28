@@ -72,6 +72,30 @@ class _DigitalAssetListScreenState extends State<DigitalAssetListScreen> {
               },
               child: CustomScrollView(
                 slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Search digital assets...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                          isDense: true,
+                        ),
+                        onSubmitted: (query) {
+                          context.read<DigitalLibraryBloc>().add(
+                            LoadDigitalAssets(
+                              category: _selectedCategory,
+                              search: query.trim().isEmpty ? null : query.trim(),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                   if (state.recommendations.isNotEmpty)
                     SliverToBoxAdapter(
                       child: _buildRecommendations(state, theme),

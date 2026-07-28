@@ -128,6 +128,14 @@ class AppDrawer extends StatelessWidget {
               context.goNamed('digital-library');
             },
           ),
+          _DrawerItem(
+            icon: Icons.science_outlined,
+            title: 'Research Repository',
+            onTap: () {
+              Navigator.pop(context);
+              context.goNamed('research-repository');
+            },
+          ),
           if (user != null && PermissionHelper.canViewAssignments(user))
             _DrawerItem(
               icon: Icons.assignment_outlined,
@@ -212,6 +220,14 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           _DrawerItem(
+            icon: Icons.calendar_month_outlined,
+            title: 'Event Calendar',
+            onTap: () {
+              Navigator.pop(context);
+              context.goNamed('event-calendar');
+            },
+          ),
+          _DrawerItem(
             icon: Icons.campaign_outlined,
             title: 'Announcements',
             onTap: () {
@@ -219,6 +235,44 @@ class AppDrawer extends StatelessWidget {
               context.goNamed('announcements');
             },
           ),
+          // Lecturer-specific items
+          if (user != null && PermissionHelper.canCreateAssignments(user)) ...[
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Text(
+                'LECTURER',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ),
+            _DrawerItem(
+              icon: Icons.school_outlined,
+              title: 'My Courses',
+              onTap: () {
+                Navigator.pop(context);
+                context.goNamed('my-courses');
+              },
+            ),
+            _DrawerItem(
+              icon: Icons.people_outlined,
+              title: 'Student Progress',
+              onTap: () {
+                Navigator.pop(context);
+                context.goNamed('student-progress');
+              },
+            ),
+            _DrawerItem(
+              icon: Icons.analytics_outlined,
+              title: 'Assignment Analytics',
+              onTap: () {
+                Navigator.pop(context);
+                context.goNamed('assignment-analytics');
+              },
+            ),
+          ],
           const Divider(),
           _DrawerItem(
             icon: Icons.person_outlined,

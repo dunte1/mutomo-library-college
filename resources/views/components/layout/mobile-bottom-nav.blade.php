@@ -37,7 +37,6 @@
             <span class="nav-label">Library</span>
         </a>
         @endcan
-        @role('super-admin|admin|librarian|assistant-librarian|finance-officer')
         @can('view-circulation')
         <a href="{{ route('circulation.index') }}" wire:navigate
            :class="{ 'active': isActive('circulation') }"
@@ -49,8 +48,8 @@
             <span class="nav-label">Borrowings</span>
         </a>
         @endcan
-        @else
         @can('view-borrows')
+        @cannot('view-circulation')
         <a href="{{ route('circulation.index') }}" wire:navigate
            :class="{ 'active': isActive('circulation') }"
            class="mobile-bottom-nav-item ripple">
@@ -60,8 +59,8 @@
             </svg>
             <span class="nav-label">Borrowings</span>
         </a>
+        @endcannot
         @endcan
-        @endrole
         <a href="{{ route('notifications.index') }}" wire:navigate
            :class="{ 'active': isActive('notifications') }"
            class="mobile-bottom-nav-item ripple">

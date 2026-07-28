@@ -25,6 +25,7 @@ class RoleList extends Component
 
     public function delete(int $id): void
     {
+        $this->authorize('manage-roles');
         $role = Role::findOrFail($id);
         if (in_array($role->name, ['super-admin', 'admin'])) {
             session()->flash('error', 'Cannot delete core system roles.');

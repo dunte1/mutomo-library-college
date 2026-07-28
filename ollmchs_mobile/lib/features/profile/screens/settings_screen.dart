@@ -29,6 +29,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _pinEnabled = false;
   bool _twoFactorEnabled = false;
   bool _loading2FA = false;
+  bool _autoDownloads = false;
+  bool _offlineSync = true;
+  String _downloadQuality = 'standard';
   final _biometricService = BiometricService();
 
   @override
@@ -42,6 +45,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final notifications = await storage.getNotificationsEnabled();
     final biometric = await storage.getBiometricEnabled();
     final pin = await storage.getPinEnabled();
+    final autoDl = await storage.getAutoDownloads();
+    final offlineS = await storage.getOfflineSync();
+    final dlQuality = await storage.getDownloadQuality();
     final available = await _biometricService.isAvailable;
     final enrolled = available ? await _biometricService.hasEnrolledBiometrics : false;
     if (!context.mounted) return;
@@ -78,6 +84,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _biometricUnavailableReason = unavailableReason;
         _pinEnabled = pin;
         _twoFactorEnabled = twoFactor;
+        _autoDownloads = autoDl;
+        _offlineSync = offlineS;
+        _downloadQuality = dlQuality;
       });
     }
   }
@@ -571,32 +580,76 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Card(
             child: Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.cloud_download_outlined),
+                SwitchListTile(
                   title: const Text('Auto Downloads'),
                   subtitle: const Text('Automatically download assigned readings'),
-                  trailing: Switch(
-                    value: false,
-                    onChanged: (v) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Auto downloads setting saved')),
-                      );
-                    },
-                  ),
+                  value: _autoDownloads,
+                  onChanged: (v) {
+                    setState(() => _autoDownloads = v);
+                    context.read<LocalStorageService>().setAutoDownloads(v);
+                  },
+                ),
+                const Divider(height: 1),
+                SwitchListTile(
+                  title: const Text('Offline Sync'),
+                  subtitle: const Text('Sync data when connected to the internet'),
+                  value: _offlineSync,
+                  onChanged: (v) {
+                    setState(() => _offlineSync = v);
+                    context.read<LocalStorageService>().setOfflineSync(v);
+                  },
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.sync_outlined),
-                  title: const Text('Offline Sync'),
-                  subtitle: const Text('Sync data when connected'),
-                  trailing: Switch(
-                    value: true,
-                    onChanged: (v) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Offline sync ${v ? 'enabled' : 'disabled'}')),
-                      );
-                    },
+                  leading: const Icon(Icons.high_quality_outlined),
+                  title: const Text('Download Quality'),
+                  subtitle: Text(
+                    _downloadQuality == 'high'
+                        ? 'High quality (larger files)'
+                        : 'Standard quality (smaller files)',
                   ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Download Quality'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            RadioListTile<String>(
+                              title: const Text('High Quality'),
+                              subtitle: const Text('Best quality, larger files'),
+                              value: 'high',
+                              groupValue: _downloadQuality,
+                              onChanged: (v) {
+                                setState(() => _downloadQuality = v!);
+                                context.read<LocalStorageService>().setDownloadQuality(v!);
+                                Navigator.pop(ctx);
+                              },
+                            ),
+                            RadioListTile<String>(
+                              title: const Text('Standard Quality'),
+                              subtitle: const Text('Good quality, smaller files'),
+                              value: 'standard',
+                              groupValue: _downloadQuality,
+                              onChanged: (v) {
+                                setState(() => _downloadQuality = v!);
+                                context.read<LocalStorageService>().setDownloadQuality(v!);
+                                Navigator.pop(ctx);
+                              },
+                            ),
+                          ],
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Cancel'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
                 const Divider(height: 1),
                 ListTile(
@@ -649,25 +702,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: const Text('Change Password'),
                   subtitle: const Text('Update your account password'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Password change flow coming soon')),
-                    );
-                  },
+                  onTap: () => context.pushNamed('change-password'),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.privacy_tip_outlined),
                   title: const Text('Privacy Policy'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
+                  onTap: () => context.pushNamed('privacy-policy'),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.description_outlined),
                   title: const Text('Terms of Service'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
+                  onTap: () => context.pushNamed('terms-of-service'),
                 ),
               ],
             ),
@@ -722,6 +771,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   subtitle: const Text('Permanently delete your account and data'),
                   onTap: () async {
+                    final password = await _showPasswordDialog();
+                    if (password == null || password.isEmpty || !mounted) return;
+
                     final confirmed = await showDialog<bool>(
                       context: context,
                       builder: (ctx) => AlertDialog(
@@ -745,9 +797,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     );
                     if (confirmed == true && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Account deletion request submitted')),
-                      );
+                      try {
+                        final repo = context.read<AuthRepository>();
+                        await repo.deleteAccount(password: password);
+                        if (context.mounted) {
+                          context.read<AuthBloc>().add(const LogoutEvent());
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Failed to delete account: $e'),
+                              backgroundColor: theme.colorScheme.error,
+                            ),
+                          );
+                        }
+                      }
                     }
                   },
                 ),

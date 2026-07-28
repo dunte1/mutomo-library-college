@@ -24,7 +24,16 @@ class _EventListScreenState extends State<EventListScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Events')),
+      appBar: AppBar(
+        title: const Text('Events'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.calendar_month),
+            tooltip: 'Calendar View',
+            onPressed: () => context.pushNamed('event-calendar'),
+          ),
+        ],
+      ),
       body: BlocBuilder<CommunicationBloc, CommunicationState>(
         builder: (context, state) {
           if (state is CommunicationLoading && state is! CommunicationLoaded) {

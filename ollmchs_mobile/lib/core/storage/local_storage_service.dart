@@ -20,6 +20,9 @@ class LocalStorageService {
   static const _pinHashKey = 'pin_hash';
   static const _lastBackgroundKey = 'last_background_timestamp';
   static const _lastActivityKey = 'last_user_activity';
+  static const _autoDownloadsKey = 'auto_downloads';
+  static const _offlineSyncKey = 'offline_sync';
+  static const _downloadQualityKey = 'download_quality';
 
   final FlutterSecureStorage? _secure;
   final Map<String, String> _inMemory = {};
@@ -144,6 +147,32 @@ class LocalStorageService {
     final raw = await _read(_lastActivityKey);
     if (raw == null) return null;
     return DateTime.tryParse(raw);
+  }
+
+  // ---- Downloads & Storage preferences ----
+
+  Future<void> setAutoDownloads(bool enabled) =>
+      _write(_autoDownloadsKey, enabled.toString());
+
+  Future<bool> getAutoDownloads() async {
+    final val = await _read(_autoDownloadsKey);
+    return val == 'true';
+  }
+
+  Future<void> setOfflineSync(bool enabled) =>
+      _write(_offlineSyncKey, enabled.toString());
+
+  Future<bool> getOfflineSync() async {
+    final val = await _read(_offlineSyncKey);
+    return val != 'false'; // default true
+  }
+
+  Future<void> setDownloadQuality(String quality) =>
+      _write(_downloadQualityKey, quality);
+
+  Future<String> getDownloadQuality() async {
+    final val = await _read(_downloadQualityKey);
+    return val ?? 'standard';
   }
 
   // ---- Clear all (logout) ----

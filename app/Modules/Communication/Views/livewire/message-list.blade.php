@@ -23,6 +23,7 @@
                     <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-white/20">{{ $draftCount }}</span>
                 @endif
             </button>
+            @can('manage-scheduled-messages')
             <button wire:click="$set('tab', 'scheduled')"
                 class="btn-{{ $tab === 'scheduled' ? 'primary' : 'secondary' }} btn-sm">
                 Scheduled
@@ -30,6 +31,7 @@
                     <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-white/20">{{ $stats['total_scheduled'] }}</span>
                 @endif
             </button>
+            @endcan
         </div>
         <a href="{{ route('communication.messages.create') }}" wire:navigate class="btn-primary btn-sm">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,10 +99,12 @@
                         <p class="text-sm text-accent-600 dark:text-accent-400 font-medium">Scheduled</p>
                         <p class="text-sm text-surface-400 truncate">{{ Str::limit(strip_tags($message->body), 100) }}</p>
                     </div>
+                    @can('manage-scheduled-messages')
                     <button wire:click="cancelScheduled({{ $message->id }})" wire:confirm="Cancel this scheduled message?"
                         class="btn-danger btn-sm shrink-0">
                         Cancel
                     </button>
+                    @endcan
                 </div>
                 @elseif($tab === 'drafts')
                 <a href="{{ route('communication.messages.create', ['id' => $message->id]) }}" wire:navigate

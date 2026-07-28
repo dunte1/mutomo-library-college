@@ -30,11 +30,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         : hour < 17
         ? 'Good afternoon'
         : 'Good evening';
-    if (PermissionHelper.isStudent(user)) return '$timeGreeting, Student';
-    if (PermissionHelper.isLecturer(user)) return '$timeGreeting, Lecturer';
-    if (PermissionHelper.isStaff(user)) return '$timeGreeting, Staff';
-    if (PermissionHelper.isAdmin(user)) return '$timeGreeting, Admin';
-    return timeGreeting;
+    return user.name.isNotEmpty ? '$timeGreeting, ${user.name}' : timeGreeting;
   }
 
   @override
@@ -216,6 +212,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             value: '${dash.digitalAssets}',
                             color: Colors.purple,
                           ),
+                          if (dash.availableBooks > 0)
+                            _StatCard(
+                              icon: Icons.check_circle_outline,
+                              label: 'Available',
+                              value: '${dash.availableBooks}',
+                              color: Colors.teal,
+                            ),
+                          if (dash.activeReservations > 0)
+                            _StatCard(
+                              icon: Icons.bookmark,
+                              label: 'Reservations',
+                              value: '${dash.activeReservations}',
+                              color: Colors.orange,
+                            ),
+                          if (dash.unreadNotifications > 0)
+                            _StatCard(
+                              icon: Icons.notifications_active,
+                              label: 'Alerts',
+                              value: '${dash.unreadNotifications}',
+                              color: Colors.amber,
+                            ),
+                          if (dash.unreadMessages > 0)
+                            _StatCard(
+                              icon: Icons.mail,
+                              label: 'Messages',
+                              value: '${dash.unreadMessages}',
+                              color: Colors.indigo,
+                            ),
                         ],
                       ),
                       if (dash.pendingFines > 0) ...[
@@ -368,6 +392,182 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                       ],
+                      if (dash.featuredBooks.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          'Featured',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          height: 120,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: dash.featuredBooks.length,
+                            separatorBuilder: (_, __) => const SizedBox(width: 8),
+                            itemBuilder: (_, i) {
+                              final item = dash.featuredBooks[i];
+                              return Card(
+                                child: SizedBox(
+                                  width: 150,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        item.title,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      if (item.description != null)
+                                        Text(
+                                          item.description!,
+                                          style: theme.textTheme.bodySmall,
+                                          maxLines: 1,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+
+                      // Announcements section
+                      if (dash.recentAnnouncements.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          'Announcements',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ...dash.recentAnnouncements.take(3).map(
+                          (a) => Card(
+                            child: ListTile(
+                              leading: const Icon(Icons.campaign, color: Colors.blue),
+                              title: Text(a.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                              subtitle: a.description != null
+                                  ? Text(a.description!, maxLines: 1, overflow: TextOverflow.ellipsis)
+                                  : null,
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => context.goNamed('announcements'),
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      // Recent Digital Assets section
+                      if (dash.recentDigitalAssets.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          'New Digital Assets',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          height: 120,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: dash.recentDigitalAssets.length,
+                            separatorBuilder: (_, __) => const SizedBox(width: 8),
+                            itemBuilder: (_, i) {
+                              final item = dash.recentDigitalAssets[i];
+                              return Card(
+                                child: SizedBox(
+                                  width: 150,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        item.description == 'pdf'
+                                            ? Icons.picture_as_pdf
+                                            : Icons.insert_drive_file,
+                                        size: 32,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        item.title,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+
+                      // Upcoming Events section
+                      if (dash.upcomingEvents.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          'Upcoming Events',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        ...dash.upcomingEvents.take(3).map(
+                          (e) => Card(
+                            child: ListTile(
+                              leading: const Icon(Icons.event, color: Colors.green),
+                              title: Text(e.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                              subtitle: e.description != null
+                                  ? Text(e.description!, maxLines: 1, overflow: TextOverflow.ellipsis)
+                                  : null,
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () => context.goNamed('events'),
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      // Borrowing limit indicator
+                      const SizedBox(height: 16),
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              Icon(Icons.bookmark, color: theme.colorScheme.primary),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Borrowing: ${dash.activeLoans}/${dash.borrowLimit} slots used',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    LinearProgressIndicator(
+                                      value: dash.borrowLimit > 0
+                                          ? dash.activeLoans / dash.borrowLimit
+                                          : 0,
+                                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

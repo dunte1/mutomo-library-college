@@ -17,6 +17,7 @@ import '../../features/books/screens/book_list_screen.dart';
 import '../../features/books/screens/book_detail_screen.dart';
 import '../../features/books/screens/book_search_screen.dart';
 import '../../features/books/screens/review_list_screen.dart';
+import '../../features/books/screens/review_detail_screen.dart';
 import '../../features/books/screens/category_list_screen.dart';
 import '../../features/books/screens/category_book_list_screen.dart';
 import '../../features/books/screens/new_arrivals_screen.dart';
@@ -27,22 +28,34 @@ import '../../features/publishers/screens/publisher_detail_screen.dart';
 import '../../features/scanner/screens/scanner_screen.dart';
 import '../../features/loans/screens/active_loans_screen.dart';
 import '../../features/loans/screens/loan_history_screen.dart';
+import '../../features/loans/screens/loan_detail_screen.dart';
+import '../../features/loans/screens/overdue_loans_screen.dart';
 import '../../features/reservations/screens/reservation_list_screen.dart';
 import '../../features/fines/screens/fines_screen.dart';
+import '../../features/fines/screens/fine_detail_screen.dart';
+import '../../features/fines/screens/payment_screen.dart';
+import '../../features/fines/screens/payment_confirmation_screen.dart';
 import '../../features/library_card/screens/library_card_screen.dart';
 import '../../features/digital_library/screens/digital_asset_list_screen.dart';
 import '../../features/digital_library/screens/digital_asset_reader_screen.dart';
 import '../../features/digital_library/screens/reading_history_screen.dart';
 import '../../features/digital_library/screens/recommendations_screen.dart';
 import '../../features/digital_library/screens/downloaded_assets_screen.dart';
+import '../../features/digital_library/screens/research_repository_screen.dart';
+import '../../features/digital_library/screens/citation_screen.dart';
 import '../../features/messaging/screens/inbox_screen.dart';
 import '../../features/messaging/screens/message_detail_screen.dart';
 import '../../features/messaging/screens/compose_message_screen.dart';
+import '../../features/messaging/screens/template_edit_screen.dart';
 import '../../features/notifications/screens/notification_list_screen.dart';
+import '../../features/notifications/screens/notification_detail_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/profile/screens/settings_screen.dart';
 import '../../features/profile/screens/edit_profile_screen.dart';
 import '../../features/profile/screens/notification_preferences_screen.dart';
+import '../../features/profile/screens/change_password_screen.dart';
+import '../../features/profile/screens/privacy_policy_screen.dart';
+import '../../features/profile/screens/terms_of_service_screen.dart';
 import '../../features/assignments/screens/assignment_list_screen.dart';
 import '../../features/assignments/screens/assignment_detail_screen.dart';
 import '../../features/teacher_assignments/screens/teacher_assignment_list_screen.dart';
@@ -56,6 +69,7 @@ import '../../features/communication/screens/announcement_list_screen.dart';
 import '../../features/communication/screens/announcement_detail_screen.dart';
 import '../../features/communication/screens/event_list_screen.dart';
 import '../../features/communication/screens/event_detail_screen.dart';
+import '../../features/communication/screens/event_calendar_screen.dart';
 import '../../features/communication/screens/bulletin_list_screen.dart';
 import '../../features/communication/screens/bulletin_detail_screen.dart';
 import '../../features/finance/screens/payment_history_screen.dart';
@@ -63,6 +77,9 @@ import '../../features/finance/screens/receipt_detail_screen.dart';
 import '../../features/reports/screens/reports_screen.dart';
 import '../../features/reports/screens/loan_history_screen.dart' as reports;
 import '../../features/reports/screens/fine_history_screen.dart';
+import '../../features/lecturer/screens/my_courses_screen.dart';
+import '../../features/lecturer/screens/student_progress_screen.dart';
+import '../../features/lecturer/screens/assignment_analytics_screen.dart';
 import '../../features/auth/models/user_model.dart';
 import '../helpers/permission_helper.dart';
 import '../widgets/bottom_nav_shell.dart';
@@ -230,6 +247,20 @@ class AppRouter {
                       bookTitle: state.extra as String? ?? '',
                     ),
                   ),
+                  GoRoute(
+                    path: 'reviews/:reviewId',
+                    name: 'review-detail',
+                    builder: (_, state) {
+                      final extra = state.extra as Map<String, dynamic>?;
+                      return ReviewDetailScreen(
+                        reviewId: int.parse(state.pathParameters['reviewId']!),
+                        reviewerName: extra?['reviewerName'] as String?,
+                        rating: extra?['rating'] as int?,
+                        comment: extra?['comment'] as String?,
+                        createdAt: extra?['createdAt'] as DateTime?,
+                      );
+                    },
+                  ),
                 ],
               ),
             ],
@@ -244,6 +275,18 @@ class AppRouter {
                 name: 'loan-history',
                 builder: (_, __) => const LoanHistoryScreen(),
               ),
+              GoRoute(
+                path: 'overdue',
+                name: 'overdue-loans',
+                builder: (_, __) => const OverdueLoansScreen(),
+              ),
+              GoRoute(
+                path: ':id',
+                name: 'loan-detail',
+                builder: (_, state) => LoanDetailScreen(
+                  loanId: int.parse(state.pathParameters['id']!),
+                ),
+              ),
             ],
           ),
           GoRoute(
@@ -255,6 +298,37 @@ class AppRouter {
             path: '/fines',
             name: 'fines',
             builder: (_, __) => const FinesScreen(),
+            routes: [
+              GoRoute(
+                path: 'payment-confirmation',
+                name: 'payment-confirmation',
+                builder: (_, state) {
+                  final extra = state.extra as Map<String, dynamic>?;
+                  return PaymentConfirmationScreen(
+                    receiptNumber: extra?['receiptNumber'] as String?,
+                    mpesaReference: extra?['mpesaReference'] as String?,
+                    amount: (extra?['amount'] as num?)?.toDouble() ?? 0,
+                    paidAt: extra?['paidAt'] as DateTime?,
+                    status: extra?['status'] as String? ?? 'confirmed',
+                    paymentMethod: extra?['paymentMethod'] as String?,
+                  );
+                },
+              ),
+              GoRoute(
+                path: ':id',
+                name: 'fine-detail',
+                builder: (_, state) => FineDetailScreen(
+                  fineId: int.parse(state.pathParameters['id']!),
+                ),
+              ),
+              GoRoute(
+                path: ':id/pay',
+                name: 'fine-payment',
+                builder: (_, state) => PaymentScreen(
+                  fineId: int.parse(state.pathParameters['id']!),
+                ),
+              ),
+            ],
           ),
           GoRoute(
             path: '/library-card',
@@ -282,6 +356,19 @@ class AppRouter {
                 builder: (_, __) => const DownloadedAssetsScreen(),
               ),
               GoRoute(
+                path: 'research',
+                name: 'research-repository',
+                builder: (_, __) => const ResearchRepositoryScreen(),
+              ),
+              GoRoute(
+                path: ':id/citations',
+                name: 'citation-generator',
+                builder: (_, state) => CitationScreen(
+                  assetId: int.parse(state.pathParameters['id']!),
+                  assetTitle: state.extra as String? ?? '',
+                ),
+              ),
+              GoRoute(
                 path: ':id',
                 name: 'digital-asset-reader',
                 builder: (_, state) => DigitalAssetReaderScreen(
@@ -307,6 +394,25 @@ class AppRouter {
                 },
               ),
               GoRoute(
+                path: 'templates/new',
+                name: 'template-new',
+                builder: (_, __) => const TemplateEditScreen(),
+              ),
+              GoRoute(
+                path: 'templates/:id/edit',
+                name: 'template-edit',
+                builder: (_, state) {
+                  final extra = state.extra as Map<String, dynamic>?;
+                  return TemplateEditScreen(
+                    templateId: int.parse(state.pathParameters['id']!),
+                    initialName: extra?['name'] as String?,
+                    initialSubject: extra?['subject'] as String?,
+                    initialBody: extra?['body'] as String?,
+                    initialPriority: extra?['priority'] as String?,
+                  );
+                },
+              ),
+              GoRoute(
                 path: ':id',
                 name: 'message-detail',
                 builder: (_, state) => MessageDetailScreen(
@@ -319,6 +425,13 @@ class AppRouter {
             path: '/notifications',
             name: 'notifications',
             builder: (_, __) => const NotificationListScreen(),
+          ),
+          GoRoute(
+            path: '/notifications/:id',
+            name: 'notification-detail',
+            builder: (_, state) => NotificationDetailScreen(
+              notificationId: int.parse(state.pathParameters['id']!),
+            ),
           ),
           GoRoute(
             path: '/profile',
@@ -340,6 +453,21 @@ class AppRouter {
                 path: 'notifications',
                 name: 'notification-preferences',
                 builder: (_, __) => const NotificationPreferencesScreen(),
+              ),
+              GoRoute(
+                path: 'change-password',
+                name: 'change-password',
+                builder: (_, __) => const ChangePasswordScreen(),
+              ),
+              GoRoute(
+                path: 'privacy-policy',
+                name: 'privacy-policy',
+                builder: (_, __) => const PrivacyPolicyScreen(),
+              ),
+              GoRoute(
+                path: 'terms-of-service',
+                name: 'terms-of-service',
+                builder: (_, __) => const TermsOfServiceScreen(),
               ),
             ],
           ),
@@ -439,6 +567,11 @@ class AppRouter {
             builder: (_, __) => const EventListScreen(),
             routes: [
               GoRoute(
+                path: 'calendar',
+                name: 'event-calendar',
+                builder: (_, __) => const EventCalendarScreen(),
+              ),
+              GoRoute(
                 path: ':id',
                 name: 'event-detail',
                 builder: (_, state) => EventDetailScreen(
@@ -517,6 +650,21 @@ class AppRouter {
             path: '/bookmarks',
             name: 'bookmarks',
             builder: (_, __) => const BookmarksScreen(),
+          ),
+          GoRoute(
+            path: '/my-courses',
+            name: 'my-courses',
+            builder: (_, __) => const MyCoursesScreen(),
+          ),
+          GoRoute(
+            path: '/student-progress',
+            name: 'student-progress',
+            builder: (_, __) => const StudentProgressScreen(),
+          ),
+          GoRoute(
+            path: '/assignment-analytics',
+            name: 'assignment-analytics',
+            builder: (_, __) => const AssignmentAnalyticsScreen(),
           ),
           GoRoute(
             path: '/help',

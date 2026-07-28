@@ -3,7 +3,9 @@
 use App\Modules\Members\Controllers\LibraryCardController;
 use App\Modules\Members\Livewire\LibraryCard;
 use App\Modules\Members\Livewire\MemberForm;
+use App\Modules\Members\Livewire\LibraryCardList;
 use App\Modules\Members\Livewire\MemberList;
+use App\Modules\Members\Livewire\MemberLibraryCard;
 use App\Modules\Members\Livewire\MembershipRequestList;
 use App\Modules\Members\Livewire\MemberShow;
 use App\Modules\Members\Livewire\SuspensionList;
@@ -43,6 +45,10 @@ Route::middleware(['auth', 'verified'])
             ->name('index')
             ->middleware('permission:view-members');
 
+        Route::get('/cards', LibraryCardList::class)
+            ->name('cards')
+            ->middleware('permission:view-library-cards');
+
         Route::get('/create', MemberForm::class)
             ->name('create')
             ->middleware(['permission:create-members', 'subscription:register_members']);
@@ -54,6 +60,11 @@ Route::middleware(['auth', 'verified'])
         Route::get('/suspensions', SuspensionList::class)
             ->name('suspensions')
             ->middleware('permission:suspend-members');
+
+        // Patron self-service card view (any authenticated user can view their own card)
+        // MUST be before /{id}/card to avoid route collision
+        Route::get('/my/card', MemberLibraryCard::class)
+            ->name('my-card');
 
         Route::get('/{id}/edit', MemberForm::class)
             ->name('edit')

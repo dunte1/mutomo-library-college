@@ -113,11 +113,7 @@ class _RecommendationsView extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () {
-          if (item.type == 'book') {
-            context.push('/books/${item.id}');
-          } else if (item.type == 'digital_asset') {
-            context.push('/digital-library/${item.id}');
-          }
+          _showRecommendationDetail(context, rec, theme);
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -216,6 +212,121 @@ class _RecommendationsView extends StatelessWidget {
       child: Icon(
         type == 'book' ? Icons.book : Icons.auto_stories,
         color: theme.colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+
+  void _showRecommendationDetail(BuildContext context, RecommendationItem rec, ThemeData theme) {
+    final item = rec.item;
+    if (item == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.8,
+        expand: false,
+        builder: (ctx, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                item.title,
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              if (item.authors != null && item.authors!.isNotEmpty)
+                Text(
+                  item.authors!.map((a) => a['name']).join(', '),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Why we recommend this:',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      rec.reason,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onPrimaryContainer,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(
+                    item.type == 'book' ? Icons.book : Icons.auto_stories,
+                    size: 16,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    item.type == 'book' ? 'Book' : 'Digital Asset',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    'Score: ${(rec.score * 100).round()}%',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    if (item.type == 'book') {
+                      context.push('/books/${item.id}');
+                    } else if (item.type == 'digital_asset') {
+                      context.push('/digital-library/${item.id}');
+                    }
+                  },
+                  icon: const Icon(Icons.open_in_new),
+                  label: const Text('View Details'),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

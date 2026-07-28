@@ -52,6 +52,8 @@ class MemberList extends Component
 
     public function exportCsv(): Response
     {
+        abort_unless(auth()->user()->can('view-members'), 403);
+
         return app(ExportService::class)->exportMembersCsv();
     }
 

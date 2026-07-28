@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import '../bloc/books_bloc.dart';
 import '../bloc/books_event.dart';
 import '../bloc/books_state.dart';
@@ -8,6 +10,8 @@ import '../models/book_copy_model.dart';
 import '../../reservations/bloc/reservations_bloc.dart';
 import '../../reservations/bloc/reservations_event.dart';
 import '../../reservations/bloc/reservations_state.dart';
+import '../../bookmarks/bloc/bookmarks_bloc.dart';
+import '../../../core/network/api_client.dart';
 
 class BookDetailScreen extends StatefulWidget {
   final int bookId;
@@ -43,7 +47,25 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
         }
       },
       child: Scaffold(
-        appBar: AppBar(title: const Text('Book Details')),
+        appBar: AppBar(
+          title: const Text('Book Details'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.share),
+              tooltip: 'Share',
+              onPressed: () {
+                final book = context.read<BooksBloc>().state;
+                if (book is BooksLoaded && book.selectedBook != null) {
+                  final b = book.selectedBook!;
+                  Share.share(
+                    '${b.title} by ${b.authors.join(", ")}',
+                    subject: 'Book from OLLMCHS Library',
+                  );
+                }
+              },
+            ),
+          ],
+        ),
         body: BlocBuilder<BooksBloc, BooksState>(
           builder: (context, state) {
             if (state is BooksLoading && state is! BooksLoaded) {
@@ -114,6 +136,10 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                                   label: 'Pages',
                                   value: '${book.pageCount}',
                                 ),
+                              if (book.publisher != null)
+                                _MetaChip(label: 'Publisher', value: book.publisher!),
+                              if (book.category != null)
+                                _MetaChip(label: 'Category', value: book.category!),
                             ],
                           ),
                           const SizedBox(height: 16),
@@ -190,6 +216,8 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                               copies: book.copies,
                               theme: theme,
                             ),
+
+                          // Action buttons
                           Row(
                             children: [
                               if (isAvailable)
@@ -212,8 +240,49 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
                                     label: const Text('Unavailable'),
                                   ),
                                 ),
+                              const SizedBox(width: 8),
+                              IconButton.filledTonal(
+                                onPressed: () => context.pushNamed(
+                                  'book-reviews',
+                                  pathParameters: {'id': '${book.id}'},
+                                  extra: book.title,
+                                ),
+                                icon: const Icon(Icons.rate_review),
+                                tooltip: 'Rate & Review',
+                              ),
                             ],
                           ),
+                          if (isAvailable)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: () async {
+                                    try {
+                                      final api = context.read<ApiClient>();
+                                      await api.post('/v1/loans/issue', data: {'book_id': book.id});
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Book borrowed successfully')),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Borrow failed: $e'),
+                                            backgroundColor: Theme.of(context).colorScheme.error,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  icon: const Icon(Icons.library_books),
+                                  label: const Text('Borrow Book'),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),

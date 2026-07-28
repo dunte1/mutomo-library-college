@@ -6,19 +6,22 @@ use App\Models\DownloadLog;
 use App\Models\User;
 use App\Modules\Members\Models\LibraryCard;
 use App\Modules\Members\Models\Member;
+use App\Modules\Notifications\Services\NotificationService;
+use App\Modules\Settings\Services\SettingsService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
+use Picqer\Barcode\BarcodeGeneratorSVG;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class LibraryCardService
 {
     /**
-     * Generate a unique library card number in OLLMCHS-{YEAR}-{SEQUENCE} format.
+     * Generate a unique library card number in LIB-{YEAR}-{SEQUENCE} format.
      */
     public function generateCardNumber(): string
     {
         $year = now()->format('Y');
-        $prefix = "OLLMCHS-{$year}-";
+        $prefix = "LIB-{$year}-";
 
         $lastCard = LibraryCard::where('card_number', 'like', "{$prefix}%")
             ->orderBy('card_number', 'desc')
@@ -63,11 +66,19 @@ class LibraryCardService
     }
 
     /**
-     * Generate a barcode string for the card.
+     * Generate a visual barcode (Code128 SVG) for the card.
      */
     public function generateBarcode(LibraryCard $card): string
     {
-        return $card->card_number;
+        try {
+            $generator = new BarcodeGeneratorSVG();
+
+            return $generator->getBarcode($card->card_number, BarcodeGeneratorSVG::TYPE_CODE_128, 1.5, 40, '#000000');
+        } catch (\Throwable $e) {
+            report($e);
+
+            return '';
+        }
     }
 
     /**
@@ -104,6 +115,11 @@ class LibraryCardService
                 ->causedBy($issuedBy)
                 ->withProperties(['member_id' => $member->id, 'card_number' => $cardNumber])
                 ->log("Library card issued: {$cardNumber} for {$member->full_name}");
+
+            // Notify the member
+            if ($member->user) {
+                app(NotificationService::class)->sendCardIssued($member->user, $cardNumber);
+            }
 
             return $card->fresh();
         });
@@ -146,6 +162,11 @@ class LibraryCardService
                 ])
                 ->log("Library card reissued: {$cardNumber} (replaced {$oldCard->card_number})");
 
+            // Notify the member
+            if ($member->user) {
+                app(NotificationService::class)->sendCardIssued($member->user, $cardNumber);
+            }
+
             return $card->fresh();
         });
     }
@@ -171,9 +192,12 @@ class LibraryCardService
         }
 
         $qrCodeSvg = $card->qr_code;
+        $settingsService = app(SettingsService::class);
+        $cardBranding = $settingsService->getCardBrandingSettings();
+        $displaySettings = $settingsService->getDisplaySettings();
 
-        $pdf = Pdf::loadView('members::pdf.library-card', compact('card', 'member', 'photoUrl', 'qrCodeSvg'));
-        $pdf->setPaper([0, 0, 340, 540], 'portrait');
+        $pdf = Pdf::loadView('members::pdf.library-card', compact('card', 'member', 'photoUrl', 'qrCodeSvg', 'cardBranding', 'displaySettings'));
+        $pdf->setPaper([0, 0, 1011, 638], 'portrait');
 
         $dompdf = $pdf->getDomPDF();
         $dompdf->getCanvas()->get_cpdf()->addInfo('Title', "Library Card - {$member->full_name}");

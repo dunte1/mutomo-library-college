@@ -20,6 +20,7 @@ class LocalizationSettings extends Component
 
     public function mount(): void
     {
+        abort_unless(auth()->user()->can('manage-settings'), 403);
         $this->settings = app(SettingsService::class)->getLocalizationSettings();
     }
 

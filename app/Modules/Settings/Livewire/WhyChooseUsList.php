@@ -21,6 +21,7 @@ class WhyChooseUsList extends Component
 
     public function delete(int $id): void
     {
+        abort_unless(auth()->user()->can('manage-settings'), 403);
         $item = WhyChooseUs::findOrFail($id);
         $item->delete();
         $this->dispatch('notify', message: 'Item deleted successfully.', type: 'success');

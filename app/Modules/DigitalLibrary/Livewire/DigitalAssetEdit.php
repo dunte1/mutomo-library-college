@@ -38,6 +38,7 @@ class DigitalAssetEdit extends Component
 
     public function mount(DigitalAsset $asset): void
     {
+        abort_unless(auth()->user()->can('edit-digital-assets'), 403);
         $this->asset = $asset;
         $this->title = $asset->title;
         $this->description = $asset->description ?? '';

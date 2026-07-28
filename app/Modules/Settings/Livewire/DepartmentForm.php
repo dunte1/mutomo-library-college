@@ -21,6 +21,7 @@ class DepartmentForm extends Component
 
     public function mount(?int $id = null): void
     {
+        abort_unless(auth()->user()->can('manage-departments'), 403);
         if ($id) {
             $this->isEditing = true;
             $this->departmentId = $id;

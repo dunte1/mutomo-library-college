@@ -28,6 +28,7 @@ class TestimonialList extends Component
 
     public function delete(int $id): void
     {
+        abort_unless(auth()->user()->can('manage-settings'), 403);
         $testimonial = Testimonial::findOrFail($id);
         $testimonial->delete();
         $this->dispatch('notify', message: 'Testimonial deleted successfully.', type: 'success');
@@ -35,6 +36,7 @@ class TestimonialList extends Component
 
     public function approve(int $id): void
     {
+        abort_unless(auth()->user()->can('manage-settings'), 403);
         $testimonial = Testimonial::findOrFail($id);
         $testimonial->update(['status' => 'approved']);
         $this->dispatch('notify', message: 'Testimonial approved.', type: 'success');
@@ -42,6 +44,7 @@ class TestimonialList extends Component
 
     public function reject(int $id): void
     {
+        abort_unless(auth()->user()->can('manage-settings'), 403);
         $testimonial = Testimonial::findOrFail($id);
         $testimonial->update(['status' => 'rejected']);
         $this->dispatch('notify', message: 'Testimonial rejected.', type: 'success');

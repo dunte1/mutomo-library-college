@@ -37,7 +37,9 @@ class ReportController extends Controller
         $pendingFines = (float) Fine::where('user_id', $user->id)->pending()->sum('amount');
 
         $digitalReadCount = ReadingHistory::where('user_id', $user->id)->count();
-        $digitalAssetsDownloaded = $user->downloads()->where('downloadable_type', DigitalAsset::class)->count();
+        $digitalAssetsDownloaded = \App\Models\DownloadLog::where('user_id', $user->id)
+            ->where('downloadable_type', DigitalAsset::class)
+            ->count();
 
         // Books by category (top 5)
         $booksByCategory = BorrowRecord::where('user_id', $user->id)

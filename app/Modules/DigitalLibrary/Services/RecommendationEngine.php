@@ -15,7 +15,7 @@ class RecommendationEngine
     {
         $recommendations = [];
 
-        if ($user->hasRole('student') || $user->hasRole('lecturer')) {
+        if ($user->hasAnyPermission(['borrow-books', 'view-assignments'])) {
             $fromBorrowHistory = $this->fromBorrowHistory($user, $limit);
             $recommendations = array_merge($recommendations, $fromBorrowHistory);
         }

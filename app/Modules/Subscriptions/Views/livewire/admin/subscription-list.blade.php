@@ -58,12 +58,19 @@
                             <td class="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{{ $subscription->end_date?->format('d/m/Y') ?? '—' }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
-                                    @if($subscription->isActive())
-                                        <button wire:click="suspendSubscription({{ $subscription->id }})" class="text-sm text-yellow-600 hover:text-yellow-800">Suspend</button>
-                                        <button wire:click="cancelSubscription({{ $subscription->id }})" wire:confirm="Cancel this subscription?" class="text-sm text-red-600 hover:text-red-800">Cancel</button>
-                                    @elseif($subscription->isSuspended())
-                                        <button wire:click="activateSubscription({{ $subscription->id }})" class="text-sm text-green-600 hover:text-green-800">Activate</button>
-                                    @endif
+                                    @can('process-subscription-payments')
+                                        @if($subscription->status === 'pending' || $subscription->status === 'expired')
+                                            <button wire:click="processPayment({{ $subscription->id }})" class="text-sm text-emerald-600 hover:text-emerald-800">Confirm Payment</button>
+                                        @endif
+                                    @endcan
+                                    @can('manage-subscriptions')
+                                        @if($subscription->isActive())
+                                            <button wire:click="suspendSubscription({{ $subscription->id }})" class="text-sm text-yellow-600 hover:text-yellow-800">Suspend</button>
+                                            <button wire:click="cancelSubscription({{ $subscription->id }})" wire:confirm="Cancel this subscription?" class="text-sm text-red-600 hover:text-red-800">Cancel</button>
+                                        @elseif($subscription->isSuspended())
+                                            <button wire:click="activateSubscription({{ $subscription->id }})" class="text-sm text-green-600 hover:text-green-800">Activate</button>
+                                        @endif
+                                    @endcan
                                 </div>
                             </td>
                         </tr>

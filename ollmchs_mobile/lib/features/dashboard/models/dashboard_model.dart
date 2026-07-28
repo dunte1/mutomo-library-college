@@ -11,9 +11,13 @@ class DashboardModel {
   final int activeReservations;
   final int unreadNotifications;
   final int unreadMessages;
+  final int borrowLimit;
   final List<DashboardLoan> recentLoans;
   final List<DashboardItem> dueSoonBooks;
   final List<DashboardItem> featuredBooks;
+  final List<DashboardItem> recentDigitalAssets;
+  final List<DashboardItem> upcomingEvents;
+  final List<DashboardItem> recentAnnouncements;
 
   DashboardModel({
     this.totalBooks = 0,
@@ -26,9 +30,13 @@ class DashboardModel {
     this.activeReservations = 0,
     this.unreadNotifications = 0,
     this.unreadMessages = 0,
+    this.borrowLimit = 5,
     this.recentLoans = const [],
     this.dueSoonBooks = const [],
     this.featuredBooks = const [],
+    this.recentDigitalAssets = const [],
+    this.upcomingEvents = const [],
+    this.recentAnnouncements = const [],
   });
 
   factory DashboardModel.fromJson(Map<String, dynamic> json) {
@@ -58,6 +66,7 @@ class DashboardModel {
           parseIntOrNull(stats['unread_notifications']) ??
           0,
       unreadMessages: parseIntOrNull(json['unread_messages']) ?? 0,
+      borrowLimit: parseIntOrNull(stats['borrow_limit']) ?? 5,
       recentLoans:
           (json['recent_loans'] as List<dynamic>?)
               ?.map((e) => DashboardLoan.fromJson(e as Map<String, dynamic>))
@@ -70,6 +79,21 @@ class DashboardModel {
           [],
       featuredBooks:
           (json['featured_books'] as List<dynamic>?)
+              ?.map((e) => DashboardItem.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      recentDigitalAssets:
+          (json['recent_digital_assets'] as List<dynamic>?)
+              ?.map((e) => DashboardItem.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      upcomingEvents:
+          (json['upcoming_events'] as List<dynamic>?)
+              ?.map((e) => DashboardItem.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      recentAnnouncements:
+          (json['recent_announcements'] as List<dynamic>?)
               ?.map((e) => DashboardItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],

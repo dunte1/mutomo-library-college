@@ -119,6 +119,12 @@ class _OllmchsLibraryAppState extends State<OllmchsLibraryApp> {
     if (!_sessionInitialized) {
       _sessionInitialized = true;
       _sessionService.initialize();
+      // Wire notification tap to router navigation
+      PushNotificationService().onNotificationTap = (route) {
+        if (route != null && mounted) {
+          AppRouter.router.push(route);
+        }
+      };
     }
   }
 

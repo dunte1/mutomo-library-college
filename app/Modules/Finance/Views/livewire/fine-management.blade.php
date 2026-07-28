@@ -1,6 +1,6 @@
 @section('title', 'Fines')
 <div class="space-y-6">
-    <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Fine Management</h1>
+    <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">{{ auth()->user()->can('manage-fines') ? 'Fine Management' : 'Fines Overview' }}</h1>
 
     <div class="card p-4">
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -56,12 +56,16 @@
                             </td>
                             <td class="py-3 px-4 text-gray-500">{{ $fine->created_at->format('d/m/Y') }}</td>
                             <td class="py-3 px-4">
-                                @if($fine->status === 'pending')
-                                    <button wire:click="confirmPay({{ $fine->id }})" class="text-sm btn-primary py-1 px-2">Pay</button>
-                                    <button wire:click="waive({{ $fine->id }})" wire:confirm="Are you sure you want to waive this fine?" class="text-sm btn-secondary py-1 px-2 ml-1">Waive</button>
+                                @can('manage-fines')
+                                    @if($fine->status === 'pending')
+                                        <button wire:click="confirmPay({{ $fine->id }})" class="text-sm btn-primary py-1 px-2">Pay</button>
+                                        <button wire:click="waive({{ $fine->id }})" wire:confirm="Are you sure you want to waive this fine?" class="text-sm btn-secondary py-1 px-2 ml-1">Waive</button>
+                                    @else
+                                        <span class="text-xs text-gray-400">-</span>
+                                    @endif
                                 @else
                                     <span class="text-xs text-gray-400">-</span>
-                                @endif
+                                @endcan
                             </td>
                         </tr>
                     @empty
@@ -76,26 +80,28 @@
 
     <div>{{ $fines->links() }}</div>
 
-    <x-bottom-sheet name="pay-fine" :show="$showPayModal" title="Record Payment" maxWidth="md">
-        <div class="p-5 space-y-4">
-            <div>
-                <label class="label">Payment Method</label>
-                <select wire:model="paymentMethod" class="input-field">
-                    <option value="cash">Cash</option>
-                    <option value="mpesa">M-Pesa</option>
-                    <option value="bank">Bank Transfer</option>
-                    <option value="card">Card</option>
-                    <option value="cheque">Cheque</option>
-                </select>
+    @can('manage-fines')
+        <x-bottom-sheet name="pay-fine" :show="$showPayModal" title="Record Payment" maxWidth="md">
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="label">Payment Method</label>
+                    <select wire:model="paymentMethod" class="input-field">
+                        <option value="cash">Cash</option>
+                        <option value="mpesa">M-Pesa</option>
+                        <option value="bank">Bank Transfer</option>
+                        <option value="card">Card</option>
+                        <option value="cheque">Cheque</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="label">Reference (optional)</label>
+                    <input type="text" wire:model="reference" class="input-field" placeholder="Receipt/transaction ref">
+                </div>
+                <div class="flex flex-col sm:flex-row justify-end gap-3 pt-2 mobile-form-actions">
+                    <button wire:click="$set('showPayModal', false)" x-on:click="$dispatch('close-bottom-sheet', 'pay-fine')" class="btn-outline">Cancel</button>
+                    <button wire:click="pay" class="btn-primary">Confirm Payment</button>
+                </div>
             </div>
-            <div>
-                <label class="label">Reference (optional)</label>
-                <input type="text" wire:model="reference" class="input-field" placeholder="Receipt/transaction ref">
-            </div>
-            <div class="flex flex-col sm:flex-row justify-end gap-3 pt-2 mobile-form-actions">
-                <button wire:click="$set('showPayModal', false)" x-on:click="$dispatch('close-bottom-sheet', 'pay-fine')" class="btn-outline">Cancel</button>
-                <button wire:click="pay" class="btn-primary">Confirm Payment</button>
-            </div>
-        </div>
-    </x-bottom-sheet>
+        </x-bottom-sheet>
+    @endcan
 </div>

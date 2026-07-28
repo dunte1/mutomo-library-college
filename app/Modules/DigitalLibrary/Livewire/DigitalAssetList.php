@@ -25,6 +25,24 @@ class DigitalAssetList extends Component
 
     protected $queryString = ['search', 'type', 'categoryId', 'accessLevel', 'sort', 'direction'];
 
+    public function delete(int $id): void
+    {
+        abort_unless(auth()->user()->can('delete-digital-assets'), 403);
+
+        $asset = DigitalAsset::findOrFail($id);
+
+        if ($asset->file_path && \Storage::disk('public')->exists($asset->file_path)) {
+            \Storage::disk('public')->delete($asset->file_path);
+        }
+        if ($asset->cover_image && \Storage::disk('public')->exists($asset->cover_image)) {
+            \Storage::disk('public')->delete($asset->cover_image);
+        }
+
+        $asset->delete();
+
+        $this->dispatch('notify', type: 'success', message: 'Digital asset deleted successfully.');
+    }
+
     public function render()
     {
         $allowedSortFields = ['title', 'created_at', 'file_size', 'publication_year', 'author'];

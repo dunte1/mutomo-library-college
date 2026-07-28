@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/services/download_service.dart';
@@ -23,6 +24,7 @@ class _DigitalAssetReaderScreenState extends State<DigitalAssetReaderScreen> {
   String? _error;
   int? _pageCount;
   double _progress = 0;
+  bool _isBookmarked = false;
 
   // Download state
   bool _isDownloaded = false;
@@ -186,6 +188,20 @@ class _DigitalAssetReaderScreenState extends State<DigitalAssetReaderScreen> {
         title: Text(_filename ?? 'Digital Asset'),
         actions: [
           if (!_loading && _error == null)
+            IconButton(
+              icon: Icon(_isBookmarked ? Icons.bookmark : Icons.bookmark_border),
+              tooltip: _isBookmarked ? 'Remove Bookmark' : 'Bookmark',
+              onPressed: () {
+                setState(() => _isBookmarked = !_isBookmarked);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(_isBookmarked ? 'Bookmarked' : 'Bookmark removed'),
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
+              },
+            ),
+          if (!_loading && _error == null)
             PopupMenuButton<String>(
               onSelected: (value) {
                 switch (value) {
@@ -195,9 +211,24 @@ class _DigitalAssetReaderScreenState extends State<DigitalAssetReaderScreen> {
                   case 'delete':
                     _deleteDownload();
                     break;
+                  case 'cite':
+                    context.pushNamed(
+                      'citation-generator',
+                      pathParameters: {'id': '${widget.assetId}'},
+                      extra: _filename,
+                    );
+                    break;
                 }
               },
               itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'cite',
+                  child: ListTile(
+                    leading: Icon(Icons.format_quote),
+                    title: Text('Generate Citation'),
+                    dense: true,
+                  ),
+                ),
                 if (!_isDownloaded)
                   const PopupMenuItem(
                     value: 'download',

@@ -63,6 +63,11 @@ class DigitalAssetUpload extends Component
         'bookId' => 'nullable|exists:books,id',
     ];
 
+    public function mount()
+    {
+        abort_unless(auth()->user()->can('upload-digital-assets'), 403);
+    }
+
     public function save()
     {
         $this->validate();

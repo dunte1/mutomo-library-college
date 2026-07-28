@@ -29,6 +29,7 @@ class MemberShow extends Component
 
     public function suspend(): void
     {
+        abort_unless(auth()->user()->can('suspend-members'), 403);
         app(MemberService::class)->suspendMember($this->member, 'Suspended by '.auth()->user()->name);
         $this->member->refresh();
         $this->dispatch('notify', type: 'success', message: 'Member suspended successfully.');
@@ -36,6 +37,7 @@ class MemberShow extends Component
 
     public function activate(): void
     {
+        abort_unless(auth()->user()->can('reinstate-members'), 403);
         app(MemberService::class)->activateMember($this->member);
         $this->member->refresh();
         $this->dispatch('notify', type: 'success', message: 'Member activated successfully.');
@@ -50,6 +52,7 @@ class MemberShow extends Component
 
     public function clear(): void
     {
+        abort_unless(auth()->user()->can('clear-members'), 403);
         try {
             app(MemberService::class)->clearMember($this->member, 'Cleared by '.auth()->user()->name);
             $this->member->refresh();
@@ -61,6 +64,20 @@ class MemberShow extends Component
 
     public function delete(): void
     {
+        abort_unless(auth()->user()->can('delete-members'), 403);
+
+        if ($this->member->activeBorrows()->count() > 0) {
+            $this->dispatch('notify', type: 'error', message: 'Cannot delete member with active borrows. Return or transfer all borrowed books first.');
+
+            return;
+        }
+
+        if ($this->member->fines()->where('status', 'pending')->count() > 0) {
+            $this->dispatch('notify', type: 'error', message: 'Cannot delete member with outstanding fines. Clear all fines first.');
+
+            return;
+        }
+
         app(MemberService::class)->deleteMember($this->member);
         session()->flash('success', 'Member deleted successfully.');
         $this->redirect(route('members.index'), navigate: true);

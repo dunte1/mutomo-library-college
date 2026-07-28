@@ -9,7 +9,7 @@ use Illuminate\Routing\Controller;
 
 class BookController extends Controller
 {
-    public function index(): JsonResponse
+    public function index()
     {
         $data = request()->validate([
             'search' => 'sometimes|string|max:255',

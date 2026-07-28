@@ -39,6 +39,18 @@
                         @error("settings.opening_hours") <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
                     </div>
 
+                    <div>
+                        <label class="label">Library Website</label>
+                        <input type="url" wire:model="settings.library_website" class="input-field" placeholder="https://www.ollmchs.ac.ke">
+                        @error("settings.library_website") <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="label">Library Motto / Tagline</label>
+                        <input type="text" wire:model="settings.library_motto" class="input-field" placeholder="e.g. Learn • Discover • Succeed">
+                        @error("settings.library_motto") <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
+                    </div>
+
                     <div class="md:col-span-2">
                         <label class="label">Site Description</label>
                         <textarea wire:model="settings.site_description" class="input-field" rows="3"></textarea>
@@ -70,6 +82,92 @@
                             <label class="label">Twitter / X URL</label>
                             <input type="url" wire:model="settings.footer_twitter_url" class="input-field" placeholder="https://twitter.com/...">
                             @error("settings.footer_twitter_url") <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-surface-200 dark:border-surface-700 pt-6 mt-6">
+                    <h3 class="text-base font-semibold text-surface-900 dark:text-white mb-1">Library Card Branding</h3>
+                    <p class="text-sm text-surface-500 dark:text-surface-400 mb-4">Customize the colors and logo used on library cards.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div>
+                            <label class="label">Primary Color (Header Gradient Start)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" wire:model="settings.card_primary_color" class="h-10 w-10 rounded border border-surface-300 dark:border-surface-600 cursor-pointer">
+                                <input type="text" wire:model="settings.card_primary_color" class="input-field flex-1" placeholder="#1a365d">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="label">Secondary Color (Header Gradient Mid)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" wire:model="settings.card_secondary_color" class="h-10 w-10 rounded border border-surface-300 dark:border-surface-600 cursor-pointer">
+                                <input type="text" wire:model="settings.card_secondary_color" class="input-field flex-1" placeholder="#153168">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="label">Tertiary Color (Header Gradient End)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" wire:model="settings.card_tertiary_color" class="h-10 w-10 rounded border border-surface-300 dark:border-surface-600 cursor-pointer">
+                                <input type="text" wire:model="settings.card_tertiary_color" class="input-field flex-1" placeholder="#0f2453">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="label">Text Color</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" wire:model="settings.card_text_color" class="h-10 w-10 rounded border border-surface-300 dark:border-surface-600 cursor-pointer">
+                                <input type="text" wire:model="settings.card_text_color" class="input-field flex-1" placeholder="#ffffff">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="label">Accent Color (Labels &amp; Subtitles)</label>
+                            <div class="flex items-center gap-2">
+                                <input type="color" wire:model="settings.card_accent_color" class="h-10 w-10 rounded border border-surface-300 dark:border-surface-600 cursor-pointer">
+                                <input type="text" wire:model="settings.card_accent_color" class="input-field flex-1" placeholder="#93c5fd">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <label class="label">Card Logo</label>
+                        <p class="text-xs text-surface-500 dark:text-surface-400 mb-2">Upload a logo to display on library cards. Recommended size: 200x200px, PNG or SVG.</p>
+                        <div class="flex items-start gap-4">
+                            <div class="shrink-0">
+                                @if($currentCardLogo)
+                                    <img src="{{ Storage::url($currentCardLogo) }}" alt="Card Logo" class="w-20 h-20 object-contain rounded-lg border border-surface-200 dark:border-surface-600 bg-white p-1">
+                                @else
+                                    <div class="w-20 h-20 rounded-lg border-2 border-dashed border-surface-300 dark:border-surface-600 flex items-center justify-center bg-surface-50 dark:bg-surface-800">
+                                        <svg class="w-8 h-8 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="flex-1 space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <label class="btn-outline btn-sm cursor-pointer">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                        </svg>
+                                        Choose Logo
+                                        <input type="file" wire:model="cardLogo" accept="image/*" class="hidden">
+                                    </label>
+                                    @if($cardLogo)
+                                        <button type="button" wire:click="saveCardLogo" class="btn-primary btn-sm">
+                                            Upload
+                                        </button>
+                                    @endif
+                                    @if($currentCardLogo)
+                                        <button type="button" wire:click="removeCardLogo" wire:confirm="Remove the card logo?"
+                                            class="btn-sm btn-danger">
+                                            Remove
+                                        </button>
+                                    @endif
+                                </div>
+                                @error("cardLogo") <p class="text-sm text-accent-600">{{ $message }}</p> @enderror
+                                @if($cardLogo)
+                                    <p class="text-xs text-surface-500">Selected: {{ $cardLogo->getClientOriginalName() }}</p>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>

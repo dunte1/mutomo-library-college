@@ -42,6 +42,7 @@ class OverrideDueDates extends Component
 
     public function override(): void
     {
+        $this->authorize('override-due-dates');
         $this->validate();
 
         $record = BorrowRecord::with(['user', 'bookCopy.book'])->findOrFail($this->selectedBorrowId);

@@ -70,6 +70,7 @@ class EmailSettings extends Component
 
     public function mount(): void
     {
+        abort_unless(auth()->user()->can('manage-settings'), 403);
         $service = app(SettingsService::class);
         $this->settings = $service->getEmailSettings();
         $this->hasPassword = $service->hasEmailPassword();

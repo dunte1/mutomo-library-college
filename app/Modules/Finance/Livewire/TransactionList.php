@@ -27,6 +27,7 @@ class TransactionList extends Component
 
     public function exportCsv()
     {
+        abort_unless(auth()->user()->can('view-transactions'), 403);
         $transactions = Transaction::with('user')
             ->when($this->search, fn ($q) => $q->where(function ($q) {
                 $q->where('transaction_number', 'like', "%{$this->search}%")

@@ -5,6 +5,7 @@ namespace App\Modules\Members\Livewire;
 use App\Modules\Members\Models\LibraryCard as LibraryCardModel;
 use App\Modules\Members\Models\Member;
 use App\Modules\Members\Services\LibraryCardService;
+use App\Modules\Settings\Services\SettingsService;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -106,11 +107,12 @@ class LibraryCard extends Component
             return;
         }
 
-        $this->card->markAsLost();
+        $card = $this->card;
+        $card->markAsLost();
         $this->card = null;
 
         activity()
-            ->performedOn($this->card)
+            ->performedOn($card)
             ->causedBy(auth()->user())
             ->log("Library card marked as lost for {$this->member->full_name}");
 
@@ -139,8 +141,14 @@ class LibraryCard extends Component
             ->orderByDesc('created_at')
             ->get();
 
+        $settingsService = app(SettingsService::class);
+        $cardBranding = $settingsService->getCardBrandingSettings();
+        $displaySettings = $settingsService->getDisplaySettings();
+
         return view('members::livewire.library-card', [
             'history' => $history,
+            'cardBranding' => $cardBranding,
+            'displaySettings' => $displaySettings,
         ]);
     }
 }

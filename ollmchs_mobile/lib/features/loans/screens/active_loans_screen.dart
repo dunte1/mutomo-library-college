@@ -1,11 +1,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../bloc/loans_bloc.dart';
 import '../bloc/loans_event.dart';
 import '../bloc/loans_state.dart';
 import '../models/loan_model.dart';
+import '../../reservations/bloc/reservations_bloc.dart';
+import '../../reservations/bloc/reservations_event.dart';
+import '../../reservations/bloc/reservations_state.dart';
+import '../../reservations/models/reservation_model.dart';
+import '../../../core/network/api_client.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/utils/responsive.dart';
@@ -27,9 +33,10 @@ class _ActiveLoansScreenState extends State<ActiveLoansScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     context.read<LoansBloc>().add(const LoadActiveLoans());
     context.read<LoansBloc>().add(const LoadLoanHistory());
+    context.read<ReservationsBloc>().add(const LoadReservations());
 
     _activeScrollController.addListener(_onActiveScroll);
     _historyScrollController.addListener(_onHistoryScroll);
@@ -83,6 +90,7 @@ class _ActiveLoansScreenState extends State<ActiveLoansScreen>
           controller: _tabController,
           tabs: const [
             Tab(text: 'Active'),
+            Tab(text: 'Reservations'),
             Tab(text: 'History'),
           ],
         ),
@@ -116,6 +124,7 @@ class _ActiveLoansScreenState extends State<ActiveLoansScreen>
             controller: _tabController,
             children: [
               _buildActiveTab(state, theme),
+              _buildReservationsTab(theme),
               _buildHistoryTab(state, theme),
             ],
           );
@@ -194,17 +203,47 @@ class _ActiveLoansScreenState extends State<ActiveLoansScreen>
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (loan.canRenew)
+                  if (loan.status == 'active')
+                    FilledButton.tonal(
+                      onPressed: () async {
+                        try {
+                          final api = context.read<ApiClient>();
+                          await api.post('/v1/loans/return', data: {'loan_id': loan.id});
+                          if (context.mounted) {
+                            context.read<LoansBloc>().add(const LoadActiveLoans());
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Book returned successfully')),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Return failed: $e'),
+                                backgroundColor: Theme.of(context).colorScheme.error,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      child: const Text('Return', style: TextStyle(fontSize: 12)),
+                    ),
+                  if (loan.canRenew) ...[
+                    const SizedBox(width: 4),
                     FilledButton.tonal(
                       onPressed: () =>
                           context.read<LoansBloc>().add(RenewLoan(loan.id)),
                       child: const Text('Renew'),
                     ),
+                  ],
                   const SizedBox(width: 4),
                   IconButton(
                     icon: const Icon(Icons.info_outline, size: 20),
                     tooltip: 'Loan details',
-                    onPressed: () => _showLoanDetail(loan, theme),
+                    onPressed: () => context.pushNamed(
+                      'loan-detail',
+                      pathParameters: {'id': '${loan.id}'},
+                    ),
                   ),
                 ],
               ),
@@ -216,100 +255,72 @@ class _ActiveLoansScreenState extends State<ActiveLoansScreen>
     );
   }
 
-  void _showLoanDetail(LoanModel loan, ThemeData theme) {
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              loan.bookTitle,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+  Widget _buildReservationsTab(ThemeData theme) {
+    return BlocBuilder<ReservationsBloc, ReservationsState>(
+      builder: (context, state) {
+        if (state is ReservationsLoading) {
+          return const Padding(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              children: [
+                SkeletonCard(height: 100),
+                SkeletonCard(height: 100),
+              ],
             ),
-            const SizedBox(height: 16),
-            _detailRow(theme, 'Status', loan.status.toUpperCase()),
-            _detailRow(
-              theme,
-              'Borrowed',
-              DateFormat('MMM d, y').format(loan.borrowedAt),
-            ),
-            _detailRow(
-              theme,
-              'Due Date',
-              DateFormat('MMM d, y').format(loan.dueAt),
-            ),
-            if (loan.returnedAt != null)
-              _detailRow(
-                theme,
-                'Returned',
-                DateFormat('MMM d, y').format(loan.returnedAt!),
-              ),
-            if (loan.renewalCount > 0)
-              _detailRow(
-                theme,
-                'Renewals Used',
-                '${loan.renewalCount} of ${loan.maxRenewals}',
-              ),
-            if (loan.renewedAt != null)
-              _detailRow(
-                theme,
-                'Last Renewed',
-                DateFormat('MMM d, y').format(loan.renewedAt!),
-              ),
-            if (loan.renewalCount > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  loan.renewalCount == 1
-                      ? 'This loan was renewed once.'
-                      : 'This loan was renewed ${loan.renewalCount} times.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+          );
+        }
+        if (state is ReservationsLoaded) {
+          if (state.reservations.isEmpty) {
+            return const EmptyState(
+              icon: Icons.bookmark_border,
+              title: 'No reservations',
+              subtitle: "You haven't reserved any books yet",
+            );
+          }
+          return RefreshIndicator(
+            onRefresh: () async =>
+                context.read<ReservationsBloc>().add(const LoadReservations()),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: state.reservations.length,
+              itemBuilder: (_, i) {
+                final reservation = state.reservations[i];
+                return Card(
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: reservation.isActive
+                          ? Colors.green.withValues(alpha: 0.1)
+                          : Colors.orange.withValues(alpha: 0.1),
+                      child: Icon(
+                        reservation.isActive ? Icons.bookmark : Icons.bookmark_border,
+                        color: reservation.isActive ? Colors.green : Colors.orange,
+                      ),
+                    ),
+                    title: Text(
+                      reservation.bookTitle ?? 'Reserved Book',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(
+                      'Reserved: ${DateFormat('MMM d').format(reservation.reservedAt)}'
+                      '${reservation.expiresAt != null ? ' | Expires: ${DateFormat('MMM d').format(reservation.expiresAt!)}' : ''}',
+                    ),
+                    trailing: Chip(
+                      label: Text(reservation.status, style: const TextStyle(fontSize: 10)),
+                      visualDensity: VisualDensity.compact,
+                    ),
                   ),
-                ),
-              ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  context.read<LoansBloc>().add(RenewLoan(loan.id));
-                },
-                child: const Text('Renew Loan'),
-              ),
+                );
+              },
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _detailRow(ThemeData theme, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          Text(
-            value,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
+          );
+        }
+        return const EmptyState(
+          icon: Icons.bookmark_border,
+          title: 'No reservations',
+          subtitle: "You haven't reserved any books yet",
+        );
+      },
     );
   }
 

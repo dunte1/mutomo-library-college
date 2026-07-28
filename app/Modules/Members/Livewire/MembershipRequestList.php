@@ -20,6 +20,11 @@ class MembershipRequestList extends Component
         'search' => ['except' => ''],
     ];
 
+    public function mount(): void
+    {
+        abort_unless(auth()->user()->can('manage-membership-requests'), 403);
+    }
+
     public function approve(int $userId): void
     {
         try {

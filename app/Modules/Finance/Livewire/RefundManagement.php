@@ -32,6 +32,7 @@ class RefundManagement extends Component
 
     public function processRefund(): void
     {
+        $this->authorize('process-refunds');
         $this->validate([
             'selectedTransactionId' => 'required|integer',
             'refundReason' => 'required|string|min:5',

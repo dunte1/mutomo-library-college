@@ -55,6 +55,7 @@ class CollectPayments extends Component
 
     public function payAll(): void
     {
+        $this->authorize('collect-payments');
         $this->validate([
             'selectedUserId' => 'required|integer',
             'amount' => 'required|numeric|min:0.01',

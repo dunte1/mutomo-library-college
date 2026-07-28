@@ -21,9 +21,11 @@ class AuthorList extends Component
 
     public function delete(int $id): void
     {
+        abort_unless(auth()->user()->can('delete-authors'), 403);
+
         $author = Author::findOrFail($id);
         if ($author->books()->count() > 0) {
-            $this->dispatch('notify', message: 'Cannot delete author with associated books.', type: 'error');
+            $this->dispatch('notify', message: 'Cannot delete author with associated books. Remove all books by this author first.', type: 'error');
 
             return;
         }

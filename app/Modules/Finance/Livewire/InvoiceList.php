@@ -22,6 +22,7 @@ class InvoiceList extends Component
 
     public function generateInvoice(int $userId, float $amount, string $type = 'fine'): void
     {
+        $this->authorize('generate-invoices');
         $user = User::findOrFail($userId);
 
         app(FinanceService::class)->generateInvoice(

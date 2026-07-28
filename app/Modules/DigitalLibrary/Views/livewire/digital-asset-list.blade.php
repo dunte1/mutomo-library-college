@@ -123,6 +123,9 @@
                              <a href="{{ route('digital-library.show', $asset) }}" wire:navigate
                                 class="btn-secondary text-sm px-3 text-center">Download</a>
                          @endif
+                        @can('delete-digital-assets')
+                            <button wire:click="delete({{ $asset->id }})" wire:confirm="Permanently delete this asset and its files?" class="btn-danger text-sm px-3">Delete</button>
+                        @endcan
                     </div>
                 </div>
             @endforeach

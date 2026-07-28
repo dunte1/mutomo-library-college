@@ -20,6 +20,7 @@ class PlanList extends Component
 
     public function toggleActive(Plan $plan): void
     {
+        abort_unless(auth()->user()->can('manage-pricing'), 403);
         $plan->update(['is_active' => ! $plan->is_active]);
 
         activity()
@@ -32,6 +33,7 @@ class PlanList extends Component
 
     public function deletePlan(Plan $plan): void
     {
+        abort_unless(auth()->user()->can('manage-pricing'), 403);
         if ($plan->subscriptions()->exists()) {
             $this->dispatch('notify', message: 'Cannot delete plan with active subscriptions.', type: 'error');
 

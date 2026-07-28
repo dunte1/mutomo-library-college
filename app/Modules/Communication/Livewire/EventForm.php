@@ -28,6 +28,7 @@ class EventForm extends Component
     public function mount(?int $id = null): void
     {
         if ($id) {
+            abort_unless(auth()->user()->can('manage-events'), 403);
             $this->isEditing = true;
             $this->eventId = $id;
             $event = Event::findOrFail($id);
@@ -39,6 +40,8 @@ class EventForm extends Component
             $this->end_date = $event->end_date?->format('Y-m-d\TH:i');
             $this->type = $event->type;
             $this->status = $event->status;
+        } else {
+            abort_unless(auth()->user()->can('manage-events'), 403);
         }
     }
 

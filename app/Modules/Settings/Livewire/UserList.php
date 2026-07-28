@@ -41,6 +41,7 @@ class UserList extends Component
 
     public function toggleActive(int $id): void
     {
+        $this->authorize('manage-settings');
         $user = User::findOrFail($id);
         if ($user->isSuperAdmin() && ! auth()->user()->isSuperAdmin()) {
             session()->flash('error', 'Cannot deactivate a super admin.');

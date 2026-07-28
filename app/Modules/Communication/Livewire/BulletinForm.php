@@ -24,6 +24,7 @@ class BulletinForm extends Component
 
     public function mount(?int $id = null): void
     {
+        abort_unless(auth()->user()->can('manage-bulletins'), 403);
         if ($id) {
             $this->isEditing = true;
             $this->bulletinId = $id;

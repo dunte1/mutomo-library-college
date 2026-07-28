@@ -125,9 +125,35 @@ class _MySubscriptionScreenState extends State<MySubscriptionScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => context.read<SubscriptionsBloc>().add(
-                        CancelSubscription(sub.id),
-                      ),
+                      onPressed: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Cancel Subscription'),
+                            content: const Text(
+                              'Are you sure you want to cancel your subscription? This action cannot be undone.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: const Text('Keep'),
+                              ),
+                              FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: theme.colorScheme.error,
+                                ),
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: const Text('Cancel Subscription'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true && context.mounted) {
+                          context.read<SubscriptionsBloc>().add(
+                            CancelSubscription(sub.id),
+                          );
+                        }
+                      },
                       icon: const Icon(Icons.cancel_outlined),
                       label: const Text('Cancel Subscription'),
                       style: OutlinedButton.styleFrom(

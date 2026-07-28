@@ -35,6 +35,34 @@ class InventoryList extends Component
         $this->reset(['search', 'status', 'sort', 'direction']);
     }
 
+    public function markDamaged(BookCopy $copy): void
+    {
+        abort_unless(auth()->user()->can('manage-inventory'), 403);
+        $copy->update(['status' => 'damaged']);
+        $this->dispatch('notify', message: "Copy {$copy->barcode} marked as damaged.", type: 'success');
+    }
+
+    public function markLost(BookCopy $copy): void
+    {
+        abort_unless(auth()->user()->can('manage-inventory'), 403);
+        $copy->update(['status' => 'lost']);
+        $this->dispatch('notify', message: "Copy {$copy->barcode} marked as lost.", type: 'success');
+    }
+
+    public function markWithdrawn(BookCopy $copy): void
+    {
+        abort_unless(auth()->user()->can('manage-inventory'), 403);
+        $copy->update(['status' => 'withdrawn']);
+        $this->dispatch('notify', message: "Copy {$copy->barcode} marked as withdrawn.", type: 'success');
+    }
+
+    public function markAvailable(BookCopy $copy): void
+    {
+        abort_unless(auth()->user()->can('manage-inventory'), 403);
+        $copy->update(['status' => 'available']);
+        $this->dispatch('notify', message: "Copy {$copy->barcode} marked as available.", type: 'success');
+    }
+
     public function render()
     {
         $query = BookCopy::with(['book', 'currentBorrow'])

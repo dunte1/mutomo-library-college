@@ -21,9 +21,16 @@ class CategoryList extends Component
 
     public function delete(int $id): void
     {
+        abort_unless(auth()->user()->can('delete-categories'), 403);
+
         $category = Category::findOrFail($id);
         if ($category->books()->count() > 0) {
-            $this->dispatch('notify', message: 'Cannot delete category with associated books.', type: 'error');
+            $this->dispatch('notify', message: 'Cannot delete category with associated books. Reclassify or remove all books first.', type: 'error');
+
+            return;
+        }
+        if ($category->children()->count() > 0) {
+            $this->dispatch('notify', message: 'Cannot delete category with subcategories. Remove or reassign subcategories first.', type: 'error');
 
             return;
         }

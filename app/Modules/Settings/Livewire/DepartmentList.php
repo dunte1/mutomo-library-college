@@ -21,9 +21,10 @@ class DepartmentList extends Component
 
     public function delete(int $id): void
     {
+        abort_unless(auth()->user()->can('manage-departments'), 403);
         $department = Department::findOrFail($id);
         if ($department->users()->count() > 0) {
-            $this->dispatch('notify', message: 'Cannot delete department with associated users.', type: 'error');
+            $this->dispatch('notify', message: 'Cannot delete department with associated users. Reassign users first.', type: 'error');
 
             return;
         }

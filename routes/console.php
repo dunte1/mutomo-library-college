@@ -5,6 +5,8 @@ use App\Jobs\SendDueReminderJob;
 use App\Jobs\SendOverdueNotificationJob;
 use App\Modules\Circulation\Models\BorrowRecord;
 use App\Modules\Finance\Services\MpesaService;
+use App\Modules\Members\Models\LibraryCard;
+use App\Modules\Notifications\Services\NotificationService;
 use App\Modules\Settings\Services\SettingsService;
 use App\Modules\Subscriptions\Jobs\ProcessSubscriptionRenewals;
 use App\Modules\Subscriptions\Services\SubscriptionService;
@@ -77,3 +79,29 @@ Schedule::command('members:check-expiry')->dailyAt('06:00')->name('check-members
 
 // Prune expired Sanctum API tokens daily
 Schedule::command('sanctum:prune-expired --hours=48')->dailyAt('04:00')->name('prune-expired-tokens');
+
+// Card expiry reminders — notify members whose cards expire within 30 days
+Schedule::call(function () {
+    $settings = app(SettingsService::class);
+    $notificationSettings = $settings->getNotificationSettings();
+    if (! ($notificationSettings['due_date_reminders'] ?? false)) {
+        return;
+    }
+
+    $expiringCards = LibraryCard::where('status', 'active')
+        ->whereBetween('expires_at', [now(), now()->addDays(30)])
+        ->with('member.user')
+        ->get();
+
+    $notifier = app(NotificationService::class);
+
+    foreach ($expiringCards as $card) {
+        if ($card->member?->user) {
+            $notifier->sendCardExpiringSoon(
+                $card->member->user,
+                $card->card_number,
+                $card->expires_at->format('d M Y')
+            );
+        }
+    }
+})->dailyAt('10:00')->name('send-card-expiry-reminders');

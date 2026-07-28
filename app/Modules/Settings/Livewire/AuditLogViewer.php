@@ -22,6 +22,7 @@ class AuditLogViewer extends Component
 
     public function clearOldLogs(): void
     {
+        abort_unless(auth()->user()->can('clear-audit-logs'), 403);
         $cutoff = now()->subDays(90);
 
         Activity::where('created_at', '<', $cutoff)->delete();

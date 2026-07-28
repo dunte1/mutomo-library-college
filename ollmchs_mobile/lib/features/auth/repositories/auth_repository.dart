@@ -293,4 +293,17 @@ class AuthRepository {
       },
     );
   }
+
+  Future<void> deleteAccount({required String password}) async {
+    await _api.delete(
+      '/v1/auth/account',
+      data: {'password': password},
+    );
+    await _storage.clearAll();
+    await _storage.setBiometricEnabled(false);
+    try {
+      final cache = HiveCacheService();
+      await cache.clear();
+    } catch (_) {}
+  }
 }

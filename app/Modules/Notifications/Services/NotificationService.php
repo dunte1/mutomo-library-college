@@ -121,6 +121,30 @@ class NotificationService
             ->get();
     }
 
+    public function sendCardIssued(User $user, string $cardNumber): void
+    {
+        $this->send(
+            $user,
+            'card_issued',
+            'Library Card Issued',
+            "Your library card ({$cardNumber}) has been issued. You can view it from your dashboard.",
+            'credit-card',
+            route('members.my-card'),
+        );
+    }
+
+    public function sendCardExpiringSoon(User $user, string $cardNumber, string $expiresAt): void
+    {
+        $this->send(
+            $user,
+            'card_expiring',
+            'Library Card Expiring Soon',
+            "Your library card ({$cardNumber}) expires on {$expiresAt}. Please visit the library to renew.",
+            'exclamation-triangle',
+            route('members.my-card'),
+        );
+    }
+
     public function deleteOldNotifications(int $daysOld = 90): int
     {
         return InAppNotification::where('created_at', '<', now()->subDays($daysOld))

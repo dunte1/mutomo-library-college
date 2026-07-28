@@ -45,6 +45,7 @@ class ReservationList extends Component
 
     public function cancelAsStaff(int $id): void
     {
+        abort_unless(auth()->user()->can('manage-reservations'), 403);
         $reservation = Reservation::findOrFail($id);
         $reservation->update([
             'status' => Reservation::STATUS_CANCELLED,

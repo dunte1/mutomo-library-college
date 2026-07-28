@@ -29,6 +29,7 @@ class PublisherForm extends Component
     public function mount(?int $id = null): void
     {
         if ($id) {
+            abort_unless(auth()->user()->can('edit-publishers'), 403);
             $this->isEditing = true;
             $this->publisherId = $id;
             $publisher = Publisher::findOrFail($id);
@@ -40,6 +41,8 @@ class PublisherForm extends Component
             $this->website = $publisher->website;
             $this->description = $publisher->description;
             $this->is_active = $publisher->is_active;
+        } else {
+            abort_unless(auth()->user()->can('create-publishers'), 403);
         }
     }
 

@@ -47,6 +47,11 @@ class BookBulkUpload extends Component
         ];
     }
 
+    public function mount(): void
+    {
+        abort_unless(auth()->user()->can('import-books'), 403);
+    }
+
     public function parse(): void
     {
         $this->validate();

@@ -5,6 +5,7 @@ namespace App\Modules\Settings\Livewire;
 use App\Modules\Settings\Services\SettingsService;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
+use App\Modules\Settings\Models\Setting;
 use Livewire\WithFileUploads;
 
 class AppearanceSettings extends Component
@@ -45,6 +46,7 @@ class AppearanceSettings extends Component
 
     public function mount(): void
     {
+        abort_unless(auth()->user()->can('manage-settings'), 403);
         $service = app(SettingsService::class);
         $branding = $service->getBrandingSettings();
 

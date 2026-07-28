@@ -21,6 +21,7 @@ class FeatureList extends Component
 
     public function delete(int $id): void
     {
+        abort_unless(auth()->user()->can('manage-settings'), 403);
         $feature = Feature::findOrFail($id);
         $feature->delete();
         $this->dispatch('notify', message: 'Feature deleted successfully.', type: 'success');

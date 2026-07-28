@@ -53,8 +53,20 @@ class BookList extends Component
         $this->reset(['search', 'categoryId', 'authorId', 'publisherId', 'subjectId', 'year', 'sort', 'direction']);
     }
 
+    public function delete(int $id): void
+    {
+        abort_unless(auth()->user()->can('delete-books'), 403);
+
+        $service = app(BookService::class);
+        $service->delete($id);
+
+        $this->dispatch('notify', message: 'Book deleted successfully.', type: 'success');
+    }
+
     public function exportCsv(): Response
     {
+        abort_unless(auth()->user()->can('export-books'), 403);
+
         return app(ExportService::class)->exportBooksCsv();
     }
 

@@ -68,6 +68,7 @@ class IssueBook extends Component
 
     public function issue(): void
     {
+        $this->authorize('borrow-books');
         $this->validate();
 
         try {

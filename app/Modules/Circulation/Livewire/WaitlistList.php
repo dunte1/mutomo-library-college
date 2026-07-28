@@ -21,6 +21,7 @@ class WaitlistList extends Component
 
     public function delete(int $id): void
     {
+        abort_unless(auth()->user()->can('manage-reservations'), 403);
         $reservation = Reservation::findOrFail($id);
         $reservation->delete();
         $this->dispatch('notify', message: 'Waitlist entry removed.', type: 'success');

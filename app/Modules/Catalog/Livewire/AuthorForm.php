@@ -29,6 +29,7 @@ class AuthorForm extends Component
     public function mount(?int $id = null): void
     {
         if ($id) {
+            abort_unless(auth()->user()->can('edit-authors'), 403);
             $this->isEditing = true;
             $this->authorId = $id;
             $author = Author::findOrFail($id);
@@ -40,6 +41,8 @@ class AuthorForm extends Component
             $this->nationality = $author->nationality;
             $this->website = $author->website;
             $this->is_active = $author->is_active;
+        } else {
+            abort_unless(auth()->user()->can('create-authors'), 403);
         }
     }
 

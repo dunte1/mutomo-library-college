@@ -17,6 +17,7 @@ class FinanceDashboard extends Component
 
     public function mount()
     {
+        abort_unless(auth()->user()->can('view-financial-reports'), 403);
         $this->stats = app(FinanceService::class)->getDashboardStats();
         $this->analytics = app(AnalyticsService::class)->getDashboardAnalytics();
         $this->subscriptionRevenue = app(SubscriptionService::class)->getRevenueStats();

@@ -21,6 +21,7 @@ class AccessLevelList extends Component
 
     public function delete(int $id): void
     {
+        abort_unless(auth()->user()->can('manage-access-levels'), 403);
         $accessLevel = AccessLevel::findOrFail($id);
         $accessLevel->delete();
         $this->dispatch('notify', message: 'Access level deleted successfully.', type: 'success');
@@ -28,6 +29,7 @@ class AccessLevelList extends Component
 
     public function toggleStatus(int $id): void
     {
+        abort_unless(auth()->user()->can('manage-access-levels'), 403);
         $accessLevel = AccessLevel::findOrFail($id);
         $accessLevel->update(['is_active' => ! $accessLevel->is_active]);
         $this->dispatch('notify', message: 'Access level status updated successfully.', type: 'success');

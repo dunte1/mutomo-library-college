@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'verified'])->prefix('finance')->name('finance.')->group(function () {
     Route::get('/', FinanceDashboard::class)->name('index')->middleware('permission:view-financial-reports');
     Route::get('/transactions', TransactionList::class)->name('transactions')->middleware('permission:view-transactions');
-    Route::get('/fines', FineManagement::class)->name('fines')->middleware('permission:manage-fines');
+    Route::get('/fines', FineManagement::class)->name('fines')->middleware('permission:view-fines');
     Route::get('/reports', ReportViewer::class)->name('reports')->middleware('permission:generate-reports');
     Route::get('/analytics', AnalyticsDashboard::class)->name('analytics')->middleware('permission:view-analytics');
     Route::get('/receipts', ReceiptView::class)->name('receipts')->middleware('permission:view-transactions');

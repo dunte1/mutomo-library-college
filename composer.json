@@ -15,6 +15,7 @@
         "livewire/volt": "^1.7.0",
         "minishlink/web-push": "^10.1",
         "phpoffice/phpspreadsheet": "*",
+        "picqer/php-barcode-generator": "*",
         "pragmarx/google2fa": "^9.0",
         "shuchkin/simplexlsx": "*",
         "simplesoftwareio/simple-qrcode": "^4.2",

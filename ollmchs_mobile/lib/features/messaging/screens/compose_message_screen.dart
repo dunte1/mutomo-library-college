@@ -451,12 +451,6 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
           attachments: attachmentFiles,
         ),
       );
-    }
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Message sent')),
-      );
       context.pop();
     }
   }

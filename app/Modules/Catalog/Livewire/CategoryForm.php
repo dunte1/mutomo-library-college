@@ -25,6 +25,7 @@ class CategoryForm extends Component
     public function mount(?int $id = null): void
     {
         if ($id) {
+            abort_unless(auth()->user()->can('edit-books'), 403);
             $this->isEditing = true;
             $this->categoryId = $id;
             $category = Category::findOrFail($id);
@@ -34,6 +35,8 @@ class CategoryForm extends Component
             $this->parent_id = $category->parent_id;
             $this->sort_order = $category->sort_order;
             $this->is_active = $category->is_active;
+        } else {
+            abort_unless(auth()->user()->can('create-books'), 403);
         }
     }
 

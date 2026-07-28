@@ -139,6 +139,13 @@
                                     </span>
                                 </div>
                             </div>
+                            @can('delete-books')
+                                <div class="mt-2 pt-2 border-t border-surface-100 dark:border-surface-700">
+                                    <button wire:click.stop="delete({{ $book->id }})" wire:confirm="Permanently delete this book? This action cannot be undone." class="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                                        Delete
+                                    </button>
+                                </div>
+                            @endcan
                         </div>
                     </div>
                 </div>

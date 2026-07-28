@@ -170,9 +170,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     Emitter<ProfileState> emit,
   ) async {
     final current = state;
-    if (current is ProfileLoaded) {
-      emit(ProfilePhotoUploading(user: current.user));
-    }
+    if (current is! ProfileLoaded) return;
     try {
       await _api.delete('/v1/profile/avatar');
       final response = await _api.get('/v1/profile');
@@ -182,8 +180,14 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       emit(
         ProfileLoaded(user: UserModel.fromJson(data), message: 'Photo removed'),
       );
-    } catch (e) {
-      emit(ProfileError(ErrorMapper.map(e)));
+    } catch (_) {
+      // Endpoint may not exist yet; keep current state and show a message
+      emit(
+        ProfileLoaded(
+          user: current.user,
+          message: 'Photo removal is not available yet',
+        ),
+      );
     }
   }
 

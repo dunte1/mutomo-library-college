@@ -57,7 +57,9 @@
                             <td class="table-cell">
                                 <div class="flex items-center gap-2">
                                     <a href="{{ route('catalog.authors.edit', $author->id) }}" wire:navigate class="btn-sm btn-outline">Edit</a>
-                                    <button wire:click="delete({{ $author->id }})" wire:confirm="Delete this author?" class="btn-sm btn-danger">Delete</button>
+                                    @can('delete-authors')
+                                        <button wire:click="delete({{ $author->id }})" wire:confirm="Delete this author? This action cannot be undone." class="btn-sm btn-danger">Delete</button>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>

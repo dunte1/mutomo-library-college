@@ -29,6 +29,11 @@ class MemberBulkImport extends Component
 
     public bool $completed = false;
 
+    public function mount(): void
+    {
+        abort_unless(auth()->user()->can('create-members'), 403);
+    }
+
     protected function rules(): array
     {
         return [

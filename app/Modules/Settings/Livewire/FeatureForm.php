@@ -23,6 +23,7 @@ class FeatureForm extends Component
 
     public function mount(?int $id = null): void
     {
+        abort_unless(auth()->user()->can('manage-settings'), 403);
         if ($id) {
             $this->isEditing = true;
             $this->featureId = $id;
