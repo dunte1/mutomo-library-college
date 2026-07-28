@@ -1,5 +1,5 @@
 {{-- STAFF NAVIGATION --}}
-@role('super-admin|admin|librarian|assistant-librarian|finance-officer|ict-admin|department-head')
+@canany(['view-dashboard', 'view-books', 'view-circulation', 'view-members', 'view-digital-assets', 'view-financial-reports', 'view-reports', 'manage-announcements', 'view-messages', 'manage-settings', 'view-system-health', 'manage-subscriptions', 'create-assignments'])
     {{-- DASHBOARD --}}
     @can('view-dashboard')
     <a href="{{ route('dashboard') }}" wire:navigate
@@ -146,8 +146,8 @@
         <span>Members List</span>
     </a>
     @can('view-library-cards')
-    <a href="{{ route('members.index') }}" wire:navigate
-        class="sidebar-link {{ request()->routeIs('members.card*') ? 'sidebar-link-active' : '' }} ml-4">
+    <a href="{{ route('members.cards') }}" wire:navigate
+        class="sidebar-link {{ request()->routeIs('members.cards*') || request()->routeIs('members.card*') ? 'sidebar-link-active' : '' }} ml-4">
         <span class="text-sm">Library Cards</span>
     </a>
     @endcan
@@ -225,7 +225,7 @@
     <a href="{{ route('admin.subscriptions.index') }}" wire:navigate
         class="sidebar-link {{ request()->routeIs('admin.subscriptions.index') ? 'sidebar-link-active' : '' }}">
         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
         </svg>
         <span>All Subscriptions</span>
     </a>
@@ -261,12 +261,12 @@
         <span class="text-sm">Transactions</span>
     </a>
     @endcan
-    @can('manage-fines')
+    @canany(['view-fines', 'manage-fines'])
     <a href="{{ route('finance.fines') }}" wire:navigate
         class="sidebar-link {{ request()->routeIs('finance.fines*') ? 'sidebar-link-active' : '' }} ml-4">
         <span class="text-sm">Fines</span>
     </a>
-    @endcan
+    @endcanany
     @can('collect-payments')
     <a href="{{ route('finance.collect-payments') }}" wire:navigate
         class="sidebar-link {{ request()->routeIs('finance.collect-payments*') ? 'sidebar-link-active' : '' }} ml-4">
@@ -307,7 +307,6 @@
     </div>
     @endif
     @if(\Illuminate\Support\Facades\Route::has('reports.dashboard'))
-    @can('view-reports')
     <a href="{{ route('reports.dashboard') }}" wire:navigate
         class="sidebar-link {{ request()->routeIs('reports.dashboard') ? 'sidebar-link-active' : '' }}">
         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -315,39 +314,30 @@
         </svg>
         <span>Dashboard</span>
     </a>
-    @endcan
     @endif
     @if(\Illuminate\Support\Facades\Route::has('reports.catalog'))
-    @can('view-reports')
     <a href="{{ route('reports.catalog') }}" wire:navigate
         class="sidebar-link {{ request()->routeIs('reports.catalog*') ? 'sidebar-link-active' : '' }} ml-4">
         <span class="text-sm">Catalog Reports</span>
     </a>
-    @endcan
     @endif
     @if(\Illuminate\Support\Facades\Route::has('reports.circulation'))
-    @can('view-reports')
     <a href="{{ route('reports.circulation') }}" wire:navigate
         class="sidebar-link {{ request()->routeIs('reports.circulation*') ? 'sidebar-link-active' : '' }} ml-4">
         <span class="text-sm">Circulation Reports</span>
     </a>
-    @endcan
     @endif
     @if(\Illuminate\Support\Facades\Route::has('reports.members'))
-    @can('view-reports')
     <a href="{{ route('reports.members') }}" wire:navigate
         class="sidebar-link {{ request()->routeIs('reports.members*') ? 'sidebar-link-active' : '' }} ml-4">
         <span class="text-sm">Member Reports</span>
     </a>
-    @endcan
     @endif
     @if(\Illuminate\Support\Facades\Route::has('reports.digital-library'))
-    @can('view-reports')
     <a href="{{ route('reports.digital-library') }}" wire:navigate
         class="sidebar-link {{ request()->routeIs('reports.digital-library*') ? 'sidebar-link-active' : '' }} ml-4">
         <span class="text-sm">Digital Library Reports</span>
     </a>
-    @endcan
     @endif
     @can('generate-reports')
     <a href="{{ route('finance.reports') }}" wire:navigate
@@ -399,101 +389,70 @@
     </a>
     @endcan
     @can('view-messages')
-    <a href="{{ route('communication.preferences') }}" wire:navigate
-        class="sidebar-link {{ request()->routeIs('communication.preferences*') ? 'sidebar-link-active' : '' }}">
+    @if(!($hideLabels ?? false))
+    <div class="pt-2">
+        <p class="text-xs font-semibold text-primary-300/50 uppercase tracking-wider px-4 py-1">Messaging</p>
+    </div>
+    @endif
+    @if(\Illuminate\Support\Facades\Route::has('communication.messages.index'))
+    <a href="{{ route('communication.messages.index') }}" wire:navigate
+        class="sidebar-link {{ request()->routeIs('communication.messages.index') || request()->routeIs('communication.messages.show') ? 'sidebar-link-active' : '' }}">
         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
-        <span>Messaging Preferences</span>
+        <span>Inbox</span>
     </a>
+    @endif
+    @can('send-messages')
+    @if(\Illuminate\Support\Facades\Route::has('communication.messages.create'))
+    <a href="{{ route('communication.messages.create') }}" wire:navigate
+        class="sidebar-link {{ request()->routeIs('communication.messages.create') ? 'sidebar-link-active' : '' }}">
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>Compose Message</span>
+    </a>
+    @endif
+    @endcan
     @endcan
 
-    {{-- Messaging Sub-group --}}
-    @can('view-messages')
-    <div class="ml-4 mt-1 space-y-0.5">
-        <p class="text-xs font-semibold text-primary-300 uppercase tracking-wider px-3 py-1">Messaging</p>
-        @if(\Illuminate\Support\Facades\Route::has('communication.messages.index'))
-        <a href="{{ route('communication.messages.index', ['tab' => 'inbox']) }}" wire:navigate
-            class="sidebar-link-sub {{ (request()->routeIs('communication.messages.index') && !in_array(request('tab'), ['sent', 'drafts', 'scheduled'])) || request()->routeIs('communication.messages.show') ? 'sidebar-link-sub-active' : '' }}">
-            <span class="text-sm">Inbox</span>
-        </a>
-        @endif
-        @can('send-messages')
-        @if(\Illuminate\Support\Facades\Route::has('communication.messages.create'))
-        <a href="{{ route('communication.messages.create') }}" wire:navigate
-            class="sidebar-link-sub {{ request()->routeIs('communication.messages.create') ? 'sidebar-link-sub-active' : '' }}">
-            <span class="text-sm">Compose Message</span>
-        </a>
-        @endif
-        @endcan
-        @if(\Illuminate\Support\Facades\Route::has('communication.messages.index'))
-        <a href="{{ route('communication.messages.index', ['tab' => 'sent']) }}" wire:navigate
-            class="sidebar-link-sub {{ request('tab') === 'sent' ? 'sidebar-link-sub-active' : '' }}">
-            <span class="text-sm">Sent</span>
-        </a>
-        <a href="{{ route('communication.messages.index', ['tab' => 'drafts']) }}" wire:navigate
-            class="sidebar-link-sub {{ request('tab') === 'drafts' ? 'sidebar-link-sub-active' : '' }}">
-            <span class="text-sm">Drafts</span>
-        </a>
-        <a href="{{ route('communication.messages.index', ['tab' => 'scheduled']) }}" wire:navigate
-            class="sidebar-link-sub {{ request('tab') === 'scheduled' ? 'sidebar-link-sub-active' : '' }}">
-            <span class="text-sm">Scheduled</span>
-        </a>
-        @endif
-        @can('manage-broadcasts')
-        @if(\Illuminate\Support\Facades\Route::has('communication.broadcasts'))
-        <a href="{{ route('communication.broadcasts') }}" wire:navigate
-            class="sidebar-link-sub {{ request()->routeIs('communication.broadcasts*') ? 'sidebar-link-sub-active' : '' }}">
-            <span class="text-sm">Broadcast Messages</span>
-        </a>
-        @endif
-        @endcan
-        @can('manage-templates')
-        @if(\Illuminate\Support\Facades\Route::has('communication.templates.index'))
-        <a href="{{ route('communication.templates.index') }}" wire:navigate
-            class="sidebar-link-sub {{ request()->routeIs('communication.templates*') ? 'sidebar-link-sub-active' : '' }}">
-            <span class="text-sm">Message Templates</span>
-        </a>
-        @endif
-        @endcan
-        @can('view-message-logs')
-        @if(\Illuminate\Support\Facades\Route::has('communication.messages.logs'))
-        <a href="{{ route('communication.messages.logs') }}" wire:navigate
-            class="sidebar-link-sub {{ request()->routeIs('communication.messages.logs*') ? 'sidebar-link-sub-active' : '' }}">
-            <span class="text-sm">Message Logs</span>
-        </a>
-        @endif
-        @endcan
-    </div>
-    @endcan
-
-    {{-- Notifications Sub-group --}}
+    {{-- Notifications --}}
     @canany(['send-notifications', 'view-notification-logs'])
-    <div class="ml-4 mt-2 space-y-0.5">
-        <p class="text-xs font-semibold text-primary-300 uppercase tracking-wider px-3 py-1">Notifications</p>
-        @can('send-notifications')
-        @if(\Illuminate\Support\Facades\Route::has('notifications.send'))
-        <a href="{{ route('notifications.send') }}" wire:navigate
-            class="sidebar-link-sub {{ request()->routeIs('notifications.send') ? 'sidebar-link-sub-active' : '' }}">
-            <span class="text-sm">Send Notifications</span>
-        </a>
-        @elseif(\Illuminate\Support\Facades\Route::has('settings.notifications'))
-        <a href="{{ route('settings.notifications') }}" wire:navigate
-            class="sidebar-link-sub {{ request()->routeIs('settings.notifications') ? 'sidebar-link-sub-active' : '' }}">
-            <span class="text-sm">Send Notifications</span>
-        </a>
-        @endif
-        @endcan
-        @can('view-notification-logs')
-        @if(\Illuminate\Support\Facades\Route::has('notifications.index'))
-        <a href="{{ route('notifications.index') }}" wire:navigate
-            class="sidebar-link-sub {{ request()->routeIs('notifications.*') ? 'sidebar-link-sub-active' : '' }}">
-            <span class="text-sm">Notification Logs</span>
-        </a>
-        @endif
-        @endcan
+    @if(!($hideLabels ?? false))
+    <div class="pt-2">
+        <p class="text-xs font-semibold text-primary-300/50 uppercase tracking-wider px-4 py-1">Notifications</p>
     </div>
+    @endif
+    @can('send-notifications')
+    @if(\Illuminate\Support\Facades\Route::has('notifications.send'))
+    <a href="{{ route('notifications.send') }}" wire:navigate
+        class="sidebar-link {{ request()->routeIs('notifications.send') ? 'sidebar-link-active' : '' }}">
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+        <span>Send Notifications</span>
+    </a>
+    @elseif(\Illuminate\Support\Facades\Route::has('settings.notifications'))
+    <a href="{{ route('settings.notifications') }}" wire:navigate
+        class="sidebar-link {{ request()->routeIs('settings.notifications') ? 'sidebar-link-active' : '' }}">
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+        <span>Send Notifications</span>
+    </a>
+    @endif
+    @endcan
+    @can('view-notification-logs')
+    @if(\Illuminate\Support\Facades\Route::has('notifications.index'))
+    <a href="{{ route('notifications.index') }}" wire:navigate
+        class="sidebar-link {{ request()->routeIs('notifications.*') ? 'sidebar-link-active' : '' }}">
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        <span>Notification Logs</span>
+    </a>
+    @endif
+    @endcan
     @endcanany
 
     {{-- Programs --}}
@@ -508,7 +467,7 @@
     @endcanany
 
     {{-- ADMINISTRATION --}}
-    @can('manage-settings')
+    @canany(['manage-settings', 'manage-departments', 'manage-access-levels', 'manage-roles', 'manage-ai-settings'])
     @if(!($hideLabels ?? false))
     <div class="pt-3">
         <p class="sidebar-group-label">Administration</p>
@@ -517,7 +476,7 @@
 
     {{-- Settings Sub-group --}}
     <div class="ml-4 mt-1 space-y-0.5">
-        <p class="text-xs font-semibold text-primary-300 uppercase tracking-wider px-3 py-1">Settings</p>
+        <p class="text-xs font-semibold text-primary-300/50 uppercase tracking-wider px-3 py-1">Settings</p>
         <a href="{{ route('settings.general') }}" wire:navigate
             class="sidebar-link-sub {{ request()->routeIs('settings.general') ? 'sidebar-link-sub-active' : '' }}">
             <span class="text-sm">General</span>
@@ -542,10 +501,12 @@
             class="sidebar-link-sub {{ request()->routeIs('settings.appearance') ? 'sidebar-link-sub-active' : '' }}">
             <span class="text-sm">Appearance</span>
         </a>
+        @canany(['manage-settings', 'manage-ai-settings'])
         <a href="{{ route('settings.ai-settings') }}" wire:navigate
             class="sidebar-link-sub {{ request()->routeIs('settings.ai-settings') ? 'sidebar-link-sub-active' : '' }}">
             <span class="text-sm">AI Settings</span>
         </a>
+        @endcanany
         <a href="{{ route('settings.subscriptions') }}" wire:navigate
             class="sidebar-link-sub {{ request()->routeIs('settings.subscriptions') ? 'sidebar-link-sub-active' : '' }}">
             <span class="text-sm">Subscription Pricing</span>
@@ -564,23 +525,29 @@
 
     {{-- User Management Sub-group --}}
     <div class="ml-4 mt-2 space-y-0.5">
-        <p class="text-xs font-semibold text-primary-300 uppercase tracking-wider px-3 py-1">User Management</p>
+        <p class="text-xs font-semibold text-primary-300/50 uppercase tracking-wider px-3 py-1">User Management</p>
         <a href="{{ route('settings.users') }}" wire:navigate
             class="sidebar-link-sub {{ request()->routeIs('settings.users*') ? 'sidebar-link-sub-active' : '' }}">
             <span class="text-sm">Users</span>
         </a>
+        @canany(['manage-settings', 'manage-roles'])
         <a href="{{ route('settings.roles') }}" wire:navigate
             class="sidebar-link-sub {{ request()->routeIs('settings.roles*') ? 'sidebar-link-sub-active' : '' }}">
             <span class="text-sm">Roles</span>
         </a>
+        @endcanany
+        @canany(['manage-settings', 'manage-access-levels'])
         <a href="{{ route('settings.access-levels') }}" wire:navigate
             class="sidebar-link-sub {{ request()->routeIs('settings.access-levels*') ? 'sidebar-link-sub-active' : '' }}">
             <span class="text-sm">Access Levels</span>
         </a>
+        @endcanany
+        @canany(['manage-settings', 'manage-departments'])
         <a href="{{ route('settings.departments') }}" wire:navigate
             class="sidebar-link-sub {{ request()->routeIs('settings.departments*') ? 'sidebar-link-sub-active' : '' }}">
             <span class="text-sm">Departments</span>
         </a>
+        @endcanany
         <a href="{{ route('settings.programs') }}" wire:navigate
             class="sidebar-link-sub {{ request()->routeIs('settings.programs*') ? 'sidebar-link-sub-active' : '' }}">
             <span class="text-sm">Programs</span>
@@ -589,7 +556,7 @@
 
     {{-- Security Sub-group --}}
     <div class="ml-4 mt-2 space-y-0.5">
-        <p class="text-xs font-semibold text-primary-300 uppercase tracking-wider px-3 py-1">Security</p>
+        <p class="text-xs font-semibold text-primary-300/50 uppercase tracking-wider px-3 py-1">Security</p>
         <a href="{{ route('settings.security.dashboard') }}" wire:navigate
             class="sidebar-link-sub {{ request()->routeIs('settings.security.dashboard') ? 'sidebar-link-sub-active' : '' }}">
             <span class="text-sm">Security Dashboard</span>
@@ -606,7 +573,7 @@
 
     {{-- System Sub-group --}}
     <div class="ml-4 mt-2 space-y-0.5">
-        <p class="text-xs font-semibold text-primary-300 uppercase tracking-wider px-3 py-1">System</p>
+        <p class="text-xs font-semibold text-primary-300/50 uppercase tracking-wider px-3 py-1">System</p>
         @if(\Illuminate\Support\Facades\Route::has('settings.system-health'))
         <a href="{{ route('settings.system-health') }}" wire:navigate
             class="sidebar-link-sub {{ request()->routeIs('settings.system-health') ? 'sidebar-link-sub-active' : '' }}">
@@ -640,7 +607,7 @@
         </a>
         @endif
     </div>
-    @endcan
+    @endcanany
 
     {{-- Audit Logs (standalone for non-admin roles) --}}
     @can('view-audit-logs')
@@ -654,77 +621,10 @@
     </a>
     @endcannot
     @endcan
-@endrole
+@endcanany
 
-{{-- PATRON NAVIGATION --}}
-@role('student|lecturer|guest')
-    @can('view-dashboard')
-    @if(!($hideLabels ?? false))
-    <div>
-        <p class="sidebar-group-label">Overview</p>
-    </div>
-    @endif
-    <a href="{{ route('dashboard') }}" wire:navigate
-        class="sidebar-link {{ request()->routeIs('dashboard') ? 'sidebar-link-active' : '' }}">
-        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-        <span>Dashboard</span>
-    </a>
-    @endcan
-
-    @can('view-books')
-    @if(!($hideLabels ?? false))
-    <div class="pt-3">
-        <p class="sidebar-group-label">Catalog</p>
-    </div>
-    @endif
-    <a href="{{ route('catalog.books.index') }}" wire:navigate
-        class="sidebar-link {{ request()->routeIs('catalog.books*') ? 'sidebar-link-active' : '' }}">
-        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-        <span>Browse Books</span>
-    </a>
-    @endcan
-
-    @can('view-digital-assets')
-    @if(!($hideLabels ?? false))
-    <div class="pt-3">
-        <p class="sidebar-group-label">Digital Library</p>
-    </div>
-    @endif
-    <a href="{{ route('digital-library.index') }}" wire:navigate
-        class="sidebar-link {{ request()->routeIs('digital-library.*') ? 'sidebar-link-active' : '' }}">
-        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-        <span>Digital Library</span>
-    </a>
-    @can('view-recommendations')
-    <a href="{{ route('digital-library.recommendations') }}" wire:navigate
-        class="sidebar-link {{ request()->routeIs('digital-library.recommendations') ? 'sidebar-link-active' : '' }} ml-4">
-        <span class="text-sm">Recommendations</span>
-    </a>
-    @endcan
-    @endcan
-
-    @can('view-borrows')
-    @if(!($hideLabels ?? false))
-    <div class="pt-3">
-        <p class="sidebar-group-label">My Borrowings</p>
-    </div>
-    @endif
-    <a href="{{ route('circulation.index') }}" wire:navigate
-        class="sidebar-link {{ request()->routeIs('circulation.index') ? 'sidebar-link-active' : '' }}">
-        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-        </svg>
-        <span>Personal Borrowings</span>
-    </a>
-    @endcan
-
-    @can('view-assignments')
+{{-- PATRON-ONLY NAVIGATION --}}
+@can('view-assignments')
     @if(!($hideLabels ?? false))
     <div class="pt-3">
         <p class="sidebar-group-label">My Assignments</p>
@@ -737,9 +637,9 @@
         </svg>
         <span>Assignments</span>
     </a>
-    @endcan
+@endcan
 
-    @if(\Illuminate\Support\Facades\Route::has('subscriptions.my'))
+@if(\Illuminate\Support\Facades\Route::has('subscriptions.my'))
     @if(!($hideLabels ?? false))
     <div class="pt-3">
         <p class="sidebar-group-label">Subscription</p>
@@ -748,12 +648,13 @@
     <a href="{{ route('subscriptions.my') }}" wire:navigate
         class="sidebar-link {{ request()->routeIs('subscriptions.my') ? 'sidebar-link-active' : '' }}">
         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
         </svg>
         <span>My Subscription</span>
     </a>
-    @endif
+@endif
 
+@can('view-library-cards')
     @if(!($hideLabels ?? false))
     <div class="pt-3">
         <p class="sidebar-group-label">My Account</p>
@@ -766,4 +667,11 @@
         </svg>
         <span>My Profile</span>
     </a>
-@endrole
+    <a href="{{ route('members.my-card') }}" wire:navigate
+        class="sidebar-link {{ request()->routeIs('members.my-card') ? 'sidebar-link-active' : '' }}">
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+        </svg>
+        <span>My Library Card</span>
+    </a>
+@endcan

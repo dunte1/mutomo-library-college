@@ -114,35 +114,128 @@
         @apply block text-sm font-medium text-surface-700 dark:text-surface-300 mb-1.5;
     }
 
+    /* ==================== SIDEBAR LINKS ==================== */
     .sidebar-link {
-        @apply flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 text-primary-200 hover:text-white hover:bg-primary-700/50;
+        @apply flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-primary-200/90 hover:text-white hover:bg-white/[0.07];
     }
 
     .sidebar-link-active {
-        @apply bg-primary-700/60 text-white font-semibold;
+        @apply bg-white/[0.1] text-white font-semibold;
+        box-shadow: inset 3px 0 0 0 theme('colors.primary.400');
     }
 
     .sidebar-link-sub {
-        @apply flex items-center gap-3 px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-primary-300 hover:text-white hover:bg-primary-700/40;
+        @apply flex items-center gap-2.5 px-3 py-1.5 text-[13px] font-medium rounded-lg transition-all duration-200 text-primary-200/80 hover:text-white hover:bg-white/[0.06];
     }
 
     .sidebar-link-sub-active {
-        @apply bg-primary-700/40 text-white font-medium;
+        @apply bg-white/[0.1] text-white font-medium;
+        box-shadow: inset 3px 0 0 0 theme('colors.primary.400');
     }
 
-    /* Collapsed sidebar — hide text labels, sub-items, and group labels via CSS */
+    /* ==================== SIDEBAR GROUP TRIGGERS ==================== */
+    .sidebar-group-trigger {
+        @apply flex items-center justify-between w-full px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] rounded-lg transition-all duration-200 cursor-pointer select-none;
+        color: rgba(255, 255, 255, 0.5);
+        border: none;
+        background: none;
+        font-family: inherit;
+        text-align: left;
+    }
+
+    .sidebar-group-trigger:hover {
+        color: rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sidebar-group-chevron {
+        @apply w-3.5 h-3.5 shrink-0 transition-transform duration-200 ease-out;
+        opacity: 0.5;
+    }
+
+    .sidebar-group-trigger:hover .sidebar-group-chevron {
+        opacity: 0.8;
+    }
+
+    /* ==================== SIDEBAR TOOLTIPS ==================== */
+    .sidebar-tooltip {
+        position: absolute;
+        left: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        margin-left: 0.75rem;
+        padding: 0.375rem 0.75rem;
+        background: #1e293b;
+        color: #f1f5f9;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border-radius: 0.5rem;
+        white-space: nowrap;
+        z-index: 50;
+        pointer-events: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        transform: translateY(-50%) translateX(4px);
+    }
+
+    .sidebar-tooltip::before {
+        content: '';
+        position: absolute;
+        right: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 5px solid transparent;
+        border-right-color: #1e293b;
+    }
+
+    .sidebar-tooltip-visible {
+        opacity: 1 !important;
+        transform: translateY(-50%) translateX(0) !important;
+    }
+
+    /* ==================== COLLAPSED SIDEBAR ==================== */
     aside[data-collapsed="true"] .sidebar-link > span { display: none !important; }
     aside[data-collapsed="true"] .sidebar-group-label { display: none !important; }
-    aside[data-collapsed="true"] > nav > .ml-4 { display: none !important; }
-    aside[data-collapsed="true"] .ml-8 { display: none !important; }
+    aside[data-collapsed="true"] .sidebar-group-trigger > span:first-child > span { display: none !important; }
+    aside[data-collapsed="true"] .sidebar-group-trigger { justify-content: center; padding: 0.5rem; }
+    aside[data-collapsed="true"] .sidebar-group-chevron { display: none !important; }
     aside[data-collapsed="true"] .sidebar-link { justify-content: center; padding-left: 0.5rem; padding-right: 0.5rem; }
     aside[data-collapsed="true"] button[aria-label="Toggle sidebar"] { display: none !important; }
     aside[data-collapsed="true"] .sidebar-hidden-when-collapsed { display: none !important; }
     aside[data-collapsed="true"] .sidebar-link-sub { display: none !important; }
     aside[data-collapsed="true"] .sidebar-logo-link { justify-content: center; width: 100%; }
+    aside[data-collapsed="true"] .sidebar-group-content { display: none !important; }
+    aside[data-collapsed="true"] .sidebar-user-panel-details { display: none !important; }
+    aside[data-collapsed="true"] .sidebar-user-panel { justify-content: center; padding-left: 0.5rem; padding-right: 0.5rem; }
+    aside[data-collapsed="true"] .sidebar-user-panel .sidebar-user-actions > a > span { display: none !important; }
+    aside[data-collapsed="true"] .sidebar-user-panel .sidebar-user-actions { gap: 0; justify-content: center; }
+    aside[data-collapsed="true"] .sidebar-user-panel .sidebar-user-actions > a { padding: 0.375rem; }
+    aside[data-collapsed="true"] .sidebar-collapse-label { display: none !important; }
+    aside[data-collapsed="true"] > nav > .ml-4 { display: none !important; }
+    aside[data-collapsed="true"] .ml-8 { display: none !important; }
 
     .sidebar-group-label {
-        @apply px-4 py-2 text-xs font-semibold uppercase tracking-wider text-primary-300/70;
+        @apply px-4 py-2 text-xs font-semibold uppercase tracking-wider text-primary-200/70;
+    }
+
+    /* ==================== SIDEBAR USER PANEL ==================== */
+    .sidebar-user-panel {
+        @apply border-t border-white/10 p-3 transition-all duration-200;
+    }
+
+    .sidebar-user-actions {
+        @apply flex items-center gap-1.5;
+    }
+
+    .sidebar-user-actions a,
+    .sidebar-user-actions button {
+        @apply flex items-center justify-center p-2 rounded-lg transition-all duration-200 text-primary-300/70 hover:text-white hover:bg-white/[0.07];
+    }
+
+    /* ==================== SIDEBAR SECTION DIVIDER ==================== */
+    .sidebar-divider {
+        @apply mx-3 my-1 border-t border-white/[0.06];
     }
 
     .page-header {
