@@ -36,10 +36,7 @@ class Environment {
     if (definedUrl.isNotEmpty) return definedUrl;
 
     if (kReleaseMode) {
-      // Local dev server — use your machine's LAN IP.
-      // For emulator, use 'http://10.0.2.2:8000/api'.
-      if (isAndroid) return 'http://192.168.2.10:8000/api';
-      return 'http://localhost:8000/api';
+      return 'https://collegelibrary.duncowebsolutions.co.ke/api';
     }
 
     // Development: use localhost
@@ -53,7 +50,7 @@ class Environment {
 
   /// WebSocket / Pusher URL (for real-time features).
   static String get wsUrl {
-    if (kReleaseMode) return 'http://localhost:8000';
+    if (kReleaseMode) return 'https://collegelibrary.duncowebsolutions.co.ke';
     return 'http://localhost:8000';
   }
 
