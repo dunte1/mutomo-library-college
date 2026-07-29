@@ -316,6 +316,10 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
     LoadSentMessages event,
     Emitter<MessagingState> emit,
   ) async {
+    if (state is! MessagingLoaded || event.page == 1) {
+      emit(MessagingLoading());
+    }
+
     try {
       final response = await _api.get(
         '/v1/messages/sent',
@@ -328,17 +332,15 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
           ? [...current.sent, ...messages]
           : messages;
 
-      if (current is MessagingLoaded) {
-        emit(
-          MessagingLoaded(
-            inbox: current.inbox,
-            sent: all,
-            archived: current.archived,
-            unreadCount: current.unreadCount,
-            hasMoreSent: meta['current_page'] < (meta['last_page'] ?? 1),
-          ),
-        );
-      }
+      emit(
+        MessagingLoaded(
+          inbox: current is MessagingLoaded ? current.inbox : [],
+          sent: all,
+          archived: current is MessagingLoaded ? current.archived : [],
+          unreadCount: current is MessagingLoaded ? current.unreadCount : 0,
+          hasMoreSent: meta['current_page'] < (meta['last_page'] ?? 1),
+        ),
+      );
     } catch (_) {}
   }
 
@@ -346,6 +348,10 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
     LoadArchivedMessages event,
     Emitter<MessagingState> emit,
   ) async {
+    if (state is! MessagingLoaded || event.page == 1) {
+      emit(MessagingLoading());
+    }
+
     try {
       final response = await _api.get(
         '/v1/messages/archived',
@@ -358,17 +364,15 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
           ? [...current.archived, ...messages]
           : messages;
 
-      if (current is MessagingLoaded) {
-        emit(
-          MessagingLoaded(
-            inbox: current.inbox,
-            sent: current.sent,
-            archived: all,
-            unreadCount: current.unreadCount,
-            hasMoreArchived: meta['current_page'] < (meta['last_page'] ?? 1),
-          ),
-        );
-      }
+      emit(
+        MessagingLoaded(
+          inbox: current is MessagingLoaded ? current.inbox : [],
+          sent: current is MessagingLoaded ? current.sent : [],
+          archived: all,
+          unreadCount: current is MessagingLoaded ? current.unreadCount : 0,
+          hasMoreArchived: meta['current_page'] < (meta['last_page'] ?? 1),
+        ),
+      );
     } catch (_) {}
   }
 
@@ -385,17 +389,15 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
       final unread = await _fetchUnreadCount();
 
       final current = state;
-      if (current is MessagingLoaded) {
-        emit(
-          MessagingLoaded(
-            inbox: current.inbox,
-            sent: current.sent,
-            archived: current.archived,
-            selectedMessage: message,
-            unreadCount: unread,
-          ),
-        );
-      }
+      emit(
+        MessagingLoaded(
+          inbox: current is MessagingLoaded ? current.inbox : [],
+          sent: current is MessagingLoaded ? current.sent : [],
+          archived: current is MessagingLoaded ? current.archived : [],
+          selectedMessage: message,
+          unreadCount: unread,
+        ),
+      );
     } catch (e) {
       emit(MessagingError(ErrorMapper.map(e)));
     }
@@ -432,18 +434,7 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
         );
       }
       add(const LoadInbox());
-      final current = state;
-      if (current is MessagingLoaded) {
-        emit(
-          MessagingLoaded(
-            inbox: current.inbox,
-            sent: current.sent,
-            archived: current.archived,
-            message: 'Message sent',
-            unreadCount: current.unreadCount,
-          ),
-        );
-      }
+      add(const LoadSentMessages());
     } catch (e) {
       emit(MessagingError(ErrorMapper.map(e)));
     }
@@ -536,18 +527,16 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
       );
       final results = _parseList(response.data);
 
-      if (current is MessagingLoaded) {
-        emit(
-          MessagingLoaded(
-            inbox: current.inbox,
-            sent: current.sent,
-            archived: current.archived,
-            searchResults: results,
-            isSearching: true,
-            unreadCount: current.unreadCount,
-          ),
-        );
-      }
+      emit(
+        MessagingLoaded(
+          inbox: current is MessagingLoaded ? current.inbox : [],
+          sent: current is MessagingLoaded ? current.sent : [],
+          archived: current is MessagingLoaded ? current.archived : [],
+          searchResults: results,
+          isSearching: true,
+          unreadCount: current is MessagingLoaded ? current.unreadCount : 0,
+        ),
+      );
     } catch (e) {
       emit(MessagingError(ErrorMapper.map(e)));
     }

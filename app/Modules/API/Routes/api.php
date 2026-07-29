@@ -417,6 +417,35 @@ Route::name('api.v1.')->prefix('v1')->group(function () {
                 ->middleware('permission:create-assignments');
         });
 
+        // ---- Users (messaging recipients, etc.) ----
+
+        Route::get('/users/search', function () {
+            $data = request()->validate([
+                'q' => ['required', 'string', 'max:255'],
+                'role' => ['sometimes', 'string', 'max:50'],
+            ]);
+            $users = \App\Models\User::active()
+                ->where(function ($q) use ($data) {
+                    $search = $data['q'];
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('admission_number', 'like', "%{$search}%");
+                })
+                ->when($data['role'] ?? null, fn ($q, $role) => $q->role($role))
+                ->orderBy('name')
+                ->limit(50)
+                ->get()
+                ->map(fn ($u) => [
+                    'id' => $u->id,
+                    'name' => $u->name,
+                    'email' => $u->email,
+                    'avatar' => $u->avatar ? url('storage/'.$u->avatar) : null,
+                    'profile_photo_url' => $u->avatar ? url('storage/'.$u->avatar) : null,
+                ]);
+            $svc = app(\App\Modules\API\Services\ApiResponseService::class);
+            return $svc->success($users);
+        })->name('users.search')->middleware('permission:send-messages');
+
         // ---- Programs & Departments ----
 
         Route::get('/programs', function () {

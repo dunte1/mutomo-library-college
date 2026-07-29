@@ -22,6 +22,16 @@ class MessageResource extends JsonResource
             'type' => $this->type,
             'is_read' => $this->whenPivotLoaded('message_recipients', fn () => (bool) $this->pivot?->is_read, null),
             'read_at' => $this->whenPivotLoaded('message_recipients', fn () => $this->pivot?->read_at?->toIso8601String(), null),
+            'recipients' => $this->whenLoaded('recipients', fn () => $this->recipients->map(fn ($r) => [
+                'id' => $r->id,
+                'recipient_id' => $r->recipient_id,
+                'copy_type' => $r->copy_type,
+                'recipient' => $r->relationLoaded('recipient') && $r->recipient ? [
+                    'id' => $r->recipient->id,
+                    'name' => $r->recipient->name,
+                    'email' => $r->recipient->email,
+                ] : null,
+            ])),
             'has_attachments' => $this->relationLoaded('attachments') && $this->attachments->isNotEmpty(),
             'attachments' => $this->whenLoaded('attachments', fn () => $this->attachments->map(fn ($a) => [
                 'id' => $a->id,

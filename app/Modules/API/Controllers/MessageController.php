@@ -55,11 +55,13 @@ class MessageController extends Controller
             'recipient_ids.*' => ['integer', 'exists:users,id'],
             'subject' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string'],
-            'priority' => ['required', 'string', 'in:low,normal,high'],
+            'priority' => ['required', 'string', 'in:low,normal,high,urgent'],
             'type' => ['required', 'string', 'in:direct,group,department,program'],
             'department_id' => ['nullable', 'integer', 'exists:departments,id'],
             'program_id' => ['nullable', 'integer', 'exists:programs,id'],
         ]);
+
+        $data['recipients'] = $data['recipient_ids'];
 
         $message = $this->messagingService->sendMessage(auth()->user(), $data);
 
@@ -101,7 +103,7 @@ class MessageController extends Controller
         );
 
         $messages->getCollection()->transform(fn ($msg) => new MessageResource(
-            $msg->load(['recipients.recipient'])
+            $msg->load(['sender', 'recipients.recipient'])
         ));
 
         return $this->response->paginated($messages);
