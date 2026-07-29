@@ -281,7 +281,8 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
     LoadInbox event,
     Emitter<MessagingState> emit,
   ) async {
-    if (state is! MessagingLoaded || event.page == 1) {
+    final current = state;
+    if (current is! MessagingLoaded || event.page == 1) {
       emit(MessagingLoading());
     }
 
@@ -292,7 +293,6 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
       );
       final messages = _parseList(response.data);
       final meta = response.data['meta'] as Map<String, dynamic>? ?? {};
-      final current = state;
       final all = (current is MessagingLoaded && event.page > 1)
           ? [...current.inbox, ...messages]
           : messages;
@@ -316,7 +316,8 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
     LoadSentMessages event,
     Emitter<MessagingState> emit,
   ) async {
-    if (state is! MessagingLoaded || event.page == 1) {
+    final current = state;
+    if (current is! MessagingLoaded || event.page == 1) {
       emit(MessagingLoading());
     }
 
@@ -327,7 +328,6 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
       );
       final messages = _parseList(response.data);
       final meta = response.data['meta'] as Map<String, dynamic>? ?? {};
-      final current = state;
       final all = (current is MessagingLoaded && event.page > 1)
           ? [...current.sent, ...messages]
           : messages;
@@ -348,7 +348,8 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
     LoadArchivedMessages event,
     Emitter<MessagingState> emit,
   ) async {
-    if (state is! MessagingLoaded || event.page == 1) {
+    final current = state;
+    if (current is! MessagingLoaded || event.page == 1) {
       emit(MessagingLoading());
     }
 
@@ -359,7 +360,6 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
       );
       final messages = _parseList(response.data);
       final meta = response.data['meta'] as Map<String, dynamic>? ?? {};
-      final current = state;
       final all = (current is MessagingLoaded && event.page > 1)
           ? [...current.archived, ...messages]
           : messages;
