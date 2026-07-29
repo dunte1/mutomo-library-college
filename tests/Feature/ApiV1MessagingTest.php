@@ -334,4 +334,162 @@ class ApiV1MessagingTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure(['data', 'meta' => ['total_unread']]);
     }
+
+    // ===== SEND MESSAGE (POST /messages/send) =====
+
+    public function test_send_message_creates_recipient_records(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token($this->librarian))
+            ->postJson("{$this->baseUrl}/messages/send", [
+                'recipient_ids' => [$this->student->id],
+                'subject' => 'Test Direct Message',
+                'body' => 'This is a test message body.',
+                'priority' => 'normal',
+                'type' => 'direct',
+            ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('message', 'Message sent.')
+            ->assertJsonStructure(['data' => ['id', 'subject', 'sender']]);
+
+        $messageId = $response->json('data.id');
+        $this->assertDatabaseHas('message_recipients', [
+            'message_id' => $messageId,
+            'recipient_id' => $this->student->id,
+        ]);
+    }
+
+    public function test_send_message_fails_without_send_messages_permission(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token($this->student))
+            ->postJson("{$this->baseUrl}/messages/send", [
+                'recipient_ids' => [$this->librarian->id],
+                'subject' => 'Test',
+                'body' => 'Test body',
+                'priority' => 'normal',
+                'type' => 'direct',
+            ]);
+
+        $response->assertForbidden();
+    }
+
+    // ===== SENT MESSAGES (GET /messages/sent) =====
+
+    public function test_sent_messages_include_sender_and_recipients(): void
+    {
+        $this->createMessage($this->librarian, [$this->student->id, $this->student2->id],
+            ['subject' => 'SentMsgTest']);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token($this->librarian))
+            ->getJson("{$this->baseUrl}/messages/sent");
+
+        $response->assertOk()
+            ->assertJsonStructure(['data', 'meta']);
+
+        $sent = collect($response->json('data'));
+        $target = $sent->firstWhere('subject', 'SentMsgTest');
+
+        $this->assertNotNull($target, 'Sent message not found in response');
+        $this->assertArrayHasKey('sender', $target, 'sender key missing');
+        $this->assertNotNull($target['sender'], 'sender is null — relation not loaded');
+        $this->assertEquals($this->librarian->name, $target['sender']['name']);
+        $this->assertArrayHasKey('recipients', $target, 'recipients key missing');
+        $this->assertCount(2, $target['recipients']);
+        $this->assertEquals($this->student->id, $target['recipients'][0]['recipient_id']);
+    }
+
+    public function test_sent_messages_requires_view_messages_permission(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token($this->student))
+            ->getJson("{$this->baseUrl}/messages/sent");
+
+        $response->assertForbidden();
+    }
+
+    // ===== USER SEARCH (GET /users/search) =====
+
+    public function test_user_search_returns_matching_users(): void
+    {
+        // Search by name fragment
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token($this->librarian))
+            ->getJson("{$this->baseUrl}/users/search?q=student");
+
+        $response->assertOk()
+            ->assertJsonStructure(['data']);
+        $users = $response->json('data');
+        $this->assertNotEmpty($users);
+        // Each result should have the expected keys
+        foreach ($users as $u) {
+            $this->assertArrayHasKey('id', $u);
+            $this->assertArrayHasKey('name', $u);
+            $this->assertArrayHasKey('email', $u);
+            $this->assertArrayHasKey('profile_photo_url', $u);
+        }
+    }
+
+    public function test_user_search_returns_empty_for_no_match(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token($this->librarian))
+            ->getJson("{$this->baseUrl}/users/search?q=ZZZZNONEXISTENT");
+
+        $response->assertOk();
+        $this->assertEmpty($response->json('data'));
+    }
+
+    public function test_user_search_requires_send_messages_permission(): void
+    {
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token($this->student))
+            ->getJson("{$this->baseUrl}/users/search?q=admin");
+
+        $response->assertForbidden();
+    }
+
+    // ===== MESSAGE DETAIL (GET /messages/{id}) =====
+
+    public function test_message_detail_includes_sender_and_replies(): void
+    {
+        $msg = $this->createMessage($this->librarian, [$this->student->id]);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token($this->student))
+            ->getJson("{$this->baseUrl}/messages/{$msg->id}");
+
+        $response->assertOk()
+            ->assertJsonStructure(['data' => ['id', 'subject', 'sender', 'body']]);
+        $data = $response->json('data');
+        $this->assertNotNull($data['sender']);
+        $this->assertEquals($this->librarian->name, $data['sender']['name']);
+    }
+
+    // ===== UNREAD COUNT =====
+
+    public function test_unread_count_reflects_inbox_messages(): void
+    {
+        $this->createMessage($this->librarian, [$this->student->id]);
+        $this->createMessage($this->librarian, [$this->student->id]);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token($this->student))
+            ->getJson("{$this->baseUrl}/messages/unread-count");
+
+        $response->assertOk();
+        $this->assertGreaterThanOrEqual(2, $response->json('data.unread_count'));
+    }
+
+    // ===== INBOX MESSAGES HAVE CORRECT STRUCTURE =====
+
+    public function test_inbox_message_has_sender(): void
+    {
+        $this->createMessage($this->librarian, [$this->student->id],
+            ['subject' => 'InboxSenderTest']);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$this->token($this->student))
+            ->getJson("{$this->baseUrl}/messages/inbox");
+
+        $response->assertOk();
+        $inbox = collect($response->json('data'));
+        $target = $inbox->firstWhere('subject', 'InboxSenderTest');
+        $this->assertNotNull($target);
+        $this->assertArrayHasKey('sender', $target);
+        $this->assertNotNull($target['sender']);
+        $this->assertEquals($this->librarian->name, $target['sender']['name']);
+    }
 }

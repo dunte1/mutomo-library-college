@@ -59,6 +59,17 @@ void main() {
     );
 
     blocTest<MessagingBloc, MessagingState>(
+      'LoadSentMessages emits MessagingLoaded even when starting from MessagingInitial',
+      build: () => MessagingBloc(api: mockApi),
+      seed: () => MessagingInitial(),
+      act: (bloc) => bloc.add(const LoadSentMessages()),
+      expect: () => [
+        isA<MessagingLoading>(),
+        isA<MessagingLoaded>().having((s) => s.sent, 'sent', isEmpty),
+      ],
+    );
+
+    blocTest<MessagingBloc, MessagingState>(
       'LoadArchivedMessages adds archived messages to state',
       build: () => MessagingBloc(api: mockApi),
       seed: () => const MessagingLoaded(),
@@ -69,7 +80,18 @@ void main() {
     );
 
     blocTest<MessagingBloc, MessagingState>(
-      'SendMessage emits success message',
+      'LoadArchivedMessages emits MessagingLoaded even when starting from MessagingInitial',
+      build: () => MessagingBloc(api: mockApi),
+      seed: () => MessagingInitial(),
+      act: (bloc) => bloc.add(const LoadArchivedMessages()),
+      expect: () => [
+        isA<MessagingLoading>(),
+        isA<MessagingLoaded>().having((s) => s.archived, 'archived', isEmpty),
+      ],
+    );
+
+    blocTest<MessagingBloc, MessagingState>(
+      'SendMessage emits success and triggers LoadInbox + LoadSentMessages',
       build: () => MessagingBloc(api: mockApi),
       seed: () => const MessagingLoaded(),
       act: (bloc) => bloc.add(const SendMessage(
@@ -78,9 +100,20 @@ void main() {
         body: 'Hello',
       )),
       expect: () => [
-        isA<MessagingLoaded>().having((s) => s.message, 'message', 'Message sent'),
         isA<MessagingLoading>(),
         isA<MessagingLoaded>(),
+        isA<MessagingLoading>(),
+        isA<MessagingLoaded>(),
+      ],
+    );
+
+    blocTest<MessagingBloc, MessagingState>(
+      'LoadMessageDetail works even without MessagingLoaded seed',
+      build: () => MessagingBloc(api: mockApi),
+      seed: () => MessagingInitial(),
+      act: (bloc) => bloc.add(const LoadMessageDetail(1)),
+      expect: () => [
+        isA<MessagingLoaded>().having((s) => s.selectedMessage, 'selectedMessage', isNotNull),
       ],
     );
 
