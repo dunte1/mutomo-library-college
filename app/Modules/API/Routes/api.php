@@ -444,7 +444,7 @@ Route::name('api.v1.')->prefix('v1')->group(function () {
                 ]);
             $svc = app(\App\Modules\API\Services\ApiResponseService::class);
             return $svc->success($users);
-        })->name('users.search')->middleware('permission:send-messages');
+        })->name('users.search')->middleware('permission:view-messages');
 
         // ---- Programs & Departments ----
 
