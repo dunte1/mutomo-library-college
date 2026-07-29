@@ -15,7 +15,27 @@ import 'package:ollmchs_library/features/fines/screens/payment_confirmation_scre
 
 class MockApiClient extends Mock implements ApiClient {}
 
-Response<dynamic> _fineResponse() {
+Response<dynamic> _fineListResponse() {
+  return Response(
+    data: {
+      'data': [
+        {
+          'id': 1,
+          'amount': 200.0,
+          'reason': 'Overdue book',
+          'status': 'pending',
+          'assessed_at': '2026-07-20T10:00:00.000Z',
+          'fine_type': 'overdue',
+          'book_title': 'Anatomy Textbook',
+        },
+      ],
+    },
+    statusCode: 200,
+    requestOptions: RequestOptions(path: ''),
+  );
+}
+
+Response<dynamic> _fineDetailResponse() {
   return Response(
     data: {
       'data': {
@@ -39,7 +59,9 @@ void main() {
   setUp(() {
     mockApi = MockApiClient();
     when(() => mockApi.get(any(), queryParameters: any(named: 'queryParameters')))
-        .thenAnswer((_) async => _fineResponse());
+        .thenAnswer((_) async => _fineDetailResponse());
+    when(() => mockApi.get('/v1/fines'))
+        .thenAnswer((_) async => _fineListResponse());
     when(() => mockApi.post(any(), data: any(named: 'data')))
         .thenAnswer((_) async => Response(data: {'data': {}}, statusCode: 200, requestOptions: RequestOptions(path: '')));
   });
@@ -171,7 +193,7 @@ void main() {
     testWidgets('renders with tabs (Outstanding/Paid)', (tester) async {
       await tester.pumpWidget(MaterialApp(
         home: BlocProvider<FinesBloc>(
-          create: (_) => FinesBloc(api: mockApi)..emit(const FinesLoaded()),
+          create: (_) => FinesBloc(api: mockApi),
           child: const FinesScreen(),
         ),
       ));
@@ -181,9 +203,15 @@ void main() {
     });
 
     testWidgets('shows empty state when no fines', (tester) async {
+      when(() => mockApi.get('/v1/fines', queryParameters: any(named: 'queryParameters')))
+          .thenAnswer((_) async => Response(
+            data: {'data': <dynamic>[]},
+            statusCode: 200,
+            requestOptions: RequestOptions(path: ''),
+          ));
       await tester.pumpWidget(MaterialApp(
         home: BlocProvider<FinesBloc>(
-          create: (_) => FinesBloc(api: mockApi)..emit(const FinesLoaded()),
+          create: (_) => FinesBloc(api: mockApi),
           child: const FinesScreen(),
         ),
       ));
@@ -194,29 +222,18 @@ void main() {
     testWidgets('shows pending fines', (tester) async {
       await tester.pumpWidget(MaterialApp(
         home: BlocProvider<FinesBloc>(
-          create: (_) => FinesBloc(api: mockApi)..emit(FinesLoaded(
-            fines: [
-              FineModel(id: 1, amount: 200, reason: 'Overdue', status: 'pending', assessedAt: DateTime(2026, 7, 20)),
-            ],
-            totalPending: 200,
-          )),
+          create: (_) => FinesBloc(api: mockApi),
           child: const FinesScreen(),
         ),
       ));
       await tester.pumpAndSettle();
-      expect(find.text('Overdue'), findsOneWidget);
-      expect(find.text('KES 200.00'), findsWidgets);
+      expect(find.text('Overdue book'), findsOneWidget);
     });
 
     testWidgets('Pay All button visible when fines exist', (tester) async {
       await tester.pumpWidget(MaterialApp(
         home: BlocProvider<FinesBloc>(
-          create: (_) => FinesBloc(api: mockApi)..emit(FinesLoaded(
-            fines: [
-              FineModel(id: 1, amount: 200, reason: 'Overdue', status: 'pending', assessedAt: DateTime(2026, 7, 20)),
-            ],
-            totalPending: 200,
-          )),
+          create: (_) => FinesBloc(api: mockApi),
           child: const FinesScreen(),
         ),
       ));

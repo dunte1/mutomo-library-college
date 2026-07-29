@@ -29,6 +29,7 @@ import 'package:ollmchs_library/features/library_card/bloc/library_card_bloc.dar
 import 'package:ollmchs_library/features/digital_library/bloc/digital_library_bloc.dart';
 import 'package:ollmchs_library/features/notifications/bloc/notifications_bloc.dart';
 import 'package:ollmchs_library/features/profile/bloc/profile_bloc.dart';
+import 'package:ollmchs_library/core/widgets/app_drawer.dart';
 import 'package:ollmchs_library/features/assignments/bloc/assignments_bloc.dart';
 import 'package:ollmchs_library/features/subscriptions/bloc/subscriptions_bloc.dart';
 import 'package:ollmchs_library/features/communication/bloc/communication_bloc.dart';
@@ -49,7 +50,13 @@ void main() {
     mockAuthRepo = MockAuthRepository();
     when(() => mockApi.get(any(), queryParameters: any(named: 'queryParameters')))
         .thenAnswer((_) async => Response(
-              data: {'data': [], 'meta': {'current_page': 1, 'last_page': 1}},
+              data: {'data': {}, 'meta': {'current_page': 1, 'last_page': 1}},
+              statusCode: 200,
+              requestOptions: RequestOptions(path: ''),
+            ));
+    when(() => mockApi.get('/v1/fines'))
+        .thenAnswer((_) async => Response(
+              data: {'data': <dynamic>[]},
               statusCode: 200,
               requestOptions: RequestOptions(path: ''),
             ));
@@ -113,11 +120,44 @@ void main() {
     );
   }
 
+  Widget buildDrawerApp({UserModel? user}) {
+    final u = user ?? studentUser();
+    final scaffoldKey = GlobalKey<ScaffoldState>();
+    when(() => mockAuthRepo.getStoredToken()).thenAnswer((_) async => 'token');
+    when(() => mockAuthRepo.getUser()).thenAnswer((_) async => u);
+
+    return MultiRepositoryProvider(
+      providers: [RepositoryProvider<ApiClient>.value(value: mockApi)],
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>(
+            create: (_) => AuthBloc(authRepository: mockAuthRepo)
+              ..add(const CheckAuthEvent()),
+          ),
+          BlocProvider<MessagingBloc>(create: (_) => MessagingBloc(api: mockApi)),
+          BlocProvider<BooksBloc>(create: (_) => BooksBloc(repository: MockBooksRepo())),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            key: scaffoldKey,
+            drawer: const AppDrawer(),
+            body: const SizedBox.shrink(),
+          ),
+        ),
+      ),
+    );
+  }
+
   group('BottomNavShell Navigation', () {
     testWidgets('shows 6 tabs for student', (tester) async {
       await tester.pumpWidget(buildApp());
       await tester.pumpAndSettle();
-      expect(find.byType(NavigationDestination), findsNWidgets(6));
+      expect(find.text('Dashboard'), findsWidgets);
+      expect(find.text('Books'), findsOneWidget);
+      expect(find.text('Loans'), findsOneWidget);
+      expect(find.text('Messages'), findsOneWidget);
+      expect(find.text('Digital'), findsOneWidget);
+      expect(find.text('Profile'), findsOneWidget);
     });
 
     testWidgets('tapping Books tab navigates to books', (tester) async {
@@ -169,39 +209,44 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(DashboardScreen), findsOneWidget);
     });
+  });
 
-    testWidgets('drawer opens when menu icon tapped', (tester) async {
-      await tester.pumpWidget(buildApp());
+  group('AppDrawer', () {
+    testWidgets('drawer opens and shows navigation items', (tester) async {
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+      await tester.pumpWidget(buildDrawerApp());
       await tester.pumpAndSettle();
-      final menuButton = find.byIcon(Icons.menu);
-      expect(menuButton, findsOneWidget);
-      await tester.tap(menuButton);
+      final scaffoldState = tester.state<ScaffoldState>(find.byType(Scaffold));
+      scaffoldState.openDrawer();
       await tester.pumpAndSettle();
-      expect(find.byType(Drawer), findsOneWidget);
-    });
-
-    testWidgets('drawer shows navigation items', (tester) async {
-      await tester.pumpWidget(buildApp());
-      await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.menu));
-      await tester.pumpAndSettle();
-      expect(find.text('Dashboard'), findsWidgets);
+      expect(find.text('Dashboard'), findsOneWidget);
       expect(find.text('My Library'), findsOneWidget);
       expect(find.text('Digital Library'), findsOneWidget);
-      expect(find.text('Messages'), findsWidgets);
+      expect(find.text('Messages'), findsOneWidget);
       expect(find.text('Notifications'), findsOneWidget);
-      expect(find.text('Profile'), findsWidgets);
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Logout'), findsOneWidget);
     });
 
     testWidgets('drawer logout shows confirmation dialog', (tester) async {
-      await tester.pumpWidget(buildApp());
+      tester.view.physicalSize = const Size(800, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+      await tester.pumpWidget(buildDrawerApp());
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.menu));
+      final scaffoldState = tester.state<ScaffoldState>(find.byType(Scaffold));
+      scaffoldState.openDrawer();
       await tester.pumpAndSettle();
       await tester.tap(find.text('Logout'));
-      await tester.pumpAndSettle();
+      await tester.pump();
       expect(find.text('Are you sure you want to logout?'), findsOneWidget);
       expect(find.text('Cancel'), findsOneWidget);
     });

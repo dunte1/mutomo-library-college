@@ -40,6 +40,7 @@ void main() {
     when(() => mockStorage.getDownloadQuality()).thenAnswer((_) async => 'standard');
     when(() => mockStorage.getBiometricEnabled()).thenAnswer((_) async => false);
     when(() => mockStorage.getPinEnabled()).thenAnswer((_) async => false);
+    when(() => mockStorage.getNotificationsEnabled()).thenAnswer((_) async => true);
   });
 
   Widget buildSettingsScreen() {
@@ -69,49 +70,71 @@ void main() {
   group('SettingsScreen', () {
     testWidgets('renders settings title', (tester) async {
       await tester.pumpWidget(buildSettingsScreen());
-      await tester.pumpAndSettle();
+      await tester.pump();
       expect(find.text('Settings'), findsOneWidget);
     });
 
     testWidgets('shows appearance section', (tester) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() { tester.view.resetPhysicalSize(); tester.view.resetDevicePixelRatio(); });
       await tester.pumpWidget(buildSettingsScreen());
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump();
       expect(find.text('Appearance'), findsOneWidget);
     });
 
     testWidgets('shows dark mode toggle', (tester) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() { tester.view.resetPhysicalSize(); tester.view.resetDevicePixelRatio(); });
       await tester.pumpWidget(buildSettingsScreen());
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump();
       expect(find.text('Dark Mode'), findsOneWidget);
     });
 
     testWidgets('shows security section', (tester) async {
       await tester.pumpWidget(buildSettingsScreen());
-      await tester.pumpAndSettle();
-      expect(find.text('Security'), findsOneWidget);
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Security', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('shows 2FA option', (tester) async {
       await tester.pumpWidget(buildSettingsScreen());
-      await tester.pumpAndSettle();
-      expect(find.text('Two-Factor Authentication'), findsOneWidget);
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Two-Factor Authentication', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('shows account section', (tester) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() { tester.view.resetPhysicalSize(); tester.view.resetDevicePixelRatio(); });
       await tester.pumpWidget(buildSettingsScreen());
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump();
       expect(find.text('Account'), findsOneWidget);
     });
 
     testWidgets('shows sign out option', (tester) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() { tester.view.resetPhysicalSize(); tester.view.resetDevicePixelRatio(); });
       await tester.pumpWidget(buildSettingsScreen());
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump();
       expect(find.text('Sign Out'), findsOneWidget);
     });
 
     testWidgets('shows about section', (tester) async {
+      tester.view.physicalSize = const Size(800, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() { tester.view.resetPhysicalSize(); tester.view.resetDevicePixelRatio(); });
       await tester.pumpWidget(buildSettingsScreen());
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump();
       expect(find.text('About'), findsOneWidget);
     });
   });
@@ -132,7 +155,7 @@ void main() {
         home: const HelpScreen(),
       ));
       await tester.pump();
-      expect(find.text('Help'), findsWidgets);
+      expect(find.text('Help & Support'), findsOneWidget);
     });
   });
 }

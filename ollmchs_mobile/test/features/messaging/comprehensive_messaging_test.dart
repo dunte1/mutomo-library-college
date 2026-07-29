@@ -5,6 +5,10 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:dio/dio.dart';
 import 'package:ollmchs_library/core/network/api_client.dart';
+import 'package:ollmchs_library/features/auth/bloc/auth_bloc.dart';
+import 'package:ollmchs_library/features/auth/bloc/auth_event.dart';
+import 'package:ollmchs_library/features/auth/models/user_model.dart';
+import 'package:ollmchs_library/features/auth/repositories/auth_repository.dart';
 import 'package:ollmchs_library/features/messaging/bloc/messaging_bloc.dart';
 import 'package:ollmchs_library/features/messaging/models/message_model.dart';
 import 'package:ollmchs_library/features/messaging/screens/inbox_screen.dart';
@@ -12,6 +16,7 @@ import 'package:ollmchs_library/features/messaging/screens/compose_message_scree
 import 'package:ollmchs_library/features/messaging/screens/message_detail_screen.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
+class MockAuthRepository extends Mock implements AuthRepository {}
 
 Response<dynamic> _fakeResponse(dynamic data) {
   return Response<dynamic>(
@@ -74,6 +79,8 @@ void main() {
       )),
       expect: () => [
         isA<MessagingLoaded>().having((s) => s.message, 'message', 'Message sent'),
+        isA<MessagingLoading>(),
+        isA<MessagingLoaded>(),
       ],
     );
 
@@ -83,6 +90,7 @@ void main() {
       seed: () => const MessagingLoaded(),
       act: (bloc) => bloc.add(const SearchMessages(query: 'test')),
       expect: () => [
+        isA<MessagingLoading>(),
         isA<MessagingLoaded>().having((s) => s.isSearching, 'isSearching', true),
       ],
     );
@@ -118,11 +126,13 @@ void main() {
         'id': 1,
         'subject': 'Test Subject',
         'body': 'Test body',
-        'sender_name': 'John',
-        'sender_photo': 'http://example.com/photo.jpg',
-        'recipient_names': ['Jane', 'Bob'],
+        'sender': {'name': 'John', 'profile_photo_url': 'http://example.com/photo.jpg'},
+        'recipients': [
+          {'recipient': {'name': 'Jane'}},
+          {'recipient': {'name': 'Bob'}},
+        ],
         'is_read': true,
-        'sent_at': '2026-07-25T10:00:00.000Z',
+        'created_at': '2026-07-25T10:00:00.000Z',
         'priority': 'high',
         'has_attachments': true,
         'attachments_count': 2,
@@ -144,11 +154,11 @@ void main() {
         'id': 2,
         'subject': 'Minimal',
         'body': 'Body',
-        'sent_at': '2026-07-25T10:00:00.000Z',
+        'created_at': '2026-07-25T10:00:00.000Z',
       };
       final msg = MessageModel.fromJson(json);
       expect(msg.id, 2);
-      expect(msg.senderName, isNull);
+      expect(msg.senderName, 'System');
       expect(msg.isRead, false);
       expect(msg.priority, 'normal');
     });
@@ -191,13 +201,24 @@ void main() {
     });
 
     testWidgets('shows messages when loaded', (tester) async {
+      when(() => mockApi.get('/v1/messages/inbox', queryParameters: any(named: 'queryParameters')))
+          .thenAnswer((_) async => _fakeResponse({
+            'data': [
+              {
+                'id': 1,
+                'subject': 'Test Message',
+                'body': 'Hello',
+                'sender': {'name': 'John'},
+                'created_at': DateTime.now().toIso8601String(),
+              },
+            ],
+            'meta': {'current_page': 1, 'last_page': 1},
+          }));
+      when(() => mockApi.get('/v1/messages/unread-count'))
+          .thenAnswer((_) async => _fakeResponse({'unread_count': 0}));
       await tester.pumpWidget(MaterialApp(
         home: BlocProvider<MessagingBloc>(
-          create: (_) => MessagingBloc(api: mockApi)..emit(MessagingLoaded(
-            inbox: [
-              MessageModel(id: 1, subject: 'Test Message', body: 'Hello', senderName: 'John', isRead: false, sentAt: DateTime.now(), priority: 'normal'),
-            ],
-          )),
+          create: (_) => MessagingBloc(api: mockApi),
           child: const InboxScreen(),
         ),
       ));
@@ -230,14 +251,24 @@ void main() {
 
   group('ComposeMessageScreen', () {
     testWidgets('renders compose form', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: BlocProvider<MessagingBloc>(
-          create: (_) => MessagingBloc(api: mockApi),
-          child: const ComposeMessageScreen(),
-        ),
+      final mockAuthRepo = MockAuthRepository();
+      when(() => mockAuthRepo.getStoredToken()).thenAnswer((_) async => 'token');
+      when(() => mockAuthRepo.getUser()).thenAnswer((_) async => UserModel(
+        id: 1, name: 'Test', email: 'test@test.com', roles: ['student'], permissions: [],
+      ));
+      await tester.pumpWidget(MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthBloc>(
+            create: (_) => AuthBloc(authRepository: mockAuthRepo)..add(const CheckAuthEvent()),
+          ),
+          BlocProvider<MessagingBloc>(
+            create: (_) => MessagingBloc(api: mockApi),
+          ),
+        ],
+        child: const MaterialApp(home: ComposeMessageScreen()),
       ));
       await tester.pump();
-      expect(find.text('Compose'), findsOneWidget);
+      expect(find.text('Compose Message'), findsOneWidget);
       expect(find.byType(TextField), findsWidgets);
     });
   });

@@ -38,6 +38,9 @@ void main() {
     when(() => mockStorage.getNotificationsEnabled()).thenAnswer((_) async => true);
     when(() => mockStorage.getBiometricEnabled()).thenAnswer((_) async => false);
     when(() => mockStorage.getPinEnabled()).thenAnswer((_) async => false);
+    when(() => mockStorage.getAutoDownloads()).thenAnswer((_) async => false);
+    when(() => mockStorage.getOfflineSync()).thenAnswer((_) async => true);
+    when(() => mockStorage.getDownloadQuality()).thenAnswer((_) async => 'standard');
     when(() => mockBiometric.isAvailable).thenAnswer((_) async => false);
     when(() => mockBiometric.unavailableReason).thenAnswer((_) async => 'No biometric hardware');
     when(() => mockThemeCubit.state).thenReturn(ThemeMode.system);

@@ -17,6 +17,47 @@ import 'package:ollmchs_library/core/widgets/bottom_nav_shell.dart';
 class MockApiClient extends Mock implements ApiClient {}
 class MockAuthRepository extends Mock implements AuthRepository {}
 
+Widget _buildDashboardTestShell(UserModel user, ApiClient api, AuthRepository authRepo) {
+  return MultiRepositoryProvider(
+    providers: [RepositoryProvider<ApiClient>.value(value: api)],
+    child: MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(create: (_) => AuthBloc(authRepository: authRepo)..add(const CheckAuthEvent())),
+        BlocProvider<DashboardBloc>(create: (_) => DashboardBloc(api: api)),
+        BlocProvider<MessagingBloc>(create: (_) => MessagingBloc(api: api)),
+      ],
+      child: _DashboardTestShell(user: user),
+    ),
+  );
+}
+
+class _DashboardTestShell extends StatelessWidget {
+  final UserModel user;
+  const _DashboardTestShell({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      routerConfig: GoRouter(
+        initialLocation: '/dashboard',
+        routes: [
+          ShellRoute(
+            builder: (_, __, child) => BottomNavShell(child: child),
+            routes: [
+              GoRoute(path: '/dashboard', name: 'dashboard', builder: (_, __) => const DashboardScreen()),
+              GoRoute(path: '/books', name: 'books', builder: (_, __) => const Scaffold(body: Text('Books'))),
+              GoRoute(path: '/loans', name: 'loans', builder: (_, __) => const Scaffold(body: Text('Loans'))),
+              GoRoute(path: '/messages', name: 'messages', builder: (_, __) => const Scaffold(body: Text('Messages'))),
+              GoRoute(path: '/digital-library', name: 'digital-library', builder: (_, __) => const Scaffold(body: Text('Digital'))),
+              GoRoute(path: '/profile', name: 'profile', builder: (_, __) => const Scaffold(body: Text('Profile'))),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 void main() {
   late MockApiClient mockApi;
   late MockAuthRepository mockAuthRepo;
@@ -38,33 +79,8 @@ void main() {
       when(() => mockAuthRepo.getStoredToken()).thenAnswer((_) async => 'token');
       when(() => mockAuthRepo.getUser()).thenAnswer((_) async => user);
 
-      await tester.pumpWidget(MaterialApp(
-        home: MultiRepositoryProvider(
-          providers: [RepositoryProvider<ApiClient>.value(value: mockApi)],
-          child: MultiBlocProvider(
-            providers: [
-              BlocProvider<AuthBloc>(create: (_) => AuthBloc(authRepository: mockAuthRepo)..add(const CheckAuthEvent())),
-              BlocProvider<DashboardBloc>(create: (_) => DashboardBloc(api: mockApi)),
-              BlocProvider<MessagingBloc>(create: (_) => MessagingBloc(api: mockApi)),
-            ],
-            child: Builder(builder: (context) => MaterialApp.router(
-              routerConfig: GoRouter(
-                initialLocation: '/dashboard',
-                routes: [ShellRoute(builder: (_, __, child) => BottomNavShell(child: child), routes: [
-                  GoRoute(path: '/dashboard', builder: (_, __) => const DashboardScreen()),
-                  GoRoute(path: '/books', builder: (_, __) => const Scaffold(body: Text('Books'))),
-                  GoRoute(path: '/loans', builder: (_, __) => const Scaffold(body: Text('Loans'))),
-                  GoRoute(path: '/messages', builder: (_, __) => const Scaffold(body: Text('Messages'))),
-                  GoRoute(path: '/digital-library', builder: (_, __) => const Scaffold(body: Text('Digital'))),
-                  GoRoute(path: '/profile', builder: (_, __) => const Scaffold(body: Text('Profile'))),
-                ])],
-              ),
-            )),
-          ),
-        ),
-      ));
-      await tester.pumpAndSettle();
-      // Should show the dashboard content
+      await tester.pumpWidget(MaterialApp(home: _buildDashboardTestShell(user, mockApi, mockAuthRepo)));
+      await tester.pump();
       expect(find.byType(DashboardScreen), findsOneWidget);
     });
 
@@ -73,67 +89,31 @@ void main() {
       when(() => mockAuthRepo.getStoredToken()).thenAnswer((_) async => 'token');
       when(() => mockAuthRepo.getUser()).thenAnswer((_) async => user);
 
-      await tester.pumpWidget(MaterialApp(
-        home: MultiRepositoryProvider(
-          providers: [RepositoryProvider<ApiClient>.value(value: mockApi)],
-          child: MultiBlocProvider(
-            providers: [
-              BlocProvider<AuthBloc>(create: (_) => AuthBloc(authRepository: mockAuthRepo)..add(const CheckAuthEvent())),
-              BlocProvider<DashboardBloc>(create: (_) => DashboardBloc(api: mockApi)),
-              BlocProvider<MessagingBloc>(create: (_) => MessagingBloc(api: mockApi)),
-            ],
-            child: Builder(builder: (context) => MaterialApp.router(
-              routerConfig: GoRouter(
-                initialLocation: '/dashboard',
-                routes: [ShellRoute(builder: (_, __, child) => BottomNavShell(child: child), routes: [
-                  GoRoute(path: '/dashboard', builder: (_, __) => const DashboardScreen()),
-                  GoRoute(path: '/books', builder: (_, __) => const Scaffold(body: Text('Books'))),
-                  GoRoute(path: '/loans', builder: (_, __) => const Scaffold(body: Text('Loans'))),
-                  GoRoute(path: '/messages', builder: (_, __) => const Scaffold(body: Text('Messages'))),
-                  GoRoute(path: '/digital-library', builder: (_, __) => const Scaffold(body: Text('Digital'))),
-                  GoRoute(path: '/profile', builder: (_, __) => const Scaffold(body: Text('Profile'))),
-                ])],
-              ),
-            )),
-          ),
-        ),
-      ));
-      await tester.pumpAndSettle();
-      // Should show stat cards for Books, Active Loans, etc.
+      await tester.pumpWidget(MaterialApp(home: _buildDashboardTestShell(user, mockApi, mockAuthRepo)));
+      await tester.pump();
       expect(find.text('Books'), findsWidgets);
     });
 
     testWidgets('shows quick actions section', (tester) async {
+      tester.view.physicalSize = const Size(1400, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
       final user = UserModel(id: 1, name: 'Test', email: 'test@test.com', roles: ['student'], permissions: []);
       when(() => mockAuthRepo.getStoredToken()).thenAnswer((_) async => 'token');
       when(() => mockAuthRepo.getUser()).thenAnswer((_) async => user);
+      when(() => mockApi.get('/v1/dashboard'))
+          .thenAnswer((_) async => Response(
+                data: <String, dynamic>{'data': <String, dynamic>{'stats': <String, dynamic>{}}},
+                statusCode: 200,
+                requestOptions: RequestOptions(path: ''),
+              ));
 
-      await tester.pumpWidget(MaterialApp(
-        home: MultiRepositoryProvider(
-          providers: [RepositoryProvider<ApiClient>.value(value: mockApi)],
-          child: MultiBlocProvider(
-            providers: [
-              BlocProvider<AuthBloc>(create: (_) => AuthBloc(authRepository: mockAuthRepo)..add(const CheckAuthEvent())),
-              BlocProvider<DashboardBloc>(create: (_) => DashboardBloc(api: mockApi)),
-              BlocProvider<MessagingBloc>(create: (_) => MessagingBloc(api: mockApi)),
-            ],
-            child: Builder(builder: (context) => MaterialApp.router(
-              routerConfig: GoRouter(
-                initialLocation: '/dashboard',
-                routes: [ShellRoute(builder: (_, __, child) => BottomNavShell(child: child), routes: [
-                  GoRoute(path: '/dashboard', builder: (_, __) => const DashboardScreen()),
-                  GoRoute(path: '/books', builder: (_, __) => const Scaffold(body: Text('Books'))),
-                  GoRoute(path: '/loans', builder: (_, __) => const Scaffold(body: Text('Loans'))),
-                  GoRoute(path: '/messages', builder: (_, __) => const Scaffold(body: Text('Messages'))),
-                  GoRoute(path: '/digital-library', builder: (_, __) => const Scaffold(body: Text('Digital'))),
-                  GoRoute(path: '/profile', builder: (_, __) => const Scaffold(body: Text('Profile'))),
-                ])],
-              ),
-            )),
-          ),
-        ),
-      ));
-      await tester.pumpAndSettle();
+      await tester.pumpWidget(MaterialApp(home: _buildDashboardTestShell(user, mockApi, mockAuthRepo)));
+      await tester.pump();
+      await tester.pump();
       expect(find.text('Quick Actions'), findsOneWidget);
     });
   });
