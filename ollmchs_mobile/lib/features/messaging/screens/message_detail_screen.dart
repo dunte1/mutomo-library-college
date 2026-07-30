@@ -29,6 +29,12 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
     super.dispose();
   }
 
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
   void _showForwardDialog() {
     final controller = TextEditingController();
     showDialog(
@@ -180,32 +186,46 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
                         Text(msg.body, style: theme.textTheme.bodyLarge?.copyWith(height: 1.5)),
 
                         // Attachments
-                        if (msg.hasAttachments) ...[
+                        if (msg.hasAttachments && msg.attachments.isNotEmpty) ...[
                           const SizedBox(height: 16),
                           const Divider(),
                           Text('Attachments', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          InkWell(
+                          ...msg.attachments.map((a) => InkWell(
                             onTap: () async {
-                              final uri = Uri.parse('/v1/messages/${msg.id}/attachments');
-                              if (await canLaunchUrl(uri)) {
-                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              final url = a['url'] as String?;
+                              if (url != null) {
+                                final uri = Uri.parse(url);
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                }
                               }
                             },
                             borderRadius: BorderRadius.circular(8),
                             child: Padding(
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.symmetric(vertical: 6),
                               child: Row(
                                 children: [
                                   const Icon(Icons.attach_file, size: 16),
                                   const SizedBox(width: 4),
-                                  Text('Tap to view attachments', style: theme.textTheme.bodySmall),
+                                  Expanded(
+                                    child: Text(
+                                      a['file_name'] as String? ?? 'Attachment',
+                                      style: theme.textTheme.bodySmall,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (a['file_size'] != null)
+                                    Text(
+                                      _formatFileSize(a['file_size'] as int),
+                                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
+                                    ),
                                   const SizedBox(width: 4),
                                   Icon(Icons.open_in_new, size: 12, color: theme.colorScheme.primary),
                                 ],
                               ),
                             ),
-                          ),
+                          )),
                         ],
                       ],
                     ),
