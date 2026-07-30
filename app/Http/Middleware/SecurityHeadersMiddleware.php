@@ -13,8 +13,8 @@ class SecurityHeadersMiddleware
     private array $cspPolicies = [
         "default-src 'self'",
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net",
-        "style-src 'self' 'unsafe-inline' https://fonts.bunny.net https://cdn.jsdelivr.net",
-        "font-src 'self' https://fonts.bunny.net",
+        "style-src 'self' 'unsafe-inline' https://fonts.bunny.net https://fonts.googleapis.com https://cdn.jsdelivr.net",
+        "font-src 'self' https://fonts.bunny.net https://fonts.gstatic.com",
         "img-src 'self' data: blob:",
         "connect-src 'self'",
         "frame-src 'self'",

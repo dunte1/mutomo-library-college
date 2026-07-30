@@ -4,7 +4,7 @@
     <x-slot name="subtitle">View and manage your library card</x-slot>
 
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&family=Poppins:wght@600;700&display=swap');
+      @import url('https://fonts.bunny.net/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&family=Poppins:wght@600;700&display=swap');
     </style>
 
     <div class="max-w-4xl mx-auto">
