@@ -13,7 +13,6 @@ import 'package:ollmchs_library/features/messaging/bloc/messaging_bloc.dart';
 import 'package:ollmchs_library/features/messaging/models/message_model.dart';
 import 'package:ollmchs_library/features/messaging/screens/inbox_screen.dart';
 import 'package:ollmchs_library/features/messaging/screens/compose_message_screen.dart';
-import 'package:ollmchs_library/features/messaging/screens/message_detail_screen.dart';
 
 class MockApiClient extends Mock implements ApiClient {}
 class MockAuthRepository extends Mock implements AuthRepository {}

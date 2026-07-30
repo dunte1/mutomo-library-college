@@ -159,7 +159,7 @@ void main() {
     );
 
     blocTest<MessagingBloc, MessagingState>(
-      'LoadSentMessages when not in MessagingLoaded state does nothing',
+      'LoadSentMessages from initial state emits loading then loaded',
       build: () {
         when(() => apiClient.get(
               '/v1/messages/sent',
@@ -169,7 +169,7 @@ void main() {
         return bloc;
       },
       act: (bloc) => bloc.add(const LoadSentMessages()),
-      expect: () => <Matcher>[],
+      expect: () => [isA<MessagingLoading>(), isA<MessagingLoaded>()],
     );
 
     blocTest<MessagingBloc, MessagingState>(
@@ -184,11 +184,11 @@ void main() {
       },
       seed: () => const MessagingLoaded(),
       act: (bloc) => bloc.add(const LoadSentMessages()),
-      expect: () => [isA<MessagingLoaded>()],
+      expect: () => [isA<MessagingLoading>(), isA<MessagingLoaded>()],
     );
 
     blocTest<MessagingBloc, MessagingState>(
-      'LoadArchivedMessages when not in MessagingLoaded state does nothing',
+      'LoadArchivedMessages from initial state emits loading then loaded',
       build: () {
         when(() => apiClient.get(
               '/v1/messages/archived',
@@ -198,7 +198,7 @@ void main() {
         return bloc;
       },
       act: (bloc) => bloc.add(const LoadArchivedMessages()),
-      expect: () => <Matcher>[],
+      expect: () => [isA<MessagingLoading>(), isA<MessagingLoaded>()],
     );
 
     blocTest<MessagingBloc, MessagingState>(
@@ -213,7 +213,7 @@ void main() {
       },
       seed: () => const MessagingLoaded(),
       act: (bloc) => bloc.add(const LoadArchivedMessages()),
-      expect: () => [isA<MessagingLoaded>()],
+      expect: () => [isA<MessagingLoading>(), isA<MessagingLoaded>()],
     );
 
     blocTest<MessagingBloc, MessagingState>(
