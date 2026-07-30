@@ -1,10 +1,11 @@
 @section('title', 'Library Card - ' . $member->full_name)
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&family=Poppins:wght@600;700&display=swap');
-</style>
 <div>
     <x-slot name="header">Library Card</x-slot>
     <x-slot name="subtitle">{{ $member->full_name }} &middot; {{ $member->member_id }}</x-slot>
+
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&family=Poppins:wght@600;700&display=swap');
+    </style>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Main Card Area --}}

@@ -132,19 +132,28 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
+        scrolledUnderElevation: 0,
         title: const Text('Compose Message'),
         actions: [
-          TextButton(
-            onPressed: _sending ? null : _onSend,
-            child: _sending
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Send'),
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: FilledButton(
+              onPressed: _sending ? null : _onSend,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+              child: _sending
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text('Send'),
+            ),
           ),
         ],
       ),
@@ -154,23 +163,53 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
           // Recipients
           if (_selectedRecipients.isNotEmpty)
             ..._selectedRecipients.asMap().entries.map((e) => Card(
-                  child: ListTile(
-                    dense: true,
-                    leading: const Icon(Icons.person, size: 20),
-                    title: Text(e.value['name'] as String? ?? ''),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.close, size: 18),
-                      onPressed: () => _removeRecipient(e.key),
-                    ),
-                  ),
-                )),
+              elevation: 0,
+              margin: const EdgeInsets.only(bottom: 6),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: BorderSide(color: cs.outline.withValues(alpha: 0.3)),
+              ),
+              child: ListTile(
+                dense: true,
+                leading: CircleAvatar(
+                  radius: 16,
+                  backgroundColor: cs.primary.withValues(alpha: 0.1),
+                  child: Icon(Icons.person, size: 16, color: cs.primary),
+                ),
+                title: Text(
+                  e.value['name'] as String? ?? '',
+                  style: const TextStyle(fontWeight: FontWeight.w500),
+                ),
+                trailing: IconButton(
+                  icon: Icon(Icons.close, size: 18, color: cs.error),
+                  onPressed: () => _removeRecipient(e.key),
+                ),
+              ),
+            )),
 
           // Recipient picker toggle
           if (!_showRecipientPicker && _selectedRecipients.isEmpty)
-            ListTile(
-              leading: const Icon(Icons.person_add),
-              title: const Text('Add recipient'),
+            InkWell(
+              borderRadius: BorderRadius.circular(12),
               onTap: () => setState(() => _showRecipientPicker = true),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: cs.outline.withValues(alpha: 0.3)),
+                  borderRadius: BorderRadius.circular(12),
+                  color: cs.surface,
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.person_add_outlined, size: 20, color: cs.primary),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Add recipient',
+                      style: TextStyle(color: cs.onSurface.withValues(alpha: 0.6)),
+                    ),
+                  ],
+                ),
+              ),
             ),
 
           if (_showRecipientPicker)
@@ -180,13 +219,14 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                   controller: _recipientController,
                   decoration: InputDecoration(
                     labelText: 'Search users...',
-                    border: const OutlineInputBorder(),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     suffixIcon: _searchingRecipients
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Padding(
-                              padding: EdgeInsets.all(12),
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                           )
@@ -195,44 +235,82 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                   onChanged: _searchUsers,
                 ),
                 if (_searchResults.isNotEmpty)
-                  SizedBox(
-                    height: 160,
+                  Container(
+                    margin: const EdgeInsets.only(top: 6),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: cs.outline.withValues(alpha: 0.2)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    constraints: const BoxConstraints(maxHeight: 180),
                     child: ListView.builder(
+                      padding: EdgeInsets.zero,
                       itemCount: _searchResults.length,
-                      itemBuilder: (_, i) => ListTile(
-                        dense: true,
-                        leading: CircleAvatar(
-                          radius: 16,
-                          child: Text(
-                            (_searchResults[i]['name'] as String? ?? '?')[0],
+                      itemBuilder: (_, i) => InkWell(
+                        onTap: () => _addRecipient(_searchResults[i]),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 18,
+                                backgroundColor: cs.primary.withValues(alpha: 0.1),
+                                child: Text(
+                                  (_searchResults[i]['name'] as String? ?? '?')[0],
+                                  style: TextStyle(color: cs.primary, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _searchResults[i]['name'] as String? ?? '',
+                                      style: const TextStyle(fontWeight: FontWeight.w500),
+                                    ),
+                                    Text(
+                                      _searchResults[i]['email'] as String? ?? '',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: cs.onSurface.withValues(alpha: 0.5),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        title: Text(_searchResults[i]['name'] as String? ?? ''),
-                        subtitle: Text(_searchResults[i]['email'] as String? ?? ''),
-                        onTap: () => _addRecipient(_searchResults[i]),
                       ),
                     ),
                   ),
                 if (_searchError != null)
                   Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      _searchError!,
-                      style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.error),
+                    padding: const EdgeInsets.only(top: 6, left: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.error_outline, size: 14, color: cs.error),
+                        const SizedBox(width: 4),
+                        Text(
+                          _searchError!,
+                          style: TextStyle(fontSize: 12, color: cs.error),
+                        ),
+                      ],
                     ),
                   ),
               ],
             ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
-          // Type selector (lecturers see more options)
+          // Type selector
           if (_isLecturer)
             DropdownButtonFormField<String>(
               initialValue: _type,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Type',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               ),
               items: const [
                 DropdownMenuItem(value: 'direct', child: Text('Direct')),
@@ -243,39 +321,53 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
             ),
 
           if (_isLecturer && _type == 'department')
-            const Padding(
-              padding: EdgeInsets.only(top: 4, bottom: 8),
-              child: Text(
-                'Sends to all users in your department.',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+            Padding(
+              padding: const EdgeInsets.only(top: 6, left: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 14, color: cs.onSurface.withValues(alpha: 0.5)),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Sends to all users in your department.',
+                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
+                  ),
+                ],
               ),
             ),
 
           if (_isLecturer && _type == 'program')
-            const Padding(
-              padding: EdgeInsets.only(top: 4, bottom: 8),
-              child: Text(
-                'Sends to all users in your program.',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+            Padding(
+              padding: const EdgeInsets.only(top: 6, left: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, size: 14, color: cs.onSurface.withValues(alpha: 0.5)),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Sends to all users in your program.',
+                    style: TextStyle(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.5)),
+                  ),
+                ],
               ),
             ),
 
-          const SizedBox(height: 12),
+          if (_isLecturer) const SizedBox(height: 12),
 
           TextField(
             controller: _subjectController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Subject',
-              border: OutlineInputBorder(),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             ),
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             initialValue: _priority,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Priority',
-              border: OutlineInputBorder(),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             ),
             items: const [
               DropdownMenuItem(value: 'normal', child: Text('Normal')),
@@ -284,7 +376,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
             ],
             onChanged: (v) => setState(() => _priority = v ?? 'normal'),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
           // Template controls (lecturers)
           if (_isLecturer) ...[
@@ -293,6 +385,9 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                 OutlinedButton.icon(
                   icon: const Icon(Icons.bookmark_outline, size: 16),
                   label: const Text('Templates'),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  ),
                   onPressed: () {
                     context.read<MessagingBloc>().add(const LoadTemplates());
                     setState(() => _showTemplatePicker = !_showTemplatePicker);
@@ -302,6 +397,9 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                 OutlinedButton.icon(
                   icon: const Icon(Icons.save_outlined, size: 16),
                   label: const Text('Save as Template'),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  ),
                   onPressed: _showSaveTemplateDialog,
                 ),
               ],
@@ -310,25 +408,19 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
               BlocBuilder<MessagingBloc, MessagingState>(
                 builder: (context, state) {
                   if (state is MessagingLoaded && state.templates.isNotEmpty) {
-                    return SizedBox(
-                      height: 120,
+                    return Container(
+                      margin: const EdgeInsets.only(top: 8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: cs.outline.withValues(alpha: 0.2)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      constraints: const BoxConstraints(maxHeight: 140),
                       child: ListView.builder(
+                        padding: EdgeInsets.zero,
                         itemCount: state.templates.length,
                         itemBuilder: (_, i) {
                           final t = state.templates[i];
-                          return ListTile(
-                            dense: true,
-                            leading: const Icon(Icons.article_outlined, size: 18),
-                            title: Text(t['name'] as String? ?? ''),
-                            subtitle: Text(t['subject'] as String? ?? ''),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 16),
-                              onPressed: () {
-                                context.read<MessagingBloc>().add(
-                                  DeleteTemplate(parseInt(t['id'])),
-                                );
-                              },
-                            ),
+                          return InkWell(
                             onTap: () {
                               _subjectController.text = t['subject'] as String? ?? '';
                               _bodyController.text = t['body'] as String? ?? '';
@@ -337,50 +429,126 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                               }
                               setState(() => _showTemplatePicker = false);
                             },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: cs.primaryContainer.withValues(alpha: 0.5),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Icon(Icons.article_outlined, size: 16, color: cs.primary),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          t['name'] as String? ?? '',
+                                          style: const TextStyle(fontWeight: FontWeight.w500),
+                                        ),
+                                        Text(
+                                          t['subject'] as String? ?? '',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: cs.onSurface.withValues(alpha: 0.5),
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.delete_outline, size: 16, color: cs.error),
+                                    onPressed: () {
+                                      context.read<MessagingBloc>().add(
+                                        DeleteTemplate(parseInt(t['id'])),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
                           );
                         },
                       ),
                     );
                   }
                   if (state is MessagingLoaded && state.templates.isEmpty) {
-                    return const Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Text('No templates yet', style: TextStyle(color: Colors.grey)),
+                    return Container(
+                      margin: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: cs.outline.withValues(alpha: 0.2)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'No templates yet',
+                          style: TextStyle(color: cs.onSurface.withValues(alpha: 0.5)),
+                        ),
+                      ),
                     );
                   }
                   return const SizedBox.shrink();
                 },
               ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
           ],
 
           // Attachments
           if (_attachments.isNotEmpty)
             ..._attachments.asMap().entries.map((e) => Card(
-                  child: ListTile(
-                    dense: true,
-                    leading: const Icon(Icons.attach_file, size: 20),
-                    title: Text(e.value.path.split('/').last),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.close, size: 18),
-                      onPressed: () => _removeAttachment(e.key),
-                    ),
+              elevation: 0,
+              margin: const EdgeInsets.only(bottom: 6),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: BorderSide(color: cs.outline.withValues(alpha: 0.3)),
+              ),
+              child: ListTile(
+                dense: true,
+                leading: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                )),
+                  child: Icon(Icons.attach_file, size: 16, color: cs.primary),
+                ),
+                title: Text(
+                  e.value.path.split('/').last,
+                  style: const TextStyle(fontSize: 13),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: IconButton(
+                  icon: Icon(Icons.close, size: 18, color: cs.error),
+                  onPressed: () => _removeAttachment(e.key),
+                ),
+              ),
+            )),
 
           OutlinedButton.icon(
             onPressed: _pickAttachment,
-            icon: const Icon(Icons.attach_file),
+            icon: const Icon(Icons.attach_file, size: 18),
             label: const Text('Add Attachment'),
+            style: OutlinedButton.styleFrom(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           TextField(
             controller: _bodyController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Message',
-              border: OutlineInputBorder(),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               alignLabelWithHint: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             ),
             maxLines: 10,
             minLines: 6,
@@ -396,17 +564,28 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Save as Template'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.bookmark_outline, size: 22, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            const Text('Save as Template'),
+          ],
+        ),
         content: TextField(
           controller: nameController,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Template name',
-            border: OutlineInputBorder(),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
           autofocus: true,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () {
               if (nameController.text.trim().isNotEmpty &&
@@ -422,11 +601,32 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                 );
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Template saved')),
+                  SnackBar(
+                    content: const Row(
+                      children: [
+                        Icon(Icons.check_circle, size: 18, color: Colors.white),
+                        SizedBox(width: 8),
+                        Text('Template saved'),
+                      ],
+                    ),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Subject and body required')),
+                  SnackBar(
+                    content: const Row(
+                      children: [
+                        Icon(Icons.warning, size: 18, color: Colors.white),
+                        SizedBox(width: 8),
+                        Expanded(child: Text('Subject and body required')),
+                      ],
+                    ),
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
                 );
               }
             },
@@ -441,7 +641,18 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
     if (_subjectController.text.trim().isEmpty ||
         _bodyController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Subject and message are required')),
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.warning, size: 18, color: Colors.white),
+              SizedBox(width: 8),
+              Expanded(child: Text('Subject and message are required')),
+            ],
+          ),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       );
       return;
     }
@@ -480,8 +691,16 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
     if (result is MessagingError) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result.error),
+          content: Row(
+            children: [
+              Icon(Icons.error_outline, size: 18, color: Theme.of(context).colorScheme.onError),
+              const SizedBox(width: 8),
+              Expanded(child: Text(result.error)),
+            ],
+          ),
           backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
     } else {
