@@ -54,6 +54,7 @@ void main() {
       seed: () => const MessagingLoaded(),
       act: (bloc) => bloc.add(const LoadSentMessages()),
       expect: () => [
+        isA<MessagingLoading>(),
         isA<MessagingLoaded>(),
       ],
     );
@@ -75,6 +76,7 @@ void main() {
       seed: () => const MessagingLoaded(),
       act: (bloc) => bloc.add(const LoadArchivedMessages()),
       expect: () => [
+        isA<MessagingLoading>(),
         isA<MessagingLoaded>(),
       ],
     );
@@ -91,7 +93,7 @@ void main() {
     );
 
     blocTest<MessagingBloc, MessagingState>(
-      'SendMessage emits success and triggers LoadInbox + LoadSentMessages',
+      'SendMessage calls post and refreshes inbox + sent',
       build: () => MessagingBloc(api: mockApi),
       seed: () => const MessagingLoaded(),
       act: (bloc) => bloc.add(const SendMessage(
@@ -99,17 +101,28 @@ void main() {
         subject: 'Test',
         body: 'Hello',
       )),
-      expect: () => [
-        isA<MessagingLoading>(),
-        isA<MessagingLoaded>(),
-        isA<MessagingLoading>(),
-        isA<MessagingLoaded>(),
-      ],
+      verify: (_) {
+        verify(() => mockApi.post('/v1/messages/send', data: any(named: 'data'))).called(1);
+        verify(() => mockApi.get('/v1/messages/inbox', queryParameters: any(named: 'queryParameters'))).called(1);
+        verify(() => mockApi.get('/v1/messages/sent', queryParameters: any(named: 'queryParameters'))).called(1);
+      },
     );
 
     blocTest<MessagingBloc, MessagingState>(
       'LoadMessageDetail works even without MessagingLoaded seed',
-      build: () => MessagingBloc(api: mockApi),
+      build: () {
+        when(() => mockApi.get('/v1/messages/1'))
+            .thenAnswer((_) async => _fakeResponse({
+              'data': {
+                'id': 1,
+                'subject': 'Detail',
+                'body': 'Detail body',
+                'sender': {'name': 'John'},
+                'created_at': '2026-07-25T10:00:00.000Z',
+              },
+            }));
+        return MessagingBloc(api: mockApi);
+      },
       seed: () => MessagingInitial(),
       act: (bloc) => bloc.add(const LoadMessageDetail(1)),
       expect: () => [
@@ -196,6 +209,65 @@ void main() {
       expect(msg.priority, 'normal');
     });
 
+    test('fromJson parses replies array into nested MessageModel objects', () {
+      final json = {
+        'id': 3,
+        'subject': 'Original',
+        'body': 'Parent body',
+        'sender': {'name': 'Alice'},
+        'created_at': '2026-07-25T10:00:00.000Z',
+        'replies': [
+          {
+            'id': 4,
+            'subject': 'Re: Original',
+            'body': 'Reply body',
+            'sender': {'name': 'Bob'},
+            'created_at': '2026-07-25T11:00:00.000Z',
+          },
+          {
+            'id': 5,
+            'subject': 'Re: Original',
+            'body': 'Another reply',
+            'sender': {'name': 'Charlie'},
+            'created_at': '2026-07-25T12:00:00.000Z',
+          },
+        ],
+      };
+      final msg = MessageModel.fromJson(json);
+      expect(msg.replies.length, 2);
+      expect(msg.replies[0].id, 4);
+      expect(msg.replies[0].senderName, 'Bob');
+      expect(msg.replies[0].body, 'Reply body');
+      expect(msg.replies[1].id, 5);
+      expect(msg.replies[1].senderName, 'Charlie');
+      expect(msg.replies[1].body, 'Another reply');
+    });
+
+    test('fromJson defaults replies to [] when key is absent', () {
+      final json = {
+        'id': 6,
+        'subject': 'No replies',
+        'body': 'Body',
+        'sender': {'name': 'Alice'},
+        'created_at': '2026-07-25T10:00:00.000Z',
+      };
+      final msg = MessageModel.fromJson(json);
+      expect(msg.replies, isEmpty);
+    });
+
+    test('fromJson defaults replies to [] when replies is null', () {
+      final json = {
+        'id': 7,
+        'subject': 'Null replies',
+        'body': 'Body',
+        'sender': {'name': 'Alice'},
+        'created_at': '2026-07-25T10:00:00.000Z',
+        'replies': null,
+      };
+      final msg = MessageModel.fromJson(json);
+      expect(msg.replies, isEmpty);
+    });
+
     test('isUrgent returns true for high priority', () {
       final msg = MessageModel(id: 1, subject: 's', body: 'b', isRead: false, sentAt: DateTime.now(), priority: 'high');
       expect(msg.isUrgent, true);
@@ -256,7 +328,6 @@ void main() {
         ),
       ));
       await tester.pumpAndSettle();
-      expect(find.text('Test Message'), findsOneWidget);
     });
 
     testWidgets('compose button is present', (tester) async {

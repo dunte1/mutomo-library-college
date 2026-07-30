@@ -34,6 +34,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
   List<Map<String, dynamic>> _searchResults = [];
   bool _showRecipientPicker = false;
   bool _searchingRecipients = false;
+  String? _searchError;
   bool _sending = false;
   bool _showTemplatePicker = false;
 
@@ -74,7 +75,10 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
       setState(() => _searchResults = []);
       return;
     }
-    setState(() => _searchingRecipients = true);
+    setState(() {
+      _searchingRecipients = true;
+      _searchError = null;
+    });
     try {
       final api = context.read<ApiClient>();
       final response = await api.get('/v1/users/search', queryParameters: {'q': query});
@@ -84,9 +88,13 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
             .map((e) => e as Map<String, dynamic>)
             .where((u) => !_selectedRecipientIds.contains(parseInt(u['id'])))
             .toList();
+        _searchError = null;
       });
     } catch (_) {
-      setState(() => _searchResults = []);
+      setState(() {
+        _searchResults = [];
+        _searchError = 'Search failed. Please try again.';
+      });
     } finally {
       setState(() => _searchingRecipients = false);
     }
@@ -203,6 +211,14 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                         subtitle: Text(_searchResults[i]['email'] as String? ?? ''),
                         onTap: () => _addRecipient(_searchResults[i]),
                       ),
+                    ),
+                  ),
+                if (_searchError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      _searchError!,
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.error),
                     ),
                   ),
               ],
@@ -439,18 +455,36 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
       );
     }
 
-    if (mounted) {
-      context.read<MessagingBloc>().add(
-        SendMessage(
-          subject: _subjectController.text.trim(),
-          body: _bodyController.text.trim(),
-          recipientIds:
-              _selectedRecipientIds.isNotEmpty ? _selectedRecipientIds : null,
-          priority: _priority,
-          type: _isLecturer ? _type : null,
-          attachments: attachmentFiles,
+    if (!mounted) return;
+
+    final bloc = context.read<MessagingBloc>();
+    bloc.add(
+      SendMessage(
+        subject: _subjectController.text.trim(),
+        body: _bodyController.text.trim(),
+        recipientIds:
+            _selectedRecipientIds.isNotEmpty ? _selectedRecipientIds : null,
+        priority: _priority,
+        type: _isLecturer ? _type : null,
+        attachments: attachmentFiles,
+      ),
+    );
+
+    final result = await bloc.stream.firstWhere(
+      (s) => s is MessagingError || s is MessagingLoaded,
+    );
+
+    if (!mounted) return;
+    setState(() => _sending = false);
+
+    if (result is MessagingError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.error),
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
+    } else {
       context.pop();
     }
   }

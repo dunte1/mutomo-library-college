@@ -13,6 +13,7 @@ class MessageModel {
   final int? replyCount;
   final List<String>? recipientNames;
   final List<Map<String, dynamic>> attachments;
+  final List<MessageModel> replies;
 
   MessageModel({
     required this.id,
@@ -27,6 +28,7 @@ class MessageModel {
     this.replyCount,
     this.recipientNames,
     this.attachments = const [],
+    this.replies = const [],
   });
 
   bool get isUrgent => priority == 'urgent' || priority == 'high';
@@ -35,6 +37,7 @@ class MessageModel {
     final sender = json['sender'] as Map<String, dynamic>?;
     final recipients = json['recipients'] as List<dynamic>?;
     final attachmentsList = json['attachments'] as List<dynamic>?;
+    final repliesList = json['replies'] as List<dynamic>?;
 
     List<String>? names;
     if (recipients != null) {
@@ -67,8 +70,12 @@ class MessageModel {
       priority: json['priority'] as String? ?? 'normal',
       replyCount: parseIntOrNull(json['replies_count']),
       recipientNames: names,
-      attachments: (attachmentsList as List<dynamic>?)
+      attachments: attachmentsList
               ?.map((e) => e as Map<String, dynamic>)
+              .toList() ??
+          [],
+      replies: repliesList
+              ?.map((e) => MessageModel.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );

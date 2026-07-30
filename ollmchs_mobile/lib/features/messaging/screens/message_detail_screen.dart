@@ -227,6 +227,54 @@ class _MessageDetailScreenState extends State<MessageDetailScreen> {
                             ),
                           )),
                         ],
+
+                        // Replies
+                        if (msg.replies.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          const Divider(),
+                          Text('Replies', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          ...msg.replies.map((reply) => Padding(
+                            padding: const EdgeInsets.only(left: 16, bottom: 12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CircleAvatar(
+                                  radius: 14,
+                                  child: Text(
+                                    reply.senderName?.isNotEmpty == true
+                                        ? reply.senderName![0]
+                                        : '?',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(
+                                            reply.senderName ?? 'Unknown',
+                                            style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            DateFormat('MMM d, y h:mm a').format(reply.sentAt),
+                                            style: theme.textTheme.bodySmall,
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(reply.body, style: theme.textTheme.bodyMedium),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )),
+                        ],
                       ],
                     ),
                   ),

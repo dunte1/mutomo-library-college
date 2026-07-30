@@ -99,7 +99,21 @@ class _InboxScreenState extends State<InboxScreen>
           ],
         ),
       ),
-      body: BlocBuilder<MessagingBloc, MessagingState>(
+      body: BlocConsumer<MessagingBloc, MessagingState>(
+        listener: (context, state) {
+          if (state is MessagingError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.error),
+                backgroundColor: theme.colorScheme.error,
+              ),
+            );
+          } else if (state is MessagingLoaded && state.message != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message!)),
+            );
+          }
+        },
         builder: (context, state) {
           if (state is MessagingLoading && state is! MessagingLoaded) {
             return const Padding(
