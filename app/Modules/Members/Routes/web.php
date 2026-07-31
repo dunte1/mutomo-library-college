@@ -86,3 +86,7 @@ Route::middleware(['auth', 'verified'])
 // Public card verification route (no auth required — accessible via QR scan)
 Route::get('/verify/card/{cardNumber}', [LibraryCardController::class, 'verify'])
     ->name('verify.card');
+
+// Signed URL for the mobile app WebView (auth via HMAC signature, not session)
+Route::get('/library-card/mobile', [LibraryCardController::class, 'mobileView'])
+    ->name('mobile.library-card');

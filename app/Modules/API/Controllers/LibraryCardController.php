@@ -96,4 +96,31 @@ class LibraryCardController extends Controller
             'card_number' => $card->card_number,
         ]);
     }
+
+    public function mobileUrl(): \Illuminate\Http\JsonResponse
+    {
+        $member = Member::where('user_id', auth()->id())->first();
+        if (! $member) {
+            return $this->response->notFound('No library membership found. Please register as a member.');
+        }
+        $card = LibraryCard::where('member_id', $member->id)
+            ->where('status', 'active')
+            ->latest()
+            ->first();
+
+        if (! $card) {
+            return $this->response->notFound('No active library card found. Please visit the library to get your card issued.');
+        }
+
+        $expiresAt = now()->addMinutes(15)->timestamp;
+        $signature = hash_hmac('sha256', "{$member->id}.{$expiresAt}", config('app.key'));
+
+        return $this->response->success([
+            'url' => route('mobile.library-card', [
+                'u' => $member->id,
+                'e' => $expiresAt,
+                's' => $signature,
+            ]),
+        ]);
+    }
 }

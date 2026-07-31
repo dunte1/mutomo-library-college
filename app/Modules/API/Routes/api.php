@@ -228,6 +228,10 @@ Route::name('api.v1.')->prefix('v1')->group(function () {
             ->name('library-card.pdf')
             ->middleware('permission:view-library-cards');
 
+        Route::get('/library-card/mobile-url', [LibraryCardController::class, 'mobileUrl'])
+            ->name('library-card.mobile-url')
+            ->middleware('permission:view-library-cards');
+
         // ---- Digital Library ----
 
         Route::get('/digital-assets', [DigitalAssetController::class, 'index'])
