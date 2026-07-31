@@ -35,7 +35,14 @@
         $activeBorrows = BorrowRecord::whereNull('returned_at')->count();
         $overdueBooks = BorrowRecord::whereNull('returned_at')->where('due_at', '<', now())->count();
         $recentBorrows = BorrowRecord::with('user', 'copy.book')->latest()->take(5)->get();
-        $monthlyBorrows = BorrowRecord::selectRaw("strftime('%m', created_at) as month, count(*) as total")
+        $monthDriver = \Illuminate\Support\Facades\DB::connection()->getDriverName();
+        $monthExpr = match ($monthDriver) {
+            'mysql' => "DATE_FORMAT(created_at, '%m')",
+            'pgsql' => "TO_CHAR(created_at, 'MM')",
+            'sqlite' => "strftime('%m', created_at)",
+            default => "strftime('%m', created_at)",
+        };
+        $monthlyBorrows = BorrowRecord::selectRaw("{$monthExpr} as month, count(*) as total")
             ->where('created_at', '>=', now()->subMonths(6))
             ->groupBy('month')->orderBy('month')->pluck('total', 'month');
         $categoryCounts = Book::selectRaw('category_id, count(*) as total')
