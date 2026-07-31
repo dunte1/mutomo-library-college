@@ -3,6 +3,7 @@
 namespace App\Modules\Members\Controllers;
 
 use App\Modules\Members\Models\LibraryCard;
+use App\Modules\Members\Models\Member;
 use App\Modules\Members\Services\LibraryCardService;
 use App\Modules\Settings\Services\SettingsService;
 use Illuminate\Http\Request;
