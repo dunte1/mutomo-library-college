@@ -17,6 +17,8 @@ class MemberLibraryCard extends Component
 
     public array $displaySettings = [];
 
+    public array $cardAuthority = [];
+
     public function mount(): void
     {
         $user = auth()->user();
@@ -32,6 +34,7 @@ class MemberLibraryCard extends Component
         $settingsService = app(SettingsService::class);
         $this->cardBranding = $settingsService->getCardBrandingSettings();
         $this->displaySettings = $settingsService->getDisplaySettings();
+        $this->cardAuthority = $settingsService->getCardAuthoritySettings();
     }
 
     public function downloadCard(): void

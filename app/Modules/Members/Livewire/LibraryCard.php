@@ -144,11 +144,13 @@ class LibraryCard extends Component
         $settingsService = app(SettingsService::class);
         $cardBranding = $settingsService->getCardBrandingSettings();
         $displaySettings = $settingsService->getDisplaySettings();
+        $cardAuthority = $settingsService->getCardAuthoritySettings();
 
         return view('members::livewire.library-card', [
             'history' => $history,
             'cardBranding' => $cardBranding,
             'displaySettings' => $displaySettings,
+            'cardAuthority' => $cardAuthority,
         ]);
     }
 }

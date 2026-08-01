@@ -125,6 +125,12 @@
                                 <input type="text" wire:model="settings.card_accent_color" class="input-field flex-1" placeholder="#93c5fd">
                             </div>
                         </div>
+                        <div class="lg:col-span-2">
+                            <label class="label">Principal Name</label>
+                            <input type="text" wire:model="settings.principal_name" class="input-field" placeholder="e.g. Dr. Jane Wanjiku">
+                            <p class="text-xs text-surface-500 dark:text-surface-400 mt-1">Shown next to the principal's signature at the bottom-right of library cards.</p>
+                            @error("settings.principal_name") <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
+                        </div>
                     </div>
 
                     <div class="mt-6">
@@ -167,6 +173,87 @@
                                 @if($cardLogo)
                                     <p class="text-xs text-surface-500">Selected: {{ $cardLogo->getClientOriginalName() }}</p>
                                 @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <label class="label">Principal Signature</label>
+                        <p class="text-xs text-surface-500 dark:text-surface-400 mb-2">Upload the principal's signature to display at the bottom-right of library cards. Recommended: a wide transparent PNG.</p>
+                        <div class="flex items-start gap-4">
+                            <div class="shrink-0">
+                                @if($currentPrincipalSignature)
+                                    <img src="{{ Storage::url($currentPrincipalSignature) }}" alt="Principal Signature" class="h-16 w-40 object-contain rounded-lg border border-surface-200 dark:border-surface-600 bg-white p-1">
+                                @else
+                                    <div class="h-16 w-40 rounded-lg border-2 border-dashed border-surface-300 dark:border-surface-600 flex items-center justify-center bg-surface-50 dark:bg-surface-800">
+                                        <svg class="w-8 h-8 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="flex-1 space-y-2">
+                                <div x-data="{
+                                    cropping: false,
+                                    fileSelected(event) {
+                                        const file = event.target.files[0];
+                                        if (!file) return;
+                                        this.cropping = true;
+                                        this.$nextTick(async () => {
+                                            const img = this.$refs.sigCropImage;
+                                            img.src = await __readFileAsDataURL(file);
+                                            img.onload = () => { __initCropper(img, 4 / 1); };
+                                        });
+                                    },
+                                    async confirmCrop() {
+                                        const blob = await __getCroppedBlob('image/png');
+                                        if (!blob) return;
+                                        const croppedFile = new File([blob], 'signature.png', { type: 'image/png' });
+                                        await $wire.upload('principalSignature', croppedFile);
+                                        this.cropping = false;
+                                        __destroyCropper();
+                                    },
+                                    cancelCrop() {
+                                        this.cropping = false;
+                                        __destroyCropper();
+                                    }
+                                }">
+                                    <div class="flex items-center gap-2">
+                                        <label class="btn-outline btn-sm cursor-pointer">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                            </svg>
+                                            Choose Signature
+                                            <input type="file" x-on:change="fileSelected" accept="image/*" class="hidden">
+                                        </label>
+                                        <div wire:loading wire:target="principalSignature" class="text-sm text-primary-600">Uploading...</div>
+                                    </div>
+                                    @if($currentPrincipalSignature)
+                                        <button type="button" wire:click="removePrincipalSignature" wire:confirm="Remove the principal signature?"
+                                            class="btn-sm btn-danger">
+                                            Remove
+                                        </button>
+                                    @endif
+                                    @error("principalSignature") <p class="text-sm text-accent-600">{{ $message }}</p> @enderror
+
+                                    <div x-show="cropping" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/60" @keydown.escape.window="cancelCrop">
+                                        <div class="bg-white dark:bg-surface-800 rounded-2xl shadow-2xl max-w-3xl w-full mx-4 overflow-hidden" @click.outside="cancelCrop">
+                                            <div class="p-4 border-b border-surface-200 dark:border-surface-700 flex items-center justify-between">
+                                                <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Crop Signature</h3>
+                                                <button type="button" @click="cancelCrop" class="p-1 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-400">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </div>
+                                            <div class="p-4 bg-surface-100 dark:bg-surface-900/50">
+                                                <img x-ref="sigCropImage" class="max-w-full max-h-[60vh] mx-auto">
+                                            </div>
+                                            <div class="p-4 border-t border-surface-200 dark:border-surface-700 flex justify-end gap-3">
+                                                <button type="button" @click="cancelCrop" class="btn-secondary">Cancel</button>
+                                                <button type="button" @click="confirmCrop" class="btn-primary">Apply Crop</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

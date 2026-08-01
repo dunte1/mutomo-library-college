@@ -79,6 +79,7 @@ class LibraryCardController extends Controller
                 'member' => $member,
                 'cardBranding' => $settingsService->getCardBrandingSettings(),
                 'displaySettings' => $settingsService->getDisplaySettings(),
+                'cardAuthority' => $settingsService->getCardAuthoritySettings(),
             ])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }

@@ -166,6 +166,14 @@ class SettingsService
         ];
     }
 
+    public function getCardAuthoritySettings(): array
+    {
+        return [
+            'principal_name' => $this->cached('principal_name', ''),
+            'principal_signature' => $this->cached('principal_signature', ''),
+        ];
+    }
+
     public function updateSettings(string $group, array $data, array $sensitiveKeys = []): void
     {
         foreach ($data as $key => $value) {

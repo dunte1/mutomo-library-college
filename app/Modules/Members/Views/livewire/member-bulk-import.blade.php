@@ -70,7 +70,7 @@
                         <p class="text-sm font-medium text-info-800 dark:text-info-200">CSV Format Requirements</p>
                         <ul class="text-xs text-info-600 dark:text-info-300 mt-1 space-y-0.5 list-disc list-inside">
                             <li>Required columns: <strong>first_name, last_name, email</strong></li>
-                            <li>Optional columns: phone, admission_number, id_number, gender, date_of_birth, year_of_study, department, program, membership_type, address</li>
+                            <li>Optional columns: phone, admission_number, id_number, gender, date_of_birth, year_of_study, blood_group, department, program, membership_type, address</li>
                             <li>Valid membership types: student, teacher, staff, external (defaults to student)</li>
                             <li>Each row creates a member <strong>and</strong> an auto-generated login account</li>
                             <li>Max file size: 2 MB</li>

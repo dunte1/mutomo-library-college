@@ -41,6 +41,7 @@ class Member extends Model
     protected $fillable = [
         'user_id',
         'member_id',
+        'student_id',
         'first_name',
         'last_name',
         'email',
@@ -51,6 +52,7 @@ class Member extends Model
         'id_number',
         'admission_number',
         'class',
+        'blood_group',
         'department_id',
         'program_id',
         'membership_type',
@@ -171,6 +173,12 @@ class Member extends Model
             if (empty($member->member_id)) {
                 $last = static::withTrashed()->lockForUpdate()->max('id') ?? 0;
                 $member->member_id = 'MEM-'.str_pad($last + 1, 5, '0', STR_PAD_LEFT);
+            }
+
+            if (empty($member->student_id)) {
+                $next = (static::withTrashed()->lockForUpdate()->max('id') ?? 0) + 1;
+                $year = now()->format('Y');
+                $member->student_id = 'OLLMCHS-'.$year.'-'.str_pad($next, 4, '0', STR_PAD_LEFT);
             }
         });
     }

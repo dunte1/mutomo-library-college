@@ -3,7 +3,6 @@
 namespace App\Modules\Settings\Livewire;
 
 use App\Modules\Settings\Services\SettingsService;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -18,6 +17,10 @@ class GeneralSettings extends Component
     public mixed $cardLogo = null;
 
     public ?string $currentCardLogo = null;
+
+    public mixed $principalSignature = null;
+
+    public ?string $currentPrincipalSignature = null;
 
     protected function rules(): array
     {
@@ -38,6 +41,7 @@ class GeneralSettings extends Component
             'settings.card_tertiary_color' => ['nullable', 'string', 'max:7'],
             'settings.card_text_color' => ['nullable', 'string', 'max:7'],
             'settings.card_accent_color' => ['nullable', 'string', 'max:7'],
+            'settings.principal_name' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -48,6 +52,7 @@ class GeneralSettings extends Component
         $display = $service->getDisplaySettings();
         $footer = $service->getFooterSettings();
         $cardBranding = $service->getCardBrandingSettings();
+        $cardAuthority = $service->getCardAuthoritySettings();
         $this->settings = [
             'site_name' => $display['site_name'],
             'site_description' => $display['site_description'],
@@ -65,8 +70,10 @@ class GeneralSettings extends Component
             'card_tertiary_color' => $cardBranding['card_tertiary_color'],
             'card_text_color' => $cardBranding['card_text_color'],
             'card_accent_color' => $cardBranding['card_accent_color'],
+            'principal_name' => $cardAuthority['principal_name'],
         ];
         $this->currentCardLogo = $cardBranding['card_logo'] ?: null;
+        $this->currentPrincipalSignature = $cardAuthority['principal_signature'] ?: null;
     }
 
     public function save(): void
@@ -99,6 +106,28 @@ class GeneralSettings extends Component
         app(SettingsService::class)->updateSettings('general', ['card_logo' => '']);
         $this->currentCardLogo = null;
         session()->flash('success', 'Card logo removed.');
+    }
+
+    public function savePrincipalSignature(): void
+    {
+        $this->validate([
+            'principalSignature' => 'nullable|image|max:2048',
+        ]);
+
+        if ($this->principalSignature) {
+            $path = $this->principalSignature->store('settings/principal-signature', 'public');
+            app(SettingsService::class)->updateSettings('general', ['principal_signature' => $path]);
+            $this->currentPrincipalSignature = $path;
+            $this->principalSignature = null;
+            session()->flash('success', 'Principal signature uploaded successfully.');
+        }
+    }
+
+    public function removePrincipalSignature(): void
+    {
+        app(SettingsService::class)->updateSettings('general', ['principal_signature' => '']);
+        $this->currentPrincipalSignature = null;
+        session()->flash('success', 'Principal signature removed.');
     }
 
     public function render()

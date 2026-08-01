@@ -49,9 +49,9 @@
                                 if (!file) return;
                                 this.cropTarget = 'siteLogo';
                                 this.cropping = true;
-                                this.$nextTick(() => {
+                                this.$nextTick(async () => {
                                     const img = this.$refs.cropImage;
-                                    img.src = URL.createObjectURL(file);
+                                    img.src = await __readFileAsDataURL(file);
                                     img.onload = () => {
                                         __initCropper(img, 1);
                                     };
@@ -114,9 +114,9 @@
                                 if (!file) return;
                                 this.cropTarget = 'favicon';
                                 this.cropping = true;
-                                this.$nextTick(() => {
+                                this.$nextTick(async () => {
                                     const img = this.$refs.cropImage;
-                                    img.src = URL.createObjectURL(file);
+                                    img.src = await __readFileAsDataURL(file);
                                     img.onload = () => {
                                         __initCropper(img, 1);
                                     };

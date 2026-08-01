@@ -15,12 +15,12 @@ use Illuminate\Support\Facades\Route;
 Route::get('/members/bulk/template', function () {
     $headers = [
         'first_name', 'last_name', 'email', 'phone', 'admission_number',
-        'id_number', 'gender', 'date_of_birth', 'year_of_study', 'department',
+        'id_number', 'gender', 'date_of_birth', 'year_of_study', 'blood_group', 'department',
         'program', 'membership_type', 'address',
     ];
     $sample = [
         'John', 'Doe', 'john.doe@school.ac.ke', '+254 712 345 678', 'ADM-2026-001',
-        '12345678', 'male', '2005-06-15', 'Year 1', 'Science',
+        '12345678', 'male', '2005-06-15', 'Year 1', 'O+', 'Science',
         'Computer Science', 'student', '123 Library Lane',
     ];
 

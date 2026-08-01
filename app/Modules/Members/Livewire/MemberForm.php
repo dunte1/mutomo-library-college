@@ -42,6 +42,10 @@ class MemberForm extends Component
 
     public ?string $class = null;
 
+    public ?string $blood_group = null;
+
+    public ?string $student_id = null;
+
     public string $membership_type = 'student';
 
     public string $status = Member::STATUS_ACTIVE;
@@ -80,6 +84,8 @@ class MemberForm extends Component
             $this->department_id = $member->department_id;
             $this->program_id = $member->program_id;
             $this->class = $member->class;
+            $this->blood_group = $member->blood_group;
+            $this->student_id = $member->student_id;
             $this->membership_type = $member->membership_type;
             $this->status = $member->status;
             $this->joined_at = $member->joined_at?->format('Y-m-d');
@@ -121,6 +127,7 @@ class MemberForm extends Component
             'id_number' => ['nullable', 'string', 'max:50', $uniqueIdNumber],
             'admission_number' => ['nullable', 'string', 'max:50', $uniqueAdmission],
             'class' => ['nullable', 'string', 'max:100'],
+            'blood_group' => ['nullable', 'in:A+,A-,B+,B-,AB+,AB-,O+,O-,Unknown'],
             'department_id' => ['nullable', 'integer', 'exists:departments,id'],
             'program_id' => ['nullable', 'integer', 'exists:programs,id'],
             'membership_type' => ['required', 'in:student,teacher,staff,external'],
@@ -173,6 +180,7 @@ class MemberForm extends Component
             'id_number' => $this->id_number,
             'admission_number' => $this->admission_number,
             'class' => $this->class,
+            'blood_group' => $this->blood_group,
             'department_id' => $this->department_id,
             'program_id' => $this->program_id,
             'membership_type' => $this->membership_type,

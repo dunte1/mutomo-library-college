@@ -12,10 +12,16 @@
     $email = $displaySettings['library_email'] ?? '';
     $website = $displaySettings['library_website'] ?? '';
     $address = $displaySettings['library_address'] ?? '';
+    $cardAuthority = $cardAuthority ?? [];
+    $principalName = $cardAuthority['principal_name'] ?? '';
+    $principalSignature = $cardAuthority['principal_signature'] ?? '';
 @endphp
 @php
     $photoUrl = null;
-    if ($card->passport_photo && file_exists(storage_path('app/public/' . $card->passport_photo))) {
+    $previewPhotoPath = $previewPhotoPath ?? null;
+    if ($previewPhotoPath) {
+        $photoUrl = $previewPhotoPath;
+    } elseif ($card->passport_photo && file_exists(storage_path('app/public/' . $card->passport_photo))) {
         $photoUrl = storage_path('app/public/' . $card->passport_photo);
     } elseif ($member->photo && file_exists(storage_path('app/public/' . $member->photo))) {
         $photoUrl = storage_path('app/public/' . $member->photo);
@@ -78,6 +84,9 @@
                 <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:15px;color:#fff;letter-spacing:.8px;line-height:1.2;">{{ strtoupper(explode(' & ', $siteName)[0] ?? 'OUR LADY OF LOURDES') }}</div>
                 <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:10.5px;color:rgba(255,255,255,.8);letter-spacing:.5px;line-height:1.3;margin-top:1px;">{{ strtoupper($siteName) }}</div>
                 <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:11px;color:#FFC107;letter-spacing:2.5px;line-height:1;margin-top:4px;">LIBRARY MEMBERSHIP CARD</div>
+                @if($motto)
+                    <div style="font-family:'Inter',sans-serif;font-style:italic;font-weight:500;font-size:8.5px;color:rgba(255,255,255,.75);letter-spacing:.4px;line-height:1;margin-top:3px;">&ldquo;{{ $motto }}&rdquo;</div>
+                @endif
             </div>
         </div>
         <div style="position:relative;z-index:2;display:flex;align-items:center;gap:0;">
@@ -125,52 +134,44 @@
         </div>
 
         {{-- Member Info --}}
+        @php
+            $infoIcon = [
+                'id' => '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+                'admission' => '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="2" width="18" height="14" rx="2"/><line x1="8" y1="22" x2="16" y2="22"/><line x1="12" y1="16" x2="12" y2="22"/><circle cx="12" cy="9" r="2.5"/><path d="M7 13c0 0 2-1.5 5-1.5s5 1.5 5 1.5"/></svg>',
+                'class' => '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+                'dob' => '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+                'blood' => '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>',
+                'program' => '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="9" y1="7" x2="16" y2="7"/><line x1="9" y1="11" x2="14" y2="11"/></svg>',
+                'department' => '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="1"/><rect x="8" y="6" width="2.5" height="2.5" rx=".5"/><rect x="13.5" y="6" width="2.5" height="2.5" rx=".5"/><rect x="8" y="11" width="2.5" height="2.5" rx=".5"/><rect x="13.5" y="11" width="2.5" height="2.5" rx=".5"/><rect x="10" y="17" width="4" height="5" rx=".5"/></svg>',
+                'expiry' => '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+            ];
+            $infoFields = [
+                ['label' => 'Student ID', 'value' => $member->student_id ?? $member->member_id, 'icon' => 'id'],
+                ['label' => 'Admission No.', 'value' => $member->admission_number, 'icon' => 'admission'],
+                ['label' => 'Class', 'value' => $member->class, 'icon' => 'class'],
+                ['label' => 'DOB', 'value' => $member->date_of_birth?->format('d/m/Y'), 'icon' => 'dob'],
+                ['label' => 'Blood Group', 'value' => $member->blood_group, 'icon' => 'blood'],
+                ['label' => 'Programme', 'value' => $member->program?->name, 'icon' => 'program'],
+                ['label' => 'Department', 'value' => $member->department?->name, 'icon' => 'department'],
+                ['label' => 'Expiry Date', 'value' => $card->expires_at?->format('d M Y'), 'icon' => 'expiry'],
+            ];
+        @endphp
         <div style="display:flex;flex-direction:column;padding-top:4px;min-width:0;">
             <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:19px;color:#0a1e3a;letter-spacing:.3px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $member->full_name }}</div>
             <div style="display:inline-flex;align-self:flex-start;padding:3px 14px;border-radius:4px;background:linear-gradient(135deg,#0097A7,#00acc1);color:#fff;font-family:'Inter',sans-serif;font-weight:700;font-size:10px;letter-spacing:1.5px;margin-top:5px;">{{ strtoupper($member->membership_type) }}</div>
 
-            <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
-                @if($member->admission_number)
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:26px;height:26px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,{{ $primary }},{{ $secondary }});display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(11,60,109,.12);">
-                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="2" width="18" height="14" rx="2"/><line x1="8" y1="22" x2="16" y2="22"/><line x1="12" y1="16" x2="12" y2="22"/><circle cx="12" cy="9" r="2.5"/><path d="M7 13c0 0 2-1.5 5-1.5s5 1.5 5 1.5"/></svg>
+            <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;column-gap:16px;row-gap:9px;">
+                @foreach($infoFields as $field)
+                    <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                        <div style="width:24px;height:24px;border-radius:6px;flex-shrink:0;background:linear-gradient(135deg,{{ $primary }},{{ $secondary }});display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(11,60,109,.12);">
+                            {!! $infoIcon[$field['icon']] !!}
+                        </div>
+                        <div style="min-width:0;line-height:1.15;">
+                            <div style="font-family:'Inter',sans-serif;font-weight:500;font-size:8.5px;color:#5a6a82;letter-spacing:.5px;text-transform:uppercase;">{{ $field['label'] }}</div>
+                            <div style="font-family:'Inter',sans-serif;font-weight:600;font-size:11px;color:#0a1e3a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $field['value'] ?: '—' }}</div>
+                        </div>
                     </div>
-                    <div style="font-family:'Inter',sans-serif;font-weight:500;font-size:11px;color:#5a6a82;width:95px;flex-shrink:0;">Admission No.</div>
-                    <div style="font-family:'Inter',sans-serif;font-weight:600;font-size:12px;color:#0a1e3a;">{{ $member->admission_number }}</div>
-                </div>
-                @endif
-                @if($member->program)
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:26px;height:26px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,{{ $primary }},{{ $secondary }});display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(11,60,109,.12);">
-                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><line x1="9" y1="7" x2="16" y2="7"/><line x1="9" y1="11" x2="14" y2="11"/></svg>
-                    </div>
-                    <div style="font-family:'Inter',sans-serif;font-weight:500;font-size:11px;color:#5a6a82;width:95px;flex-shrink:0;">Programme</div>
-                    <div style="font-family:'Inter',sans-serif;font-weight:600;font-size:12px;color:#0a1e3a;">{{ $member->program->name }}</div>
-                </div>
-                @endif
-                @if($member->department)
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:26px;height:26px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,{{ $primary }},{{ $secondary }});display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(11,60,109,.12);">
-                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="1"/><rect x="8" y="6" width="2.5" height="2.5" rx=".5"/><rect x="13.5" y="6" width="2.5" height="2.5" rx=".5"/><rect x="8" y="11" width="2.5" height="2.5" rx=".5"/><rect x="13.5" y="11" width="2.5" height="2.5" rx=".5"/><rect x="10" y="17" width="4" height="5" rx=".5"/></svg>
-                    </div>
-                    <div style="font-family:'Inter',sans-serif;font-weight:500;font-size:11px;color:#5a6a82;width:95px;flex-shrink:0;">Department</div>
-                    <div style="font-family:'Inter',sans-serif;font-weight:600;font-size:12px;color:#0a1e3a;">{{ $member->department->name }}</div>
-                </div>
-                @endif
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:26px;height:26px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,{{ $primary }},{{ $secondary }});display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(11,60,109,.12);">
-                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    </div>
-                    <div style="font-family:'Inter',sans-serif;font-weight:500;font-size:11px;color:#5a6a82;width:95px;flex-shrink:0;">Issue Date</div>
-                    <div style="font-family:'Inter',sans-serif;font-weight:600;font-size:12px;color:#0a1e3a;">{{ $card->issued_at->format('d M Y') }}</div>
-                </div>
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:26px;height:26px;border-radius:7px;flex-shrink:0;background:linear-gradient(135deg,{{ $primary }},{{ $secondary }});display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(11,60,109,.12);">
-                        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    </div>
-                    <div style="font-family:'Inter',sans-serif;font-weight:500;font-size:11px;color:#5a6a82;width:95px;flex-shrink:0;">Expiry Date</div>
-                    <div style="font-family:'Inter',sans-serif;font-weight:600;font-size:12px;color:#0a1e3a;">{{ $card->expires_at?->format('d M Y') ?? 'N/A' }}</div>
-                </div>
+                @endforeach
             </div>
         </div>
 
@@ -196,26 +197,49 @@
     </div>
 
     {{-- ===== FOOTER ===== --}}
-    <div style="height:50px;position:relative;z-index:10;background:linear-gradient(135deg,#E9EEF5,#dde3ed);display:flex;align-items:center;justify-content:center;gap:6px;padding:0 28px;border-top:1px solid rgba(11,60,109,.06);">
-        @if($website)
-            <span style="font-family:'Inter',sans-serif;font-weight:500;font-size:9.5px;color:#5a6a82;letter-spacing:.3px;display:inline-flex;align-items:center;gap:5px;">
-                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#0097A7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-                {{ $website }}
-            </span>
-            <span style="color:rgba(11,60,109,.2);font-size:10px;">|</span>
-        @endif
-        @if($email)
-            <span style="font-family:'Inter',sans-serif;font-weight:500;font-size:9.5px;color:#5a6a82;letter-spacing:.3px;display:inline-flex;align-items:center;gap:5px;">
-                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#0097A7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                {{ $email }}
-            </span>
-            <span style="color:rgba(11,60,109,.2);font-size:10px;">|</span>
-        @endif
-        @if($phone)
-            <span style="font-family:'Inter',sans-serif;font-weight:500;font-size:9.5px;color:#5a6a82;letter-spacing:.3px;display:inline-flex;align-items:center;gap:5px;">
-                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#0097A7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
-                {{ $phone }}
-            </span>
+    <div style="height:50px;position:relative;z-index:10;background:linear-gradient(135deg,#E9EEF5,#dde3ed);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 28px;border-top:1px solid rgba(11,60,109,.06);">
+        <div style="display:flex;align-items:center;gap:6px;min-width:0;">
+            @if($address)
+                <span style="font-family:'Inter',sans-serif;font-weight:500;font-size:9.5px;color:#5a6a82;letter-spacing:.3px;display:inline-flex;align-items:center;gap:5px;max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#0097A7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    {{ $address }}
+                </span>
+                <span style="color:rgba(11,60,109,.2);font-size:10px;">|</span>
+            @endif
+            @if($phone)
+                <span style="font-family:'Inter',sans-serif;font-weight:500;font-size:9.5px;color:#5a6a82;letter-spacing:.3px;display:inline-flex;align-items:center;gap:5px;">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#0097A7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                    {{ $phone }}
+                </span>
+                <span style="color:rgba(11,60,109,.2);font-size:10px;">|</span>
+            @endif
+            @if($website)
+                <span style="font-family:'Inter',sans-serif;font-weight:500;font-size:9.5px;color:#5a6a82;letter-spacing:.3px;display:inline-flex;align-items:center;gap:5px;">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#0097A7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                    {{ $website }}
+                </span>
+                <span style="color:rgba(11,60,109,.2);font-size:10px;">|</span>
+            @endif
+            @if($email)
+                <span style="font-family:'Inter',sans-serif;font-weight:500;font-size:9.5px;color:#5a6a82;letter-spacing:.3px;display:inline-flex;align-items:center;gap:5px;">
+                    <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#0097A7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    {{ $email }}
+                </span>
+            @endif
+        </div>
+        @if($principalSignature || $principalName)
+            <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                @if($principalSignature && file_exists(storage_path('app/public/' . $principalSignature)))
+                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(storage_path('app/public/' . $principalSignature))) }}"
+                         alt="Principal Signature" style="height:28px;max-width:120px;object-fit:contain;">
+                @endif
+                @if($principalName)
+                    <div style="text-align:right;line-height:1.15;">
+                        <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:10px;color:#0a1e3a;">{{ $principalName }}</div>
+                        <div style="font-family:'Inter',sans-serif;font-weight:600;font-size:8px;color:#5a6a82;letter-spacing:1px;text-transform:uppercase;">Principal</div>
+                    </div>
+                @endif
+            </div>
         @endif
     </div>
 </div>

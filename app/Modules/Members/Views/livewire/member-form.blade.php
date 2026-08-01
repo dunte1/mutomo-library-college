@@ -118,6 +118,10 @@
                     </div>
                     @if($membership_type === 'student')
                         <div>
+                            <label class="label">Student ID</label>
+                            <input type="text" value="{{ $student_id }}" readonly disabled class="input-field bg-surface-100 dark:bg-surface-800 text-surface-500 cursor-not-allowed" placeholder="Auto-generated on save">
+                        </div>
+                        <div>
                             <label class="label">Admission Number</label>
                             <input type="text" wire:model="admission_number" class="input-field" placeholder="e.g. ADM-2026-001">
                             @error('admission_number') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
@@ -128,6 +132,16 @@
                             @error('class') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                     @endif
+                    <div>
+                        <label class="label">Blood Group</label>
+                        <select wire:model="blood_group" class="input-field">
+                            <option value="">Select Blood Group</option>
+                            @foreach(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'] as $group)
+                                <option value="{{ $group }}">{{ $group }}</option>
+                            @endforeach
+                        </select>
+                        @error('blood_group') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
                     <div class="md:col-span-2">
                         <label class="label">Address</label>
                         <textarea wire:model="address" rows="2" class="input-field" placeholder="Physical address..."></textarea>

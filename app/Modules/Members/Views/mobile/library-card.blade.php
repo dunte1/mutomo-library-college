@@ -49,6 +49,7 @@
                     'member' => $member,
                     'cardBranding' => $cardBranding,
                     'displaySettings' => $displaySettings,
+                    'cardAuthority' => $cardAuthority,
                 ])
             </div>
         </div>

@@ -19,8 +19,12 @@ class LibraryCardResource extends JsonResource
             'member' => $this->whenLoaded('member', fn () => [
                 'full_name' => $this->member->full_name,
                 'member_id' => $this->member->member_id,
+                'student_id' => $this->member->student_id,
                 'membership_type' => $this->member->membership_type,
                 'member_status' => $this->member->status,
+                'class' => $this->member->class,
+                'date_of_birth' => $this->member->date_of_birth?->toDateString(),
+                'blood_group' => $this->member->blood_group,
                 'photo' => $this->member->photo ? url('storage/'.$this->member->photo) : null,
                 'email' => $this->member->email,
                 'phone' => $this->member->phone,

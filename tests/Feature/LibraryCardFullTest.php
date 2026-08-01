@@ -4,12 +4,14 @@ namespace Tests\Feature;
 
 use App\Models\DownloadLog;
 use App\Models\User;
+use App\Modules\Members\Livewire\LibraryCard as LibraryCardComponent;
 use App\Modules\Members\Models\LibraryCard;
 use App\Modules\Members\Models\Member;
 use App\Modules\Members\Services\LibraryCardService;
 use App\Modules\Subscriptions\Models\Plan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class LibraryCardFullTest extends TestCase
@@ -17,9 +19,13 @@ class LibraryCardFullTest extends TestCase
     use RefreshDatabase;
 
     protected User $librarian;
+
     protected User $student;
+
     protected Member $member;
+
     protected LibraryCard $card;
+
     protected LibraryCardService $cardService;
 
     protected function setUp(): void
@@ -44,6 +50,8 @@ class LibraryCardFullTest extends TestCase
             'gender' => 'male',
             'id_number' => '1234567890',
             'admission_number' => 'AD2026001',
+            'class' => 'Year 2',
+            'blood_group' => 'O+',
             'membership_type' => 'student',
             'status' => Member::STATUS_ACTIVE,
             'joined_at' => now(),
@@ -170,6 +178,83 @@ class LibraryCardFullTest extends TestCase
     }
 
     // =========================================================================
+    // STUDENT ID + BLOOD GROUP
+    // =========================================================================
+
+    public function test_member_creation_auto_generates_student_id(): void
+    {
+        $newUser = User::factory()->create()->assignRole('student');
+        $newUser->givePermissionTo('view-library-cards');
+
+        $newMember = Member::create([
+            'user_id' => $newUser->id,
+            'email' => $newUser->email,
+            'first_name' => 'Auto',
+            'last_name' => 'Sid',
+            'membership_type' => 'student',
+            'status' => Member::STATUS_ACTIVE,
+            'joined_at' => now(),
+            'expires_at' => now()->addYear(),
+        ]);
+
+        $this->assertNotEmpty($newMember->student_id);
+        $this->assertMatchesRegularExpression(
+            '/^OLLMCHS-\d{4}-\d{4}$/',
+            $newMember->student_id,
+            "Student ID '{$newMember->student_id}' does not match OLLMCHS-{YEAR}-{SEQ} format"
+        );
+    }
+
+    public function test_blood_group_persisted_on_member(): void
+    {
+        $this->member->refresh();
+
+        $this->assertEquals('O+', $this->member->blood_group);
+    }
+
+    public function test_library_card_view_shows_student_id_and_blood_group(): void
+    {
+        $this->cardService->issueCard($this->member, $this->librarian);
+
+        $response = $this->actingAs($this->librarian)
+            ->get(route('members.card', $this->member->id));
+
+        $response->assertOk();
+        $html = $response->content();
+
+        $this->assertStringContainsString($this->member->student_id, $html);
+        $this->assertStringContainsString('O+', $html);
+    }
+
+    public function test_uploaded_passport_photo_is_embedded_as_data_url_in_card_face(): void
+    {
+        $this->cardService->issueCard($this->member, $this->librarian);
+
+        $component = Livewire::test(LibraryCardComponent::class, ['id' => $this->member->id])
+            ->set('passportPhoto', UploadedFile::fake()->image('passport.jpg'));
+
+        $component->assertSet('passportPhoto', fn ($value) => $value !== null);
+        $this->assertMatchesRegularExpression(
+            '/<img src="data:image\/jpeg;base64,[A-Za-z0-9+\/=]+"/',
+            $component->html()
+        );
+    }
+
+    public function test_verify_page_shows_student_id_and_blood_group(): void
+    {
+        $card = $this->cardService->issueCard($this->member, $this->librarian);
+
+        $response = $this->actingAs($this->librarian)
+            ->get(route('verify.card', $card->card_number));
+
+        $response->assertOk();
+        $html = $response->content();
+
+        $this->assertStringContainsString($this->member->student_id, $html);
+        $this->assertStringContainsString('O+', $html);
+    }
+
+    // =========================================================================
     // VIEW (WEB)
     // =========================================================================
 
@@ -291,7 +376,7 @@ class LibraryCardFullTest extends TestCase
             ->get(route('members.card.download', $this->member->id));
 
         $this->assertDatabaseHas('activity_log', [
-            'description' => 'Library card PDF downloaded: ' . LibraryCard::where('member_id', $this->member->id)->where('status', 'active')->first()->card_number,
+            'description' => 'Library card PDF downloaded: '.LibraryCard::where('member_id', $this->member->id)->where('status', 'active')->first()->card_number,
         ]);
     }
 
@@ -301,7 +386,7 @@ class LibraryCardFullTest extends TestCase
 
     protected function authHeaders(User $user): array
     {
-        return ['Authorization' => 'Bearer ' . $user->createToken('test')->plainTextToken];
+        return ['Authorization' => 'Bearer '.$user->createToken('test')->plainTextToken];
     }
 
     public function test_api_library_card_pdf_download(): void

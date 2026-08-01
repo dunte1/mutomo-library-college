@@ -34,6 +34,9 @@
     $email = $displaySettings['library_email'] ?? '';
     $website = $displaySettings['library_website'] ?? '';
     $address = $displaySettings['library_address'] ?? '';
+    $cardAuthority = $cardAuthority ?? [];
+    $principalName = $cardAuthority['principal_name'] ?? '';
+    $principalSignature = $cardAuthority['principal_signature'] ?? '';
 @endphp
 
 <div class="card">
@@ -64,6 +67,9 @@
                                 <div style="font-size:15px;font-weight:800;color:#fff;letter-spacing:.8px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">{{ strtoupper(explode(' & ', $siteName)[0] ?? 'OUR LADY OF LOURDES') }}</div>
                                 <div style="font-size:10.5px;font-weight:700;color:rgba(255,255,255,.8);letter-spacing:.5px;margin-top:1px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">{{ strtoupper($siteName) }}</div>
                                 <div style="font-size:11px;font-weight:800;color:#FFC107;letter-spacing:2.5px;margin-top:4px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">LIBRARY MEMBERSHIP CARD</div>
+                                @if($motto)
+                                    <div style="font-size:8px;font-style:italic;font-weight:500;color:rgba(255,255,255,.75);letter-spacing:.4px;margin-top:3px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">&ldquo;{{ $motto }}&rdquo;</div>
+                                @endif
                             </td>
                         </tr>
                     </table>
@@ -123,108 +129,33 @@
                 <div style="font-size:19px;font-weight:700;color:#0a1e3a;letter-spacing:.3px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">{{ $member->full_name }}</div>
                 <div style="display:inline-block;padding:3px 14px;background:{{ $teal ?? '#0097A7' }};color:#fff;font-size:10px;font-weight:700;letter-spacing:1.5px;margin-top:5px;">{{ strtoupper($member->membership_type) }}</div>
 
-                <table cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;">
-                    @if($member->admission_number)
+                <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:12px;">
+                    @php
+                        $pdfFields = [
+                            ['label' => 'Student ID', 'value' => $member->student_id ?? $member->member_id],
+                            ['label' => 'Admission No.', 'value' => $member->admission_number],
+                            ['label' => 'Class', 'value' => $member->class],
+                            ['label' => 'DOB', 'value' => $member->date_of_birth ? $member->date_of_birth->format('d/m/Y') : ''],
+                            ['label' => 'Blood Group', 'value' => $member->blood_group],
+                            ['label' => 'Programme', 'value' => $member->program?->name],
+                            ['label' => 'Department', 'value' => $member->department?->name],
+                            ['label' => 'Expiry Date', 'value' => $card->expires_at ? $card->expires_at->format('d M Y') : ''],
+                        ];
+                        $pdfFieldRows = array_chunk($pdfFields, 2);
+                    @endphp
+                    @foreach($pdfFieldRows as $row)
                     <tr>
-                        <td style="padding-bottom:8px;">
-                            <table cellpadding="0" cellspacing="0" border="0">
-                                <tr>
-                                    <td style="padding-right:10px;vertical-align:middle;">
-                                        <div style="width:26px;height:26px;border-radius:6px;background:{{ $primary }};text-align:center;line-height:26px;">
-                                            <span style="color:#fff;font-size:12px;">&#128196;</span>
-                                        </div>
-                                    </td>
-                                    <td style="padding-right:10px;vertical-align:middle;">
-                                        <span class="info-label">Admission No.</span>
-                                    </td>
-                                    <td style="vertical-align:middle;">
-                                        <span class="info-value">{{ $member->admission_number }}</span>
-                                    </td>
-                                </tr>
-                            </table>
+                        @foreach($row as $field)
+                        <td width="50%" style="vertical-align:top;padding:0 10px 10px 0;">
+                            <div style="font-size:8px;font-weight:600;color:#5a6a82;letter-spacing:.5px;text-transform:uppercase;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">{{ $field['label'] }}</div>
+                            <div style="font-size:11px;font-weight:600;color:#0a1e3a;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">{{ $field['value'] ?: '—' }}</div>
                         </td>
+                        @endforeach
+                        @if(count($row) === 1)
+                        <td width="50%"></td>
+                        @endif
                     </tr>
-                    @endif
-                    @if($member->program)
-                    <tr>
-                        <td style="padding-bottom:8px;">
-                            <table cellpadding="0" cellspacing="0" border="0">
-                                <tr>
-                                    <td style="padding-right:10px;vertical-align:middle;">
-                                        <div style="width:26px;height:26px;border-radius:6px;background:{{ $primary }};text-align:center;line-height:26px;">
-                                            <span style="color:#fff;font-size:12px;">&#128218;</span>
-                                        </div>
-                                    </td>
-                                    <td style="padding-right:10px;vertical-align:middle;">
-                                        <span class="info-label">Programme</span>
-                                    </td>
-                                    <td style="vertical-align:middle;">
-                                        <span class="info-value">{{ $member->program->name }}</span>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                    @endif
-                    @if($member->department)
-                    <tr>
-                        <td style="padding-bottom:8px;">
-                            <table cellpadding="0" cellspacing="0" border="0">
-                                <tr>
-                                    <td style="padding-right:10px;vertical-align:middle;">
-                                        <div style="width:26px;height:26px;border-radius:6px;background:{{ $primary }};text-align:center;line-height:26px;">
-                                            <span style="color:#fff;font-size:12px;">&#127963;</span>
-                                        </div>
-                                    </td>
-                                    <td style="padding-right:10px;vertical-align:middle;">
-                                        <span class="info-label">Department</span>
-                                    </td>
-                                    <td style="vertical-align:middle;">
-                                        <span class="info-value">{{ $member->department->name }}</span>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                    @endif
-                    <tr>
-                        <td style="padding-bottom:8px;">
-                            <table cellpadding="0" cellspacing="0" border="0">
-                                <tr>
-                                    <td style="padding-right:10px;vertical-align:middle;">
-                                        <div style="width:26px;height:26px;border-radius:6px;background:{{ $primary }};text-align:center;line-height:26px;">
-                                            <span style="color:#fff;font-size:12px;">&#128197;</span>
-                                        </div>
-                                    </td>
-                                    <td style="padding-right:10px;vertical-align:middle;">
-                                        <span class="info-label">Issue Date</span>
-                                    </td>
-                                    <td style="vertical-align:middle;">
-                                        <span class="info-value">{{ $card->issued_at->format('d M Y') }}</span>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <table cellpadding="0" cellspacing="0" border="0">
-                                <tr>
-                                    <td style="padding-right:10px;vertical-align:middle;">
-                                        <div style="width:26px;height:26px;border-radius:6px;background:{{ $primary }};text-align:center;line-height:26px;">
-                                            <span style="color:#fff;font-size:12px;">&#9201;</span>
-                                        </div>
-                                    </td>
-                                    <td style="padding-right:10px;vertical-align:middle;">
-                                        <span class="info-label">Expiry Date</span>
-                                    </td>
-                                    <td style="vertical-align:middle;">
-                                        <span class="info-value">{{ $card->expires_at ? $card->expires_at->format('d M Y') : 'N/A' }}</span>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
+                    @endforeach
                 </table>
             </td>
 
@@ -250,17 +181,32 @@
     <!-- ===== FOOTER ===== -->
     <table class="footer-bar" cellpadding="0" cellspacing="0" border="0" width="1011" height="50">
         <tr>
-            <td style="background:#E9EEF5;border-top:1px solid rgba(11,60,109,.06);text-align:center;vertical-align:middle;">
+            <td style="background:#E9EEF5;border-top:1px solid rgba(11,60,109,.06);text-align:left;vertical-align:middle;padding:0 28px;">
+                @if($address)
+                    <span style="font-size:9.5px;font-weight:500;color:#5a6a82;">&#127968; {{ $address }}</span>
+                    <span style="color:rgba(11,60,109,.2);font-size:10px;margin:0 6px;">|</span>
+                @endif
+                @if($phone)
+                    <span style="font-size:9.5px;font-weight:500;color:#5a6a82;">&#9742; {{ $phone }}</span>
+                    <span style="color:rgba(11,60,109,.2);font-size:10px;margin:0 6px;">|</span>
+                @endif
                 @if($website)
                     <span style="font-size:9.5px;font-weight:500;color:#5a6a82;">&#127760; {{ $website }}</span>
                     <span style="color:rgba(11,60,109,.2);font-size:10px;margin:0 6px;">|</span>
                 @endif
                 @if($email)
                     <span style="font-size:9.5px;font-weight:500;color:#5a6a82;">&#9993; {{ $email }}</span>
-                    <span style="color:rgba(11,60,109,.2);font-size:10px;margin:0 6px;">|</span>
                 @endif
-                @if($phone)
-                    <span style="font-size:9.5px;font-weight:500;color:#5a6a82;">&#9742; {{ $phone }}</span>
+            </td>
+            <td width="260" style="background:#E9EEF5;border-top:1px solid rgba(11,60,109,.06);text-align:right;vertical-align:middle;padding:0 28px 0 10px;">
+                @if($principalSignature && file_exists(storage_path('app/public/' . $principalSignature)))
+                    <img src="{{ storage_path('app/public/' . $principalSignature) }}" style="height:28px;max-width:120px;object-fit:contain;vertical-align:middle;">
+                @endif
+                @if($principalName)
+                    <span style="display:inline-block;text-align:right;vertical-align:middle;margin-left:8px;">
+                        <span style="display:block;font-size:10px;font-weight:700;color:#0a1e3a;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">{{ $principalName }}</span>
+                        <span style="display:block;font-size:8px;font-weight:600;color:#5a6a82;letter-spacing:1px;text-transform:uppercase;">Principal</span>
+                    </span>
                 @endif
             </td>
         </tr>

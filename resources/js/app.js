@@ -1,4 +1,5 @@
 import Cropper from 'cropperjs';
+import 'cropperjs/dist/cropper.css';
 
 /* ============================================================
  * THEME TOGGLE (DARK / LIGHT MODE)
@@ -178,6 +179,15 @@ document.addEventListener('livewire:update', () => { setTimeout(initSwipeItems, 
     }, { passive: true });
 })();
 
+
+window.__readFileAsDataURL = function (file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Could not read file'));
+        reader.readAsDataURL(file);
+    });
+};
 
 window.__initCropper = function (imageEl, aspectRatio) {
     if (window.__currentCropper) {

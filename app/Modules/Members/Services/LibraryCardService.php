@@ -195,8 +195,9 @@ class LibraryCardService
         $settingsService = app(SettingsService::class);
         $cardBranding = $settingsService->getCardBrandingSettings();
         $displaySettings = $settingsService->getDisplaySettings();
+        $cardAuthority = $settingsService->getCardAuthoritySettings();
 
-        $pdf = Pdf::loadView('members::pdf.library-card', compact('card', 'member', 'photoUrl', 'qrCodeSvg', 'cardBranding', 'displaySettings'));
+        $pdf = Pdf::loadView('members::pdf.library-card', compact('card', 'member', 'photoUrl', 'qrCodeSvg', 'cardBranding', 'displaySettings', 'cardAuthority'));
         $pdf->setPaper([0, 0, 1011, 638], 'portrait');
 
         $dompdf = $pdf->getDomPDF();

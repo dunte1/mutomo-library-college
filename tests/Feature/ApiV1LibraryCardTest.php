@@ -14,8 +14,11 @@ class ApiV1LibraryCardTest extends TestCase
     use RefreshDatabase;
 
     protected User $user;
+
     protected Member $member;
+
     protected LibraryCard $card;
+
     protected string $baseUrl = '/api/v1';
 
     protected function setUp(): void
@@ -35,6 +38,8 @@ class ApiV1LibraryCardTest extends TestCase
             'gender' => 'male',
             'id_number' => '1234567890',
             'admission_number' => 'AD2026001',
+            'class' => 'Year 2',
+            'blood_group' => 'B-',
             'membership_type' => 'student',
             'status' => Member::STATUS_ACTIVE,
             'joined_at' => now(),
@@ -74,6 +79,9 @@ class ApiV1LibraryCardTest extends TestCase
             ->assertJsonPath('data.member.full_name', $this->member->full_name)
             ->assertJsonPath('data.member.email', $this->member->email)
             ->assertJsonPath('data.member.phone', $this->member->phone)
+            ->assertJsonPath('data.member.student_id', $this->member->student_id)
+            ->assertJsonPath('data.member.class', 'Year 2')
+            ->assertJsonPath('data.member.blood_group', 'B-')
             ->assertJsonPath('data.member.member_status', $this->member->status);
     }
 

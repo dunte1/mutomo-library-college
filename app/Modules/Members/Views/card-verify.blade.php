@@ -28,6 +28,22 @@
                         <span class="text-sm font-medium text-gray-900">{{ $member->full_name }}</span>
                     </div>
                     <div class="flex justify-between">
+                        <span class="text-sm text-gray-500">Student ID</span>
+                        <span class="text-sm font-mono font-medium text-gray-900">{{ $member->student_id ?? $member->member_id }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-500">Class</span>
+                        <span class="text-sm font-medium text-gray-900">{{ $member->class ?? 'N/A' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-500">Date of Birth</span>
+                        <span class="text-sm font-medium text-gray-900">{{ $member->date_of_birth?->format('d/m/Y') ?? 'N/A' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm text-gray-500">Blood Group</span>
+                        <span class="text-sm font-medium text-gray-900">{{ $member->blood_group ?? 'N/A' }}</span>
+                    </div>
+                    <div class="flex justify-between">
                         <span class="text-sm text-gray-500">Membership Type</span>
                         <span class="text-sm font-medium capitalize text-gray-900">{{ $member->membership_type }}</span>
                     </div>

@@ -52,6 +52,8 @@
                             'member' => $member,
                             'cardBranding' => $cardBranding,
                             'displaySettings' => $displaySettings,
+                            'cardAuthority' => $cardAuthority,
+                            'previewPhotoPath' => $passportPhoto?->getRealPath(),
                         ])
 
                         {{-- Download Button --}}
@@ -178,35 +180,95 @@
                     <p class="text-xs text-surface-500 dark:text-surface-400">
                         Upload a passport photo for the library card. This will also be used as the member's profile photo.
                     </p>
-                    <div class="flex items-center gap-3">
-                        <label class="flex-1 cursor-pointer">
-                            <div class="border-2 border-dashed border-surface-300 dark:border-surface-600 rounded-lg p-3 text-center hover:border-primary-400 transition-colors">
-                                @if($passportPhoto)
-                                    <img src="{{ $passportPhoto->temporaryUrl() }}" class="w-16 h-16 object-cover rounded-lg mx-auto mb-1">
-                                @elseif($member->photo)
-                                    <img src="{{ Storage::url($member->photo) }}" class="w-16 h-16 object-cover rounded-lg mx-auto mb-1">
-                                @else
-                                    <svg class="w-8 h-8 mx-auto text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                @endif
-                                <p class="text-xs text-surface-500 mt-1">
-                                    @if($passportPhoto)
-                                        {{ $passportPhoto->getClientOriginalName() }}
-                                    @else
-                                        Click to upload (max 2MB)
-                                    @endif
-                                </p>
-                            </div>
-                            <input type="file" wire:model="passportPhoto" accept="image/*" class="hidden">
-                        </label>
-                        @if($passportPhoto)
-                            <button wire:click="$set('passportPhoto', null)" class="btn-sm btn-outline text-xs shrink-0">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    <div x-data="{
+                        cropping: false,
+                        dragOver: false,
+                        fileSelected(file) {
+                            if (!file) return;
+                            this.cropping = true;
+                            this.$nextTick(async () => {
+                                const img = this.$refs.photoCropImage;
+                                img.src = await __readFileAsDataURL(file);
+                                img.onload = () => { __initCropper(img, 148 / 178); };
+                            });
+                        },
+                        pickFromInput(event) {
+                            this.fileSelected(event.target.files[0]);
+                            event.target.value = '';
+                        },
+                        onDrop(event) {
+                            this.dragOver = false;
+                            this.fileSelected(event.dataTransfer.files[0]);
+                        },
+                        async confirmCrop() {
+                            const blob = await __getCroppedBlob('image/jpeg');
+                            if (!blob) return;
+                            const croppedFile = new File([blob], 'passport.jpg', { type: 'image/jpeg' });
+                            await $wire.upload('passportPhoto', croppedFile);
+                            this.cropping = false;
+                            __destroyCropper();
+                        },
+                        cancelCrop() {
+                            this.cropping = false;
+                            __destroyCropper();
+                        }
+                    }">
+                        <div class="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors"
+                             :class="dragOver ? 'border-primary-400 bg-primary-50 dark:bg-primary-900/20' : 'border-surface-300 dark:border-surface-600 hover:border-primary-400'"
+                             @dragover.prevent="dragOver = true"
+                             @dragleave.prevent="dragOver = false"
+                             @drop.prevent="onDrop"
+                             @click="$refs.photoInput.click()">
+                            @if($passportPhoto)
+                                <img src="{{ $passportPhoto->temporaryUrl() }}" class="w-24 h-28 object-cover rounded-lg mx-auto mb-2 shadow-sm">
+                            @elseif($member->photo)
+                                <img src="{{ Storage::url($member->photo) }}" class="w-24 h-28 object-cover rounded-lg mx-auto mb-2 shadow-sm">
+                            @else
+                                <svg class="w-10 h-10 mx-auto text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                            </button>
+                            @endif
+                            <p class="text-xs text-surface-500 mt-1">
+                                @if($passportPhoto)
+                                    {{ $passportPhoto->getClientOriginalName() }}
+                                @else
+                                    Drag &amp; drop a photo here or click to browse
+                                @endif
+                            </p>
+                            <p class="text-[10px] text-surface-400 mt-1">Auto-cropped to the ID frame &middot; max 2MB</p>
+                        </div>
+                        <input type="file" x-ref="photoInput" x-on:change="pickFromInput" accept="image/*" class="hidden">
+                        <div wire:loading wire:target="passportPhoto" class="text-xs text-primary-600 mt-2">Uploading...</div>
+                        @error("passportPhoto") <p class="text-sm text-accent-600 mt-1">{{ $message }}</p> @enderror
+                        @if($passportPhoto)
+                            <div class="flex items-center gap-2 mt-3">
+                                <button wire:click="$set('passportPhoto', null)" class="btn-sm btn-outline text-xs">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                    Remove
+                                </button>
+                                <span class="text-xs text-emerald-600">Ready to use on card</span>
+                            </div>
                         @endif
+
+                        <div x-show="cropping" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/60" @keydown.escape.window="cancelCrop">
+                            <div class="bg-white dark:bg-surface-800 rounded-2xl shadow-2xl max-w-3xl w-full mx-4 overflow-hidden" @click.outside="cancelCrop">
+                                <div class="p-4 border-b border-surface-200 dark:border-surface-700 flex items-center justify-between">
+                                    <h3 class="text-lg font-semibold text-surface-900 dark:text-white">Crop Passport Photo</h3>
+                                    <button type="button" @click="cancelCrop" class="p-1 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 text-surface-400">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+                                <div class="p-4 bg-surface-100 dark:bg-surface-900/50">
+                                    <img x-ref="photoCropImage" class="max-w-full max-h-[60vh] mx-auto">
+                                </div>
+                                <div class="p-4 border-t border-surface-200 dark:border-surface-700 flex justify-end gap-3">
+                                    <button type="button" @click="cancelCrop" class="btn-secondary">Cancel</button>
+                                    <button type="button" @click="confirmCrop" class="btn-primary">Apply Crop</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

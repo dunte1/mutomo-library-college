@@ -92,6 +92,7 @@ class MemberBulkImport extends Component
             'gender' => ['gender', 'sex'],
             'date_of_birth' => ['date of birth', 'date_of_birth', 'dob', 'birth date', 'birthdate'],
             'class' => ['class', 'grade', 'form', 'year', 'year_of_study', 'year of study'],
+            'blood_group' => ['blood group', 'blood_group', 'blood', 'bloodtype', 'blood type'],
             'department' => ['department', 'dept', 'faculty'],
             'program' => ['program', 'programme', 'course'],
             'membership_type' => ['membership type', 'membership_type', 'member type', 'member_type', 'type'],
@@ -214,6 +215,17 @@ class MemberBulkImport extends Component
                 $record['gender'] = strtolower($record['gender']);
             }
 
+            // Validate blood group
+            $validBloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown'];
+            if (! empty($record['blood_group'])) {
+                $normalized = strtoupper(str_replace(' ', '', $record['blood_group']));
+                if (! in_array($normalized, $validBloodGroups)) {
+                    $rowErrors[] = "Invalid blood group '{$record['blood_group']}'. Must be: A+, A-, B+, B-, AB+, AB-, O+, O-, or Unknown";
+                } else {
+                    $record['blood_group'] = $normalized;
+                }
+            }
+
             if (! empty($rowErrors)) {
                 $this->importErrors[] = [
                     'row' => $rowNum,
@@ -262,6 +274,7 @@ class MemberBulkImport extends Component
                     'gender' => $record['gender'] ?? null,
                     'date_of_birth' => $record['date_of_birth'] ?? null,
                     'class' => $record['class'] ?? null, // mapped as Year of Study
+                    'blood_group' => $record['blood_group'] ?? null,
                     'department_id' => $record['department_id'] ?? null,
                     'program_id' => $record['program_id'] ?? null,
                     'address' => $record['address'] ?? null,
