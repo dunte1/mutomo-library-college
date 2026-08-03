@@ -98,13 +98,24 @@ class ExternalBookService
     public function searchGoogleBooks(string $query, int $perPage = 12): array
     {
         return $this->cached('google_books', $query, function () use ($query, $perPage) {
+            $params = [
+                'q' => $query,
+                'maxResults' => min($perPage, 40),
+                'printType' => 'books',
+            ];
+
+            $apiKey = config('services.google_books.key');
+            if ($apiKey) {
+                $params['key'] = $apiKey;
+            }
+
             $response = Http::timeout(10)
                 ->acceptJson()
-                ->get('https://www.googleapis.com/books/v1/volumes', [
-                    'q' => $query,
-                    'maxResults' => min($perPage, 40),
-                    'printType' => 'books',
-                ]);
+                ->get('https://www.googleapis.com/books/v1/volumes', $params);
+
+            if ($response->status() === 429) {
+                throw new \Illuminate\Http\Client\RequestException($response);
+            }
 
             if ($response->failed()) {
                 return [];

@@ -38,8 +38,16 @@ class FreeBooksSearch extends Component
             }
         } catch (\Throwable $e) {
             Log::warning('External book search failed', ['provider' => $this->provider, 'error' => $e->getMessage()]);
+
             $this->results = [];
-            $this->error = 'The free library service is temporarily unavailable. Please try again later.';
+
+            if ($e instanceof \Illuminate\Http\Client\RequestException && $e->response->status() === 429) {
+                $this->error = $this->provider === 'google_books'
+                    ? 'Google Books is rate-limiting requests. Try again later, or ask an admin to set a GOOGLE_BOOKS_API_KEY.'
+                    : 'Too many requests. Please wait a moment and try again.';
+            } else {
+                $this->error = 'The free library service is temporarily unavailable. Please try again later.';
+            }
         } finally {
             $this->searching = false;
         }

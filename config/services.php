@@ -71,4 +71,8 @@ return [
         'private_key' => env('VAPID_PRIVATE_KEY'),
     ],
 
+    'google_books' => [
+        'key' => env('GOOGLE_BOOKS_API_KEY'),
+    ],
+
 ];

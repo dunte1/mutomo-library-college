@@ -145,6 +145,45 @@ class DigitalLibraryExternalBooksTest extends TestCase
         $this->assertSame([], $results);
     }
 
+    public function test_google_books_passes_api_key_when_configured(): void
+    {
+        config(['services.google_books.key' => 'test-key-123']);
+
+        $this->fakeGoogleBooksResponse();
+
+        app(ExternalBookService::class)->search('nursing', 'google_books');
+
+        Http::assertSent(function ($request) {
+            return $request->url() === 'https://www.googleapis.com/books/v1/volumes?q=nursing&maxResults=12&printType=books&key=test-key-123';
+        });
+    }
+
+    public function test_google_books_rate_limit_shows_specific_message(): void
+    {
+        Http::fake([
+            'googleapis.com/books/*' => Http::response([], 429),
+        ]);
+
+        Livewire::test(FreeBooksSearch::class)
+            ->set('query', 'nursing')
+            ->set('provider', 'google_books')
+            ->call('search')
+            ->assertSet('error', 'Google Books is rate-limiting requests. Try again later, or ask an admin to set a GOOGLE_BOOKS_API_KEY.');
+    }
+
+    public function test_provider_connection_failure_shows_unavailable_message(): void
+    {
+        Http::fake([
+            'gutendex.com/*' => fn () => throw new \Illuminate\Http\Client\ConnectionException('Connection refused'),
+        ]);
+
+        Livewire::test(FreeBooksSearch::class)
+            ->set('query', 'nursing')
+            ->set('provider', 'gutenberg')
+            ->call('search')
+            ->assertSet('error', 'The free library service is temporarily unavailable. Please try again later.');
+    }
+
     public function test_free_books_page_loads(): void
     {
         $response = $this->get(route('digital-library.free-books'));
