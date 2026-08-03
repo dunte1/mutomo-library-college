@@ -19,7 +19,7 @@ class DigitalAsset extends Model
         'author', 'publisher', 'isbn', 'publication_year', 'language',
         'keywords', 'access_level', 'allow_download', 'allow_printing',
         'times_downloaded', 'times_viewed', 'is_active', 'is_featured', 'uploaded_by',
-        'book_id',
+        'book_id', 'is_external', 'source_url',
     ];
 
     protected $casts = [
@@ -28,6 +28,7 @@ class DigitalAsset extends Model
         'allow_printing' => 'boolean',
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
+        'is_external' => 'boolean',
         'file_size' => 'integer',
         'times_downloaded' => 'integer',
         'times_viewed' => 'integer',
@@ -71,6 +72,16 @@ class DigitalAsset extends Model
         }
 
         return $query->whereIn('access_level', ['public', 'restricted']);
+    }
+
+    public function scopeExternal($query)
+    {
+        return $query->where('is_external', true);
+    }
+
+    public function scopeLocal($query)
+    {
+        return $query->where('is_external', false);
     }
 
     public static function typeOptions(): array

@@ -14,6 +14,12 @@ class DigitalAssetFileController extends Controller
 
         abort_if(! $asset->is_active, 404);
 
+        if ($asset->is_external && $asset->source_url) {
+            $asset->incrementViews();
+
+            return redirect()->away($asset->source_url);
+        }
+
         abort_if($this->isUnsafePath($asset->file_path), 403);
 
         $filePath = storage_path("app/public/{$asset->file_path}");

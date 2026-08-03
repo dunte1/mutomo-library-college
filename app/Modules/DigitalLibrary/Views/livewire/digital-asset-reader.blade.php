@@ -1,5 +1,6 @@
 @section('title', 'Reader')
-<div class="h-screen flex flex-col bg-surface-900 overflow-hidden" x-data="reader()" x-init="init('{{ $fileUrl }}')">
+<div class="h-screen flex flex-col bg-surface-900 overflow-hidden"
+     @if(!$asset->is_external) x-data="reader()" x-init="init('{{ $fileUrl }}')" @endif>
     {{-- Toolbar --}}
     <div class="flex items-center justify-between px-4 py-2 bg-surface-800 border-b border-surface-700 shrink-0">
         <div class="flex items-center gap-3">
@@ -9,13 +10,22 @@
                 </svg>
             </a>
             <span class="text-sm font-medium text-white truncate max-w-xs">{{ $asset->title }}</span>
-            @if($isReadOnly)
+            @if($this->isReadOnly)
                 <span class="px-2 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">Read Only</span>
             @endif
         </div>
 
         <div class="flex items-center gap-2">
-            {{-- Zoom controls --}}
+            @if($asset->is_external)
+                <a href="{{ $asset->source_url }}" target="_blank" rel="noopener noreferrer"
+                   class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-700 text-white hover:bg-surface-600 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    Open in new tab
+                </a>
+            @else
+                {{-- Zoom controls --}}
             <button wire:click="zoomOut" class="p-1.5 rounded-lg text-surface-400 hover:text-white hover:bg-surface-700 transition-colors" title="Zoom Out">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
@@ -67,10 +77,17 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
                 </svg>
             </button>
+            @endif
         </div>
     </div>
 
     {{-- Reader area --}}
+    @if($asset->is_external)
+        <div class="flex-1 relative bg-surface-950">
+            <iframe src="{{ $asset->source_url }}" class="w-full h-full border-0" title="{{ $asset->title }}"
+                    loading="lazy"></iframe>
+        </div>
+    @else
     <div class="flex-1 flex overflow-hidden relative">
         {{-- Canvas area --}}
         <div class="flex-1 flex items-center justify-center overflow-auto bg-surface-950 relative"
@@ -98,8 +115,10 @@
             </button>
         </div>
     </div>
+    @endif
 
     {{-- Loading overlay --}}
+    @if(!$asset->is_external)
     <div x-show="loading" x-cloak
          class="absolute inset-0 bg-surface-900/80 flex items-center justify-center z-50">
         <div class="text-center">
@@ -232,5 +251,6 @@
                 e.preventDefault();
             });
         </script>
+    @endif
     @endif
 </div>

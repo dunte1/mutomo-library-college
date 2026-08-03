@@ -9,6 +9,7 @@ use App\Modules\DigitalLibrary\Livewire\DigitalAssetShow;
 use App\Modules\DigitalLibrary\Livewire\DigitalAssetUpload;
 use App\Modules\DigitalLibrary\Livewire\DigitalCategoryList;
 use App\Modules\DigitalLibrary\Livewire\DownloadsList;
+use App\Modules\DigitalLibrary\Livewire\FreeBooksSearch;
 use App\Modules\DigitalLibrary\Livewire\Recommendations;
 use App\Modules\DigitalLibrary\Models\DigitalAsset;
 use App\Modules\DigitalLibrary\Observers\DigitalAssetObserver;
@@ -40,5 +41,6 @@ class DigitalLibraryServiceProvider extends ServiceProvider
         Livewire::component('recommendations', Recommendations::class);
         Livewire::component('downloads-list', DownloadsList::class);
         Livewire::component('digital-category-list', DigitalCategoryList::class);
+        Livewire::component('free-books-search', FreeBooksSearch::class);
     }
 }

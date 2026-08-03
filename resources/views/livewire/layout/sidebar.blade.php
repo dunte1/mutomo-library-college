@@ -320,6 +320,12 @@ new class extends Component {
                             class="sidebar-link-sub {{ request()->routeIs('digital-library.index') || request()->routeIs('digital-library.show') || request()->routeIs('digital-library.read') ? 'sidebar-link-sub-active' : '' }}">
                             <span class="text-sm">Assets</span>
                         </a>
+                        @if(\Illuminate\Support\Facades\Route::has('digital-library.free-books'))
+                        <a href="{{ route('digital-library.free-books') }}" wire:navigate
+                            class="sidebar-link-sub {{ request()->routeIs('digital-library.free-books') ? 'sidebar-link-sub-active' : '' }}">
+                            <span class="text-sm">Free Online Books</span>
+                        </a>
+                        @endif
                         @can('upload-digital-assets')
                         <a href="{{ route('digital-library.upload') }}" wire:navigate
                             class="sidebar-link-sub {{ request()->routeIs('digital-library.upload') ? 'sidebar-link-sub-active' : '' }}">

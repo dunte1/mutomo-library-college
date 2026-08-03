@@ -98,6 +98,11 @@ class DigitalAssetReader extends Component
         return route('digital-library.file', $this->asset);
     }
 
+    public function getExternalUrlProperty(): ?string
+    {
+        return $this->asset->is_external ? $this->asset->source_url : null;
+    }
+
     public function getIsReadOnlyProperty(): bool
     {
         return ! $this->asset->allow_download && ! $this->asset->allow_printing;
