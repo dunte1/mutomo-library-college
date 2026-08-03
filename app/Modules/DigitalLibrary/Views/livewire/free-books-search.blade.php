@@ -4,7 +4,7 @@
         <div>
             <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Free Online Books</h1>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Search public-domain books you can read online for free, courtesy of Project Gutenberg and Google Books.
+                Search public-domain and openly available books you can read online for free, courtesy of Project Gutenberg, Google Books, and Open Library.
             </p>
         </div>
         <a href="{{ route('digital-library.index') }}" wire:navigate class="btn-secondary inline-flex items-center gap-2">
@@ -33,6 +33,7 @@
                 <select wire:model="provider" class="input-field w-full">
                     <option value="gutenberg">Project Gutenberg</option>
                     <option value="google_books">Google Books</option>
+                    <option value="open_library">Open Library</option>
                 </select>
             </div>
             <div class="sm:self-end">
@@ -69,7 +70,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
             </svg>
             <p class="text-gray-500 dark:text-gray-400 text-lg">Search for a subject, title, or author</p>
-            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">All books are public domain — free to read for everyone.</p>
+            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Public-domain and open-access books are free to read; some Open Library titles may require a free account to borrow.</p>
         </div>
     @else
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -92,8 +93,8 @@
                                 <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{{ implode(', ', $book['authors']) }}</p>
                             @endif
                             <span class="inline-flex items-center mt-2 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider
-                                {{ $book['provider'] === 'gutenberg' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400' : 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' }}">
-                                {{ $book['provider'] === 'gutenberg' ? 'Project Gutenberg' : 'Google Books' }}
+                                {{ $book['provider'] === 'gutenberg' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400' : ($book['provider'] === 'google_books' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' : 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400') }}">
+                                {{ $book['provider'] === 'gutenberg' ? 'Project Gutenberg' : ($book['provider'] === 'google_books' ? 'Google Books' : 'Open Library') }}
                             </span>
                         </div>
                     </div>
@@ -104,13 +105,13 @@
                             @endforeach
                         </div>
                     @endif
-                    @if($book['publication_year'])
+                    @if($book['provider'] === 'gutenberg')
                         <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">
-                            @if($book['provider'] === 'gutenberg')
-                                {{ $book['download_count'] }} downloads
-                            @else
-                                Published {{ $book['publication_year'] }}
-                            @endif
+                            {{ $book['download_count'] }} downloads
+                        </p>
+                    @elseif($book['publication_year'])
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">
+                            Published {{ $book['publication_year'] }}
                         </p>
                     @endif
                     <div class="flex gap-2 mt-auto pt-1">

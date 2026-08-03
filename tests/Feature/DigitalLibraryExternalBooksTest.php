@@ -107,6 +107,45 @@ class DigitalLibraryExternalBooksTest extends TestCase
         ]);
     }
 
+    protected function fakeOpenLibraryResponse(): void
+    {
+        Http::fake([
+            'openlibrary.org/search.json*' => Http::response([
+                'docs' => [
+                    [
+                        'key' => '/works/OL1W',
+                        'title' => 'Notes on Nursing',
+                        'author_name' => ['Florence Nightingale'],
+                        'subject' => ['Nursing'],
+                        'first_publish_year' => 1860,
+                        'cover_i' => 12345,
+                        'ia' => ['notesonnursing00nigh'],
+                        'ebook_access' => 'public',
+                        'publisher' => ['Harrison'],
+                    ],
+                    [
+                        'key' => '/works/OL2W',
+                        'title' => 'Modern Nursing',
+                        'author_name' => ['John Doe'],
+                        'subject' => ['Nursing'],
+                        'first_publish_year' => 2001,
+                        'cover_i' => 67890,
+                        'ia' => ['modernnursing0000doe'],
+                        'ebook_access' => 'borrowable',
+                        'publisher' => ['Modern Press'],
+                    ],
+                    [
+                        'key' => '/works/OL3W',
+                        'title' => 'No Access Book',
+                        'author_name' => ['Jane Roe'],
+                        'subject' => ['Nursing'],
+                        'ebook_access' => 'no_ebook',
+                    ],
+                ],
+            ]),
+        ]);
+    }
+
     public function test_gutenberg_search_normalizes_and_excludes_copyrighted(): void
     {
         $this->fakeGutenbergResponse();
@@ -136,9 +175,62 @@ class DigitalLibraryExternalBooksTest extends TestCase
         $this->assertSame('Jane Doe', $results[0]['authors'][0]);
     }
 
-    public function test_search_with_short_query_returns_empty(): void
+    public function test_open_library_search_returns_readable_books(): void
     {
-        Http::assertNothingSent();
+        $this->fakeOpenLibraryResponse();
+
+        $results = app(ExternalBookService::class)->search('nursing', 'open_library');
+
+        $this->assertCount(2, $results);
+        $this->assertSame('Notes on Nursing', $results[0]['title']);
+        $this->assertSame('open_library', $results[0]['provider']);
+        $this->assertSame('https://archive.org/details/notesonnursing00nigh', $results[0]['read_url']);
+        $this->assertSame('https://covers.openlibrary.org/b/id/12345-M.jpg', $results[0]['cover_url']);
+        $this->assertSame('Modern Nursing', $results[1]['title']);
+    }
+
+    public function test_empty_results_are_not_cached(): void
+    {
+        $callCount = 0;
+
+        Http::fake([
+            'openlibrary.org/search.json*' => function () use (&$callCount) {
+                $callCount++;
+
+                if ($callCount === 1) {
+                    return Http::response(['docs' => []], 200);
+                }
+
+                return Http::response(['docs' => [
+                    [
+                        'key' => '/works/OL1W',
+                        'title' => 'Notes on Nursing',
+                        'author_name' => ['Florence Nightingale'],
+                        'subject' => ['Nursing'],
+                        'first_publish_year' => 1860,
+                        'cover_i' => 12345,
+                        'ia' => ['notesonnursing00nigh'],
+                        'ebook_access' => 'public',
+                        'publisher' => ['Harrison'],
+                    ],
+                ]], 200);
+            },
+        ]);
+
+        $key = 'external_books:open_library:'.md5('nothinghere');
+
+        $first = app(ExternalBookService::class)->search('nothinghere', 'open_library');
+        $this->assertSame([], $first);
+        $this->assertFalse(Cache::has($key));
+
+        $second = app(ExternalBookService::class)->search('nothinghere', 'open_library');
+        $this->assertCount(1, $second);
+        $this->assertSame(2, $callCount);
+        $this->assertTrue(Cache::has($key));
+    }
+
+    public function test_search_with_short_query_returns_empty(): void
+    {        Http::assertNothingSent();
 
         $results = app(ExternalBookService::class)->search('a', 'gutenberg');
 

@@ -9,7 +9,7 @@ class ExternalBookService
 {
     protected const CACHE_TTL = 86400;
 
-    public const PROVIDERS = ['gutenberg', 'google_books'];
+    public const PROVIDERS = ['gutenberg', 'google_books', 'open_library'];
 
     public function search(string $query, string $provider = 'gutenberg', int $perPage = 12): array
     {
@@ -21,6 +21,7 @@ class ExternalBookService
 
         return match ($provider) {
             'google_books' => $this->searchGoogleBooks($query, $perPage),
+            'open_library' => $this->searchOpenLibrary($query, $perPage),
             default => $this->searchGutenberg($query, $perPage),
         };
     }
@@ -173,10 +174,79 @@ class ExternalBookService
         });
     }
 
+    public function searchOpenLibrary(string $query, int $perPage = 12): array
+    {
+        return $this->cached('open_library', $query, function () use ($query, $perPage) {
+            $response = Http::timeout(10)
+                ->acceptJson()
+                ->get('https://openlibrary.org/search.json', [
+                    'q' => $query,
+                    'limit' => min($perPage * 4, 100),
+                    'fields' => 'title,author_name,first_publish_year,subject,cover_i,ia,key,ebook_access,publisher',
+                    'language' => 'eng',
+                ]);
+
+            if ($response->failed()) {
+                return [];
+            }
+
+            return collect($response->json('docs', []))
+                ->map(function (array $doc) {
+                    $access = $doc['ebook_access'] ?? 'no_ebook';
+                    if (! in_array($access, ['full', 'public', 'borrow', 'borrowable'])) {
+                        return null;
+                    }
+
+                    $iaIdentifier = $doc['ia'][0] ?? null;
+
+                    $readUrl = $iaIdentifier
+                        ? 'https://archive.org/details/'.$iaIdentifier
+                        : 'https://openlibrary.org'.$doc['key'];
+
+                    return [
+                        'provider' => 'open_library',
+                        'external_id' => $doc['key'] ?? null,
+                        'title' => $doc['title'] ?? 'Untitled',
+                        'authors' => $doc['author_name'] ?? [],
+                        'subjects' => $doc['subject'] ?? [],
+                        'languages' => ['en'],
+                        'copyright' => ! in_array($access, ['full', 'public']),
+                        'cover_url' => isset($doc['cover_i'])
+                            ? 'https://covers.openlibrary.org/b/id/'.$doc['cover_i'].'-M.jpg'
+                            : null,
+                        'read_url' => $readUrl,
+                        'source_url' => $readUrl,
+                        'download_url' => $iaIdentifier
+                            ? 'https://archive.org/download/'.$iaIdentifier
+                            : null,
+                        'description' => null,
+                        'isbn' => null,
+                        'publisher' => $doc['publisher'][0] ?? null,
+                        'publication_year' => $doc['first_publish_year'] ?? null,
+                        'download_count' => 0,
+                    ];
+                })
+                ->filter()
+                ->slice(0, $perPage)
+                ->values()
+                ->all();
+        });
+    }
+
     protected function cached(string $provider, string $query, callable $callback): array
     {
         $key = 'external_books:'.$provider.':'.md5(mb_strtolower($query));
 
-        return Cache::remember($key, self::CACHE_TTL, $callback);
+        if (Cache::has($key)) {
+            return Cache::get($key);
+        }
+
+        $results = $callback();
+
+        if (! empty($results)) {
+            Cache::put($key, $results, self::CACHE_TTL);
+        }
+
+        return $results;
     }
 }

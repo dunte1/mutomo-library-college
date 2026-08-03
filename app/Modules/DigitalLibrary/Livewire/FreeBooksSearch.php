@@ -24,7 +24,7 @@ class FreeBooksSearch extends Component
 
     public function search(): void
     {
-        $this->validate(['query' => 'required|string|min:2', 'provider' => 'required|in:gutenberg,google_books']);
+        $this->validate(['query' => 'required|string|min:2', 'provider' => 'required|in:'.implode(',', ExternalBookService::PROVIDERS)]);
 
         $this->searching = true;
         $this->error = null;
